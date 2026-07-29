@@ -9,13 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SkillsRouteImport } from './routes/skills'
 import { Route as SessaoRouteImport } from './routes/sessao'
 import { Route as PlanoRouteImport } from './routes/plano'
+import { Route as MapaRouteImport } from './routes/mapa'
 import { Route as DiarioRouteImport } from './routes/diario'
 import { Route as BibliotecaRouteImport } from './routes/biblioteca'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BibliotecaNodeIdRouteImport } from './routes/biblioteca.$nodeId'
 
+const SkillsRoute = SkillsRouteImport.update({
+  id: '/skills',
+  path: '/skills',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SessaoRoute = SessaoRouteImport.update({
   id: '/sessao',
   path: '/sessao',
@@ -24,6 +31,11 @@ const SessaoRoute = SessaoRouteImport.update({
 const PlanoRoute = PlanoRouteImport.update({
   id: '/plano',
   path: '/plano',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MapaRoute = MapaRouteImport.update({
+  id: '/mapa',
+  path: '/mapa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DiarioRoute = DiarioRouteImport.update({
@@ -51,16 +63,20 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/biblioteca': typeof BibliotecaRouteWithChildren
   '/diario': typeof DiarioRoute
+  '/mapa': typeof MapaRoute
   '/plano': typeof PlanoRoute
   '/sessao': typeof SessaoRoute
+  '/skills': typeof SkillsRoute
   '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/biblioteca': typeof BibliotecaRouteWithChildren
   '/diario': typeof DiarioRoute
+  '/mapa': typeof MapaRoute
   '/plano': typeof PlanoRoute
   '/sessao': typeof SessaoRoute
+  '/skills': typeof SkillsRoute
   '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
 }
 export interface FileRoutesById {
@@ -68,8 +84,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/biblioteca': typeof BibliotecaRouteWithChildren
   '/diario': typeof DiarioRoute
+  '/mapa': typeof MapaRoute
   '/plano': typeof PlanoRoute
   '/sessao': typeof SessaoRoute
+  '/skills': typeof SkillsRoute
   '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
 }
 export interface FileRouteTypes {
@@ -78,24 +96,30 @@ export interface FileRouteTypes {
     | '/'
     | '/biblioteca'
     | '/diario'
+    | '/mapa'
     | '/plano'
     | '/sessao'
+    | '/skills'
     | '/biblioteca/$nodeId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/biblioteca'
     | '/diario'
+    | '/mapa'
     | '/plano'
     | '/sessao'
+    | '/skills'
     | '/biblioteca/$nodeId'
   id:
     | '__root__'
     | '/'
     | '/biblioteca'
     | '/diario'
+    | '/mapa'
     | '/plano'
     | '/sessao'
+    | '/skills'
     | '/biblioteca/$nodeId'
   fileRoutesById: FileRoutesById
 }
@@ -103,12 +127,21 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BibliotecaRoute: typeof BibliotecaRouteWithChildren
   DiarioRoute: typeof DiarioRoute
+  MapaRoute: typeof MapaRoute
   PlanoRoute: typeof PlanoRoute
   SessaoRoute: typeof SessaoRoute
+  SkillsRoute: typeof SkillsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/skills': {
+      id: '/skills'
+      path: '/skills'
+      fullPath: '/skills'
+      preLoaderRoute: typeof SkillsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sessao': {
       id: '/sessao'
       path: '/sessao'
@@ -121,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/plano'
       fullPath: '/plano'
       preLoaderRoute: typeof PlanoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mapa': {
+      id: '/mapa'
+      path: '/mapa'
+      fullPath: '/mapa'
+      preLoaderRoute: typeof MapaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/diario': {
@@ -170,8 +210,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BibliotecaRoute: BibliotecaRouteWithChildren,
   DiarioRoute: DiarioRoute,
+  MapaRoute: MapaRoute,
   PlanoRoute: PlanoRoute,
   SessaoRoute: SessaoRoute,
+  SkillsRoute: SkillsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
