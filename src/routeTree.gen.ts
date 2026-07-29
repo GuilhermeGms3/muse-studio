@@ -12,14 +12,17 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SkillsRouteImport } from './routes/skills'
 import { Route as SessaoRouteImport } from './routes/sessao'
 import { Route as RepertorioRouteImport } from './routes/repertorio'
+import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as PlanoRouteImport } from './routes/plano'
 import { Route as OuvidoRouteImport } from './routes/ouvido'
+import { Route as MetronomoRouteImport } from './routes/metronomo'
 import { Route as MapaRouteImport } from './routes/mapa'
 import { Route as ExerciciosRouteImport } from './routes/exercicios'
 import { Route as DiarioRouteImport } from './routes/diario'
 import { Route as BibliotecaRouteImport } from './routes/biblioteca'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RepertorioSongIdRouteImport } from './routes/repertorio.$songId'
+import { Route as ProjetosProjectIdRouteImport } from './routes/projetos.$projectId'
 import { Route as BibliotecaNodeIdRouteImport } from './routes/biblioteca.$nodeId'
 
 const SkillsRoute = SkillsRouteImport.update({
@@ -37,6 +40,11 @@ const RepertorioRoute = RepertorioRouteImport.update({
   path: '/repertorio',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjetosRoute = ProjetosRouteImport.update({
+  id: '/projetos',
+  path: '/projetos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlanoRoute = PlanoRouteImport.update({
   id: '/plano',
   path: '/plano',
@@ -45,6 +53,11 @@ const PlanoRoute = PlanoRouteImport.update({
 const OuvidoRoute = OuvidoRouteImport.update({
   id: '/ouvido',
   path: '/ouvido',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MetronomoRoute = MetronomoRouteImport.update({
+  id: '/metronomo',
+  path: '/metronomo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MapaRoute = MapaRouteImport.update({
@@ -77,6 +90,11 @@ const RepertorioSongIdRoute = RepertorioSongIdRouteImport.update({
   path: '/$songId',
   getParentRoute: () => RepertorioRoute,
 } as any)
+const ProjetosProjectIdRoute = ProjetosProjectIdRouteImport.update({
+  id: '/$projectId',
+  path: '/$projectId',
+  getParentRoute: () => ProjetosRoute,
+} as any)
 const BibliotecaNodeIdRoute = BibliotecaNodeIdRouteImport.update({
   id: '/$nodeId',
   path: '/$nodeId',
@@ -89,12 +107,15 @@ export interface FileRoutesByFullPath {
   '/diario': typeof DiarioRoute
   '/exercicios': typeof ExerciciosRoute
   '/mapa': typeof MapaRoute
+  '/metronomo': typeof MetronomoRoute
   '/ouvido': typeof OuvidoRoute
   '/plano': typeof PlanoRoute
+  '/projetos': typeof ProjetosRouteWithChildren
   '/repertorio': typeof RepertorioRouteWithChildren
   '/sessao': typeof SessaoRoute
   '/skills': typeof SkillsRoute
   '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
+  '/projetos/$projectId': typeof ProjetosProjectIdRoute
   '/repertorio/$songId': typeof RepertorioSongIdRoute
 }
 export interface FileRoutesByTo {
@@ -103,12 +124,15 @@ export interface FileRoutesByTo {
   '/diario': typeof DiarioRoute
   '/exercicios': typeof ExerciciosRoute
   '/mapa': typeof MapaRoute
+  '/metronomo': typeof MetronomoRoute
   '/ouvido': typeof OuvidoRoute
   '/plano': typeof PlanoRoute
+  '/projetos': typeof ProjetosRouteWithChildren
   '/repertorio': typeof RepertorioRouteWithChildren
   '/sessao': typeof SessaoRoute
   '/skills': typeof SkillsRoute
   '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
+  '/projetos/$projectId': typeof ProjetosProjectIdRoute
   '/repertorio/$songId': typeof RepertorioSongIdRoute
 }
 export interface FileRoutesById {
@@ -118,12 +142,15 @@ export interface FileRoutesById {
   '/diario': typeof DiarioRoute
   '/exercicios': typeof ExerciciosRoute
   '/mapa': typeof MapaRoute
+  '/metronomo': typeof MetronomoRoute
   '/ouvido': typeof OuvidoRoute
   '/plano': typeof PlanoRoute
+  '/projetos': typeof ProjetosRouteWithChildren
   '/repertorio': typeof RepertorioRouteWithChildren
   '/sessao': typeof SessaoRoute
   '/skills': typeof SkillsRoute
   '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
+  '/projetos/$projectId': typeof ProjetosProjectIdRoute
   '/repertorio/$songId': typeof RepertorioSongIdRoute
 }
 export interface FileRouteTypes {
@@ -134,12 +161,15 @@ export interface FileRouteTypes {
     | '/diario'
     | '/exercicios'
     | '/mapa'
+    | '/metronomo'
     | '/ouvido'
     | '/plano'
+    | '/projetos'
     | '/repertorio'
     | '/sessao'
     | '/skills'
     | '/biblioteca/$nodeId'
+    | '/projetos/$projectId'
     | '/repertorio/$songId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -148,12 +178,15 @@ export interface FileRouteTypes {
     | '/diario'
     | '/exercicios'
     | '/mapa'
+    | '/metronomo'
     | '/ouvido'
     | '/plano'
+    | '/projetos'
     | '/repertorio'
     | '/sessao'
     | '/skills'
     | '/biblioteca/$nodeId'
+    | '/projetos/$projectId'
     | '/repertorio/$songId'
   id:
     | '__root__'
@@ -162,12 +195,15 @@ export interface FileRouteTypes {
     | '/diario'
     | '/exercicios'
     | '/mapa'
+    | '/metronomo'
     | '/ouvido'
     | '/plano'
+    | '/projetos'
     | '/repertorio'
     | '/sessao'
     | '/skills'
     | '/biblioteca/$nodeId'
+    | '/projetos/$projectId'
     | '/repertorio/$songId'
   fileRoutesById: FileRoutesById
 }
@@ -177,8 +213,10 @@ export interface RootRouteChildren {
   DiarioRoute: typeof DiarioRoute
   ExerciciosRoute: typeof ExerciciosRoute
   MapaRoute: typeof MapaRoute
+  MetronomoRoute: typeof MetronomoRoute
   OuvidoRoute: typeof OuvidoRoute
   PlanoRoute: typeof PlanoRoute
+  ProjetosRoute: typeof ProjetosRouteWithChildren
   RepertorioRoute: typeof RepertorioRouteWithChildren
   SessaoRoute: typeof SessaoRoute
   SkillsRoute: typeof SkillsRoute
@@ -207,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RepertorioRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projetos': {
+      id: '/projetos'
+      path: '/projetos'
+      fullPath: '/projetos'
+      preLoaderRoute: typeof ProjetosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/plano': {
       id: '/plano'
       path: '/plano'
@@ -219,6 +264,13 @@ declare module '@tanstack/react-router' {
       path: '/ouvido'
       fullPath: '/ouvido'
       preLoaderRoute: typeof OuvidoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/metronomo': {
+      id: '/metronomo'
+      path: '/metronomo'
+      fullPath: '/metronomo'
+      preLoaderRoute: typeof MetronomoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mapa': {
@@ -263,6 +315,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RepertorioSongIdRouteImport
       parentRoute: typeof RepertorioRoute
     }
+    '/projetos/$projectId': {
+      id: '/projetos/$projectId'
+      path: '/$projectId'
+      fullPath: '/projetos/$projectId'
+      preLoaderRoute: typeof ProjetosProjectIdRouteImport
+      parentRoute: typeof ProjetosRoute
+    }
     '/biblioteca/$nodeId': {
       id: '/biblioteca/$nodeId'
       path: '/$nodeId'
@@ -285,6 +344,18 @@ const BibliotecaRouteWithChildren = BibliotecaRoute._addFileChildren(
   BibliotecaRouteChildren,
 )
 
+interface ProjetosRouteChildren {
+  ProjetosProjectIdRoute: typeof ProjetosProjectIdRoute
+}
+
+const ProjetosRouteChildren: ProjetosRouteChildren = {
+  ProjetosProjectIdRoute: ProjetosProjectIdRoute,
+}
+
+const ProjetosRouteWithChildren = ProjetosRoute._addFileChildren(
+  ProjetosRouteChildren,
+)
+
 interface RepertorioRouteChildren {
   RepertorioSongIdRoute: typeof RepertorioSongIdRoute
 }
@@ -303,8 +374,10 @@ const rootRouteChildren: RootRouteChildren = {
   DiarioRoute: DiarioRoute,
   ExerciciosRoute: ExerciciosRoute,
   MapaRoute: MapaRoute,
+  MetronomoRoute: MetronomoRoute,
   OuvidoRoute: OuvidoRoute,
   PlanoRoute: PlanoRoute,
+  ProjetosRoute: ProjetosRouteWithChildren,
   RepertorioRoute: RepertorioRouteWithChildren,
   SessaoRoute: SessaoRoute,
   SkillsRoute: SkillsRoute,
