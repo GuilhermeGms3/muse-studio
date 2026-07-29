@@ -10,11 +10,30 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SessaoRouteImport } from './routes/sessao'
+import { Route as PlanoRouteImport } from './routes/plano'
+import { Route as DiarioRouteImport } from './routes/diario'
+import { Route as BibliotecaRouteImport } from './routes/biblioteca'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BibliotecaNodeIdRouteImport } from './routes/biblioteca.$nodeId'
 
 const SessaoRoute = SessaoRouteImport.update({
   id: '/sessao',
   path: '/sessao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanoRoute = PlanoRouteImport.update({
+  id: '/plano',
+  path: '/plano',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiarioRoute = DiarioRouteImport.update({
+  id: '/diario',
+  path: '/diario',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BibliotecaRoute = BibliotecaRouteImport.update({
+  id: '/biblioteca',
+  path: '/biblioteca',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -22,30 +41,69 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BibliotecaNodeIdRoute = BibliotecaNodeIdRouteImport.update({
+  id: '/$nodeId',
+  path: '/$nodeId',
+  getParentRoute: () => BibliotecaRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/biblioteca': typeof BibliotecaRouteWithChildren
+  '/diario': typeof DiarioRoute
+  '/plano': typeof PlanoRoute
   '/sessao': typeof SessaoRoute
+  '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/biblioteca': typeof BibliotecaRouteWithChildren
+  '/diario': typeof DiarioRoute
+  '/plano': typeof PlanoRoute
   '/sessao': typeof SessaoRoute
+  '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/biblioteca': typeof BibliotecaRouteWithChildren
+  '/diario': typeof DiarioRoute
+  '/plano': typeof PlanoRoute
   '/sessao': typeof SessaoRoute
+  '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sessao'
+  fullPaths:
+    | '/'
+    | '/biblioteca'
+    | '/diario'
+    | '/plano'
+    | '/sessao'
+    | '/biblioteca/$nodeId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sessao'
-  id: '__root__' | '/' | '/sessao'
+  to:
+    | '/'
+    | '/biblioteca'
+    | '/diario'
+    | '/plano'
+    | '/sessao'
+    | '/biblioteca/$nodeId'
+  id:
+    | '__root__'
+    | '/'
+    | '/biblioteca'
+    | '/diario'
+    | '/plano'
+    | '/sessao'
+    | '/biblioteca/$nodeId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BibliotecaRoute: typeof BibliotecaRouteWithChildren
+  DiarioRoute: typeof DiarioRoute
+  PlanoRoute: typeof PlanoRoute
   SessaoRoute: typeof SessaoRoute
 }
 
@@ -58,6 +116,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SessaoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/plano': {
+      id: '/plano'
+      path: '/plano'
+      fullPath: '/plano'
+      preLoaderRoute: typeof PlanoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diario': {
+      id: '/diario'
+      path: '/diario'
+      fullPath: '/diario'
+      preLoaderRoute: typeof DiarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/biblioteca': {
+      id: '/biblioteca'
+      path: '/biblioteca'
+      fullPath: '/biblioteca'
+      preLoaderRoute: typeof BibliotecaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -65,11 +144,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/biblioteca/$nodeId': {
+      id: '/biblioteca/$nodeId'
+      path: '/$nodeId'
+      fullPath: '/biblioteca/$nodeId'
+      preLoaderRoute: typeof BibliotecaNodeIdRouteImport
+      parentRoute: typeof BibliotecaRoute
+    }
   }
 }
 
+interface BibliotecaRouteChildren {
+  BibliotecaNodeIdRoute: typeof BibliotecaNodeIdRoute
+}
+
+const BibliotecaRouteChildren: BibliotecaRouteChildren = {
+  BibliotecaNodeIdRoute: BibliotecaNodeIdRoute,
+}
+
+const BibliotecaRouteWithChildren = BibliotecaRoute._addFileChildren(
+  BibliotecaRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BibliotecaRoute: BibliotecaRouteWithChildren,
+  DiarioRoute: DiarioRoute,
+  PlanoRoute: PlanoRoute,
   SessaoRoute: SessaoRoute,
 }
 export const routeTree = rootRouteImport

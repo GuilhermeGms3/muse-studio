@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { libraryById } from "@/data/library";
+import type { LibraryNode } from "@/data/types";
 import { skillById } from "@/data/skills";
 import { Fretboard, KeyboardDiagram } from "@/components/music/Diagrams";
 import { StateTag } from "@/components/workspace/Panel";
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/biblioteca/$nodeId")({
 });
 
 function LibraryNodePage() {
-  const { node } = Route.useLoaderData();
+  const { node } = Route.useLoaderData() as { node: LibraryNode };
 
   return (
     <article className="mx-auto max-w-3xl p-5">
