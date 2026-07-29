@@ -11,6 +11,9 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { WorkspaceProvider } from "../lib/workspace-store";
+import { WorkspaceShell } from "../components/workspace/WorkspaceShell";
+
 
 function NotFoundComponent() {
   return (
