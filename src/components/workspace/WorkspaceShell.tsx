@@ -1,28 +1,22 @@
 import { useEffect, type ReactNode } from "react";
-import { useRouterState } from "@tanstack/react-router";
-import {
-  PanelLeft,
-  PanelRight,
-  Search,
-  Play,
-  Pause,
-  Square,
-  CircleDot,
-} from "lucide-react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { PanelLeft, PanelRight, Search, Play, Pause, Square, CircleDot } from "lucide-react";
 import { WorkspaceSidebar } from "./WorkspaceSidebar";
 import { TabBar } from "./TabBar";
 import { Inspector } from "./Inspector";
 import { CommandPalette } from "./CommandPalette";
 import { useWorkspace, formatClock } from "@/lib/workspace-store";
 import { useMetronomeEngine } from "@/lib/use-metronome";
-import { instruments } from "@/data/skills";
+import { useInstruments } from "@/lib/music-api";
 import { titleForPath } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 export function WorkspaceShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
   const ws = useWorkspace();
+  const { data: instruments = [] } = useInstruments();
   const {
     instrument,
     setInstrument,
@@ -58,11 +52,31 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
       } else if (meta && e.key.toLowerCase() === "m") {
         e.preventDefault();
         setMetronome({ playing: !metronome.playing });
+      } else if (meta && e.shiftKey && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        navigate({ to: "/sessao" });
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [setPaletteOpen, toggleSidebar, toggleInspector, setMetronome, metronome.playing]);
+  }, [setPaletteOpen, toggleSidebar, toggleInspector, setMetronome, metronome.playing, navigate]);
+
+  const focusMode = pathname === "/sessao";
+
+  if (focusMode) {
+    return (
+      <div className="flex h-screen min-h-0 w-full flex-col bg-background text-foreground">
+        <header className="flex h-9 shrink-0 items-center gap-2 border-b border-border bg-rail px-2">
+          <div className="flex items-center gap-1.5 pr-2">
+            <CircleDot className="size-3.5 text-signal" />
+            <span className="text-xs font-semibold tracking-tight">MUSIC OS</span>
+          </div>
+          <span className="label-tech">Sessao em foco</span>
+        </header>
+        <div className="min-h-0 flex-1">{children}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen min-h-0 w-full flex-col bg-background text-foreground">
@@ -86,7 +100,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
               )}
               title={i.name}
             >
-              {i.short}
+              {i.shortName}
             </button>
           ))}
         </div>
@@ -110,7 +124,11 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
               className="num w-10 bg-transparent text-xs outline-none"
             />
             <button onClick={() => setMetronome({ playing: !metronome.playing })}>
-              {metronome.playing ? <Pause className="size-3 text-signal" /> : <Play className="size-3" />}
+              {metronome.playing ? (
+                <Pause className="size-3 text-signal" />
+              ) : (
+                <Play className="size-3" />
+              )}
             </button>
           </div>
           <button
@@ -133,7 +151,12 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
         <ResizablePanelGroup orientation="horizontal">
           {sidebarOpen && (
             <>
-              <ResizablePanel defaultSize="16%" minSize="11%" maxSize="26%" className="min-w-[150px]">
+              <ResizablePanel
+                defaultSize="16%"
+                minSize="11%"
+                maxSize="26%"
+                className="min-w-[150px]"
+              >
                 <WorkspaceSidebar />
               </ResizablePanel>
               <ResizableHandle className="w-px bg-border hover:bg-border-strong" />
@@ -150,7 +173,12 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
           {inspectorOpen && (
             <>
               <ResizableHandle className="w-px bg-border hover:bg-border-strong" />
-              <ResizablePanel defaultSize="21%" minSize="14%" maxSize="34%" className="min-w-[210px]">
+              <ResizablePanel
+                defaultSize="21%"
+                minSize="14%"
+                maxSize="34%"
+                className="min-w-[210px]"
+              >
                 <Inspector />
               </ResizablePanel>
             </>
@@ -161,17 +189,17 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
       {/* Status bar */}
       <footer className="flex h-6 shrink-0 items-center gap-3 border-t border-border bg-rail px-2 text-2xs text-muted-foreground">
         <span className="flex items-center gap-1">
-          {session.running ? (
-            <Play className="size-3 text-ok" />
-          ) : (
-            <Square className="size-3" />
-          )}
+          {session.running ? <Play className="size-3 text-ok" /> : <Square className="size-3" />}
           Sessão {session.running ? "ativa" : "parada"}
         </span>
         <span className="num">{formatClock(session.seconds)}</span>
-        <span className="num">{metronome.bpm} BPM · {metronome.beats}/4</span>
+        <span className="num">
+          {metronome.bpm} BPM · {metronome.beats}/4
+        </span>
         <span>{instruments.find((i) => i.id === instrument)?.name}</span>
-        <span className="ml-auto num opacity-70">⌘K busca · ⌘B sidebar · ⌘\ inspetor · ⌘M metrônomo</span>
+        <span className="ml-auto num opacity-70">
+          ⌘K busca · ⌘B sidebar · ⌘\ inspetor · ⌘M metrônomo
+        </span>
       </footer>
 
       <CommandPalette />

@@ -1,14 +1,24 @@
 import { useNavigate } from "@tanstack/react-router";
-import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { navFlat } from "@/lib/nav";
 import { useWorkspace } from "@/lib/workspace-store";
-import { library } from "@/data/library";
-import { songs, exercises } from "@/data/practice";
-import { skills } from "@/data/skills";
+import { useExercises, useLibrary, useSkills, useSongs } from "@/lib/music-api";
+import { Database } from "lucide-react";
 
 export function CommandPalette() {
-  const { paletteOpen, setPaletteOpen } = useWorkspace();
+  const { paletteOpen, setPaletteOpen, instrument } = useWorkspace();
   const navigate = useNavigate();
+  const library = useLibrary().data ?? [];
+  const songs = useSongs().data ?? [];
+  const exercises = useExercises(instrument).data ?? [];
+  const skills = useSkills(instrument).data ?? [];
 
   const go = (to: string) => {
     setPaletteOpen(false);
@@ -17,47 +27,72 @@ export function CommandPalette() {
 
   return (
     <CommandDialog open={paletteOpen} onOpenChange={setPaletteOpen}>
-      <CommandInput placeholder="Buscar módulos, conteúdos, músicas, exercícios, habilidades…" />
+      <CommandInput placeholder="Buscar módulos, conteúdos, músicas, exercícios e habilidades..." />
       <CommandList className="max-h-[420px]">
         <CommandEmpty>Nada encontrado.</CommandEmpty>
         <CommandGroup heading="Módulos">
-          {navFlat.map((i) => (
-            <CommandItem key={i.path} value={`modulo ${i.label}`} onSelect={() => go(i.path)}>
-              <i.icon className="size-3.5" />
-              {i.label}
-              <span className="ml-auto text-2xs text-muted-foreground">{i.hint}</span>
+          <CommandItem value="dados backup restaurar midi importar" onSelect={() => go("/dados")}>
+            <Database className="size-3.5" />
+            Dados e integrações
+            <span className="ml-auto text-2xs text-muted-foreground">Backup, arquivos e MIDI</span>
+          </CommandItem>
+          {navFlat.map((item) => (
+            <CommandItem
+              key={item.path}
+              value={`modulo ${item.label}`}
+              onSelect={() => go(item.path)}
+            >
+              <item.icon className="size-3.5" />
+              {item.label}
+              <span className="ml-auto text-2xs text-muted-foreground">{item.hint}</span>
             </CommandItem>
           ))}
         </CommandGroup>
         <CommandGroup heading="Biblioteca">
-          {library.map((n) => (
-            <CommandItem key={n.id} value={`lib ${n.title} ${n.category}`} onSelect={() => go(`/biblioteca/${n.id}`)}>
-              {n.title}
-              <span className="ml-auto text-2xs text-muted-foreground">{n.category}</span>
+          {library.map((item) => (
+            <CommandItem
+              key={item.id}
+              value={`lib ${item.friendlyTitle} ${item.technicalName} ${item.category}`}
+              onSelect={() => go(`/biblioteca/${item.id}`)}
+            >
+              {item.friendlyTitle}
+              <span className="ml-auto text-2xs text-muted-foreground">{item.technicalName}</span>
             </CommandItem>
           ))}
         </CommandGroup>
         <CommandGroup heading="Repertório">
-          {songs.map((s) => (
-            <CommandItem key={s.id} value={`song ${s.title} ${s.artist}`} onSelect={() => go(`/repertorio/${s.id}`)}>
-              {s.title}
-              <span className="ml-auto text-2xs text-muted-foreground">{s.artist}</span>
+          {songs.map((song) => (
+            <CommandItem
+              key={song.id}
+              value={`song ${song.title} ${song.artist}`}
+              onSelect={() => go(`/repertorio/${song.id}`)}
+            >
+              {song.title}
+              <span className="ml-auto text-2xs text-muted-foreground">{song.artist}</span>
             </CommandItem>
           ))}
         </CommandGroup>
         <CommandGroup heading="Habilidades">
-          {skills.slice(0, 40).map((s) => (
-            <CommandItem key={s.id} value={`skill ${s.name} ${s.domain}`} onSelect={() => go("/skills")}>
-              {s.name}
-              <span className="ml-auto text-2xs text-muted-foreground">{s.domain}</span>
+          {skills.map((skill) => (
+            <CommandItem
+              key={skill.id}
+              value={`skill ${skill.friendlyTitle} ${skill.technicalName} ${skill.domain}`}
+              onSelect={() => go("/skills")}
+            >
+              {skill.technicalName}
+              <span className="ml-auto text-2xs text-muted-foreground">{skill.domain}</span>
             </CommandItem>
           ))}
         </CommandGroup>
         <CommandGroup heading="Exercícios">
-          {exercises.map((e) => (
-            <CommandItem key={e.id} value={`ex ${e.name} ${e.technique}`} onSelect={() => go("/exercicios")}>
-              {e.name}
-              <span className="ml-auto text-2xs text-muted-foreground">{e.technique}</span>
+          {exercises.map((exercise) => (
+            <CommandItem
+              key={exercise.id}
+              value={`ex ${exercise.name} ${exercise.technique}`}
+              onSelect={() => go("/exercicios")}
+            >
+              {exercise.name}
+              <span className="ml-auto text-2xs text-muted-foreground">{exercise.technique}</span>
             </CommandItem>
           ))}
         </CommandGroup>

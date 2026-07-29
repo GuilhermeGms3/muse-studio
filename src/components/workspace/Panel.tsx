@@ -1,7 +1,17 @@
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
-import type { SkillState } from "@/data/types";
-import { skillStateLabel } from "@/data/skills";
+import type { SkillState } from "@/lib/music-api";
+
+export const skillStateLabel: Record<SkillState, string> = {
+  locked: "Bloqueada",
+  available: "Disponível",
+  learning: "Estudando",
+  practicing: "Praticando",
+  consistent: "Consistente",
+  mastered: "Dominada",
+  natural: "Natural",
+  expert: "Especialista",
+};
 
 export function Panel({
   title,

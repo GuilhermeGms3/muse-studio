@@ -1,24 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Play, ArrowRight } from "lucide-react";
-import { Panel, Row, Meter, StateTag, StateDot } from "@/components/workspace/Panel";
-import { Breadcrumb } from "@/components/workspace/TabBar";
-import { useWorkspace, formatClock } from "@/lib/workspace-store";
-import { todayPlan, journal, songs, projects } from "@/data/practice";
-import { skills, instruments } from "@/data/skills";
+import { ArrowRight, Flame, Play } from "lucide-react";
+import { Meter } from "@/components/workspace/Panel";
+import { QueryState } from "@/components/workspace/QueryState";
+import { useWorkspace } from "@/lib/workspace-store";
+import { useHomeData, usePreferences } from "@/lib/music-api";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Music OS — Estação de Trabalho Musical" },
+      { title: "Music OS - Inicio" },
       {
         name: "description",
         content:
-          "Painel inicial da estação: sessão de hoje, plano de estudos, última prática, música atual e próximos objetivos.",
+          "Inicio simples para decidir o que praticar agora, por quanto tempo e qual e o proximo passo.",
       },
-      { property: "og:title", content: "Music OS — Estação de Trabalho Musical" },
+      { property: "og:title", content: "Music OS - Inicio" },
       {
         property: "og:description",
-        content: "Sessão de hoje, plano de estudos, repertório e evolução em um só lugar.",
+        content: "Sessao de hoje, continuidade, objetivo atual e sequencia de estudo.",
       },
     ],
   }),
@@ -26,158 +25,142 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const { instrument, session, blocksDone, toggleBlock, startSession, skillOverrides } = useWorkspace();
-  const inst = instruments.find((i) => i.id === instrument)!;
-  const last = journal[0];
-  const current = songs.find((s) => s.instrument === instrument && s.status === "learning") ?? songs[0];
-  const nextSkill = skills.find((s) => (skillOverrides[s.id] ?? s.state) === "available");
-  const totalMin = todayPlan.reduce((a, b) => a + b.minutes, 0);
-  const doneMin = todayPlan.filter((b) => blocksDone[b.id]).reduce((a, b) => a + b.minutes, 0);
+  const { instrument, startSession } = useWorkspace();
+  const homeQuery = useHomeData(instrument);
+  const preferencesQuery = usePreferences();
+  if (preferencesQuery.data && !preferencesQuery.data.onboardingCompleted) {
+    return (
+      <main className="flex h-full items-center justify-center bg-panel p-5">
+        <section className="w-full max-w-xl border-y border-border py-8">
+          <span className="label-tech">Primeiro acesso</span>
+          <h1 className="mt-2 text-xl font-semibold">Vamos encontrar seu ponto de partida.</h1>
+          <p className="mt-2 max-w-md text-xs leading-relaxed text-muted-foreground">
+            Um diagnostico curto monta sua trilha e evita conteudos faceis ou avancados demais.
+          </p>
+          <Link
+            to="/diagnostico"
+            className="mt-5 inline-flex h-10 items-center gap-2 border border-signal bg-signal px-4 text-xs font-semibold text-signal-foreground"
+          >
+            Fazer diagnostico
+            <ArrowRight className="size-4" />
+          </Link>
+        </section>
+      </main>
+    );
+  }
+  if (!homeQuery.data) return <QueryState error={homeQuery.error} />;
+  const home = homeQuery.data;
+  const plan = home.todayPlan;
+  const totalMinutes = home.expectedMinutes;
+  const currentObjective = home.currentObjective;
+  const objectiveState = currentObjective.state;
+  const objectiveProgress = currentObjective.progress;
+  const streakDays = home.streakDays;
+  const firstBlock = plan[0];
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <Breadcrumb trail={["Estação", "Início"]} />
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-px overflow-auto bg-border xl:grid-cols-3">
-        <Panel
-          title="Sessão de hoje"
-          actions={
+    <main className="h-full overflow-auto bg-background">
+      <div className="mx-auto flex min-h-full w-full max-w-5xl flex-col gap-4 px-5 py-5">
+        <header className="shrink-0">
+          <h1 className="text-lg font-semibold tracking-tight">{home.greeting}</h1>
+          <p className="text-sm text-muted-foreground">{home.message}</p>
+        </header>
+
+        <section className="grid gap-px bg-border lg:grid-cols-[1fr_330px]">
+          <div className="bg-panel p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <span className="label-tech">Sessao de Hoje</span>
+                <p className="mt-1 text-sm text-muted-foreground">Tempo previsto.</p>
+              </div>
+              <span className="num text-2xl text-foreground">{totalMinutes} min</span>
+            </div>
+
             <Link
               to="/sessao"
-              onClick={() => startSession({ instrument })}
-              className="flex items-center gap-1 border border-border bg-surface px-1.5 py-0.5 text-2xs hover:border-signal hover:text-signal"
+              onClick={() =>
+                startSession({
+                  instrument,
+                  goal: firstBlock?.title ?? "Pratica guiada",
+                  seconds: 0,
+                  notes: "",
+                })
+              }
+              className="flex h-16 w-full items-center justify-center gap-3 border border-signal bg-signal px-4 text-base font-semibold text-signal-foreground hover:brightness-110"
             >
-              <Play className="size-3" /> Iniciar
+              <Play className="size-5 fill-current" />
+              Comecar sessao
             </Link>
-          }
-        >
-          <div className="num mb-2 text-3xl tracking-tight">{formatClock(session.seconds)}</div>
-          <Row label="Instrumento" value={inst.name} mono={false} />
-          <Row label="Objetivo" value={session.goal} mono={false} />
-          <Row label="Planejado" value={`${doneMin} / ${totalMin} min`} />
-          <div className="mt-2">
-            <Meter value={(doneMin / totalMin) * 100} tone="ok" />
           </div>
-        </Panel>
 
-        <Panel title="Plano do dia" className="xl:col-span-2" bodyClassName="p-0">
-          <table className="w-full text-xs">
-            <tbody>
-              {todayPlan.map((b) => (
-                <tr key={b.id} className="border-b border-border/60 last:border-0 hover:bg-surface/50">
-                  <td className="w-8 pl-2">
-                    <input
-                      type="checkbox"
-                      checked={!!blocksDone[b.id]}
-                      onChange={() => toggleBlock(b.id)}
-                      className="size-3 accent-[var(--color-ok)]"
-                    />
-                  </td>
-                  <td className="num w-12 text-muted-foreground">{b.minutes}m</td>
-                  <td className={blocksDone[b.id] ? "text-muted-foreground line-through" : ""}>{b.title}</td>
-                  <td className="label-tech w-24">{b.kind}</td>
-                  <td className="num w-40 pr-2 text-right text-2xs text-muted-foreground">{b.target ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Panel>
-
-        <Panel title="Última prática">
-          <Row label="Data" value={last.date} />
-          <Row label="Duração" value={last.duration} />
-          <p className="mt-2 text-xs">{last.worked.join(" · ")}</p>
-          <p className="mt-2 text-2xs text-muted-foreground">
-            <span className="text-warn">Dificuldades: </span>
-            {last.difficulties}
-          </p>
-          <p className="mt-1 text-2xs text-muted-foreground">
-            <span className="text-ok">Melhorias: </span>
-            {last.improvements}
-          </p>
-        </Panel>
-
-        <Panel title="Música atual">
-          <div className="flex items-baseline justify-between">
-            <Link to="/repertorio/$songId" params={{ songId: current.id }} className="text-sm hover:text-signal">
-              {current.title}
-            </Link>
-            <span className="num text-2xs text-muted-foreground">{current.bpm} BPM</span>
+          <div className="bg-panel p-4">
+            <span className="label-tech">Sequencia</span>
+            <div className="mt-3 flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center border border-border bg-surface">
+                <Flame className="size-5 text-signal" />
+              </div>
+              <div>
+                <p className="num text-2xl leading-none">{streakDays}</p>
+                <p className="text-xs text-muted-foreground">dias consecutivos estudando</p>
+              </div>
+            </div>
           </div>
-          <p className="text-2xs text-muted-foreground">
-            {current.artist} · {current.tuning} · {current.key}
-          </p>
-          <div className="mt-2 space-y-1">
-            {current.sections.map((s) => (
-              <div key={s.id}>
-                <div className="flex justify-between text-2xs">
-                  <span className="text-muted-foreground">{s.name}</span>
-                  <span className="num">{s.progress}%</span>
+        </section>
+
+        <section className="grid min-h-0 flex-1 gap-px bg-border lg:grid-cols-[1fr_330px]">
+          <div className="bg-panel p-4">
+            <span className="label-tech">Plano de Hoje</span>
+            <div className="mt-3 divide-y divide-border/70 border-y border-border/70">
+              {plan.map((block) => (
+                <div key={block.id} className="grid grid-cols-[70px_1fr] items-center py-2">
+                  <span className="num text-sm text-signal">{block.minutes} min</span>
+                  <span className="text-sm">{block.title}</span>
                 </div>
-                <Meter value={s.progress} tone={s.progress > 85 ? "ok" : "info"} />
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </Panel>
 
-        <Panel title="Próximo objetivo">
-          {nextSkill && (
-            <>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">{nextSkill.name}</span>
-                <StateTag state={skillOverrides[nextSkill.id] ?? nextSkill.state} />
+          <div className="grid gap-px bg-border">
+            <section className="bg-panel p-4">
+              <span className="label-tech">Continuar de onde parei</span>
+              <div className="mt-3">
+                <p className="text-sm">{home.continueFrom.title}</p>
+                <p className="text-xs text-muted-foreground">{home.continueFrom.subtitle}</p>
               </div>
-              <p className="mt-1 text-2xs text-muted-foreground">Domínio: {nextSkill.domain}</p>
-              <p className="mt-2 text-2xs text-muted-foreground">
-                Pré-requisitos concluídos: {nextSkill.requires.join(", ") || "—"}
-              </p>
               <Link
-                to="/skills"
-                className="mt-3 inline-flex items-center gap-1 border border-border bg-surface px-2 py-1 text-2xs hover:border-signal hover:text-signal"
+                to={
+                  home.continueFrom.type === "song" ? "/repertorio/$songId" : "/biblioteca/$nodeId"
+                }
+                params={
+                  home.continueFrom.type === "song"
+                    ? { songId: home.continueFrom.id }
+                    : { nodeId: home.continueFrom.id }
+                }
+                className="mt-3 inline-flex h-8 items-center gap-2 border border-border bg-surface px-3 text-xs hover:border-signal hover:text-signal"
               >
-                Abrir Skill Tree <ArrowRight className="size-3" />
+                Continuar
+                <ArrowRight className="size-3.5" />
               </Link>
-            </>
-          )}
-        </Panel>
+            </section>
 
-        <Panel title="Skill Tree — em foco" className="xl:col-span-2" bodyClassName="p-2">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 md:grid-cols-3">
-            {skills
-              .filter((s) => s.instruments.includes(instrument))
-              .slice(0, 18)
-              .map((s) => {
-                const state = skillOverrides[s.id] ?? s.state;
-                return (
-                  <Link
-                    key={s.id}
-                    to="/skills"
-                    className="flex items-center gap-2 border-b border-border/40 py-0.5 text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    <StateDot state={state} />
-                    <span className="truncate">{s.name}</span>
-                    <span className="num ml-auto text-2xs opacity-70">{s.hours}h</span>
-                  </Link>
-                );
-              })}
+            <section className="bg-panel p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <span className="label-tech">Objetivo Atual</span>
+                  <p className="mt-3 text-sm">{currentObjective.title}</p>
+                </div>
+                <span className="num text-lg">{objectiveProgress}%</span>
+              </div>
+              <div className="mt-3">
+                <Meter
+                  value={objectiveProgress}
+                  tone={objectiveState === "mastered" ? "ok" : "info"}
+                />
+              </div>
+            </section>
           </div>
-        </Panel>
-
-        <Panel title="Projetos recentes">
-          {projects.map((p) => (
-            <Link
-              key={p.id}
-              to="/projetos/$projectId"
-              params={{ projectId: p.id }}
-              className="flex items-center justify-between border-b border-border/50 py-1 text-xs last:border-0 hover:text-signal"
-            >
-              <span>{p.name}</span>
-              <span className="num text-2xs text-muted-foreground">
-                {p.key} · {p.bpm} BPM · {p.status}
-              </span>
-            </Link>
-          ))}
-        </Panel>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

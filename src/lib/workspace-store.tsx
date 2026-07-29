@@ -8,8 +8,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { InstrumentId, SkillState } from "@/data/types";
-import { quickNotes as seedNotes, todayPlan } from "@/data/practice";
+import type { InstrumentId } from "@/lib/music-api";
+
+const seedNotes = [
+  "Bends: conferir com a nota de referência",
+  "Estudar tríades antes de Little Wing",
+];
 
 export interface OpenTab {
   path: string;
@@ -38,16 +42,9 @@ interface WorkspaceValue {
   toggleInspector: () => void;
   paletteOpen: boolean;
   setPaletteOpen: (v: boolean) => void;
-  favorites: string[];
-  toggleFavorite: (path: string) => void;
-  history: string[];
   notes: string[];
   addNote: (text: string) => void;
   removeNote: (text: string) => void;
-  skillOverrides: Record<string, SkillState>;
-  setSkillState: (id: string, state: SkillState) => void;
-  blocksDone: Record<string, boolean>;
-  toggleBlock: (id: string) => void;
   session: SessionState;
   startSession: (partial?: Partial<SessionState>) => void;
   pauseSession: () => void;
@@ -63,25 +60,16 @@ const STORAGE_KEY = "music-os:workspace:v1";
 
 interface Persisted {
   instrument: InstrumentId;
-  favorites: string[];
   notes: string[];
-  skillOverrides: Record<string, SkillState>;
-  blocksDone: Record<string, boolean>;
 }
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [instrument, setInstrumentState] = useState<InstrumentId>("guitar");
   const [tabs, setTabs] = useState<OpenTab[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [inspectorOpen, setInspectorOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [favorites, setFavorites] = useState<string[]>(["/skills", "/repertorio"]);
-  const [history, setHistory] = useState<string[]>([]);
   const [notes, setNotes] = useState<string[]>(seedNotes);
-  const [skillOverrides, setSkillOverrides] = useState<Record<string, SkillState>>({});
-  const [blocksDone, setBlocksDone] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(todayPlan.filter((b) => b.done).map((b) => [b.id, true])),
-  );
   const [session, setSession] = useState<SessionState>({
     running: false,
     seconds: 0,
@@ -105,10 +93,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (raw) {
         const p = JSON.parse(raw) as Partial<Persisted>;
         if (p.instrument) setInstrumentState(p.instrument);
-        if (p.favorites) setFavorites(p.favorites);
         if (p.notes) setNotes(p.notes);
-        if (p.skillOverrides) setSkillOverrides(p.skillOverrides);
-        if (p.blocksDone) setBlocksDone(p.blocksDone);
       }
     } catch {
       /* ignore */
@@ -118,13 +103,13 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!hydrated.current) return;
-    const payload: Persisted = { instrument, favorites, notes, skillOverrides, blocksDone };
+    const payload: Persisted = { instrument, notes };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch {
       /* ignore */
     }
-  }, [instrument, favorites, notes, skillOverrides, blocksDone]);
+  }, [instrument, notes]);
 
   useEffect(() => {
     if (!session.running) return;
@@ -134,7 +119,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const openTab = useCallback((tab: OpenTab) => {
     setTabs((prev) => (prev.some((t) => t.path === tab.path) ? prev : [...prev, tab]));
-    setHistory((prev) => [tab.path, ...prev.filter((p) => p !== tab.path)].slice(0, 12));
   }, []);
 
   const value = useMemo<WorkspaceValue>(
@@ -150,17 +134,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       toggleInspector: () => setInspectorOpen((v) => !v),
       paletteOpen,
       setPaletteOpen,
-      favorites,
-      toggleFavorite: (path) =>
-        setFavorites((prev) => (prev.includes(path) ? prev.filter((p) => p !== path) : [...prev, path])),
-      history,
       notes,
       addNote: (text) => setNotes((prev) => [text, ...prev]),
       removeNote: (text) => setNotes((prev) => prev.filter((n) => n !== text)),
-      skillOverrides,
-      setSkillState: (id, state) => setSkillOverrides((prev) => ({ ...prev, [id]: state })),
-      blocksDone,
-      toggleBlock: (id) => setBlocksDone((prev) => ({ ...prev, [id]: !prev[id] })),
       session,
       startSession: (partial) => setSession((s) => ({ ...s, ...partial, running: true })),
       pauseSession: () => setSession((s) => ({ ...s, running: false })),
@@ -176,11 +152,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       sidebarOpen,
       inspectorOpen,
       paletteOpen,
-      favorites,
-      history,
       notes,
-      skillOverrides,
-      blocksDone,
       session,
       metronome,
     ],
