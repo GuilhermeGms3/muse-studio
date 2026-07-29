@@ -130,17 +130,17 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
 
       {/* Body */}
       <div className="min-h-0 flex-1">
-        <ResizablePanelGroup direction="horizontal">
+        <ResizablePanelGroup orientation="horizontal">
           {sidebarOpen && (
             <>
-              <ResizablePanel defaultSize={16} minSize={11} maxSize={26} className="min-w-[150px]">
+              <ResizablePanel defaultSize="16%" minSize="11%" maxSize="26%" className="min-w-[150px]">
                 <WorkspaceSidebar />
               </ResizablePanel>
               <ResizableHandle className="w-px bg-border hover:bg-border-strong" />
             </>
           )}
 
-          <ResizablePanel defaultSize={inspectorOpen ? 63 : 84}>
+          <ResizablePanel defaultSize={inspectorOpen ? "63%" : "84%"}>
             <div className="flex h-full min-h-0 flex-col bg-background">
               <TabBar />
               <div className="min-h-0 flex-1 overflow-auto">{children}</div>
@@ -150,7 +150,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
           {inspectorOpen && (
             <>
               <ResizableHandle className="w-px bg-border hover:bg-border-strong" />
-              <ResizablePanel defaultSize={21} minSize={14} maxSize={34} className="min-w-[210px]">
+              <ResizablePanel defaultSize="21%" minSize="14%" maxSize="34%" className="min-w-[210px]">
                 <Inspector />
               </ResizablePanel>
             </>
