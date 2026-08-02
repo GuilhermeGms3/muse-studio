@@ -5,6 +5,9 @@ spring:
     url: jdbc:h2:file:./data/music-os;AUTO_SERVER=TRUE
     username: music_os
     password:
+  sql:
+    init:
+      mode: always
   jpa:
     open-in-view: false
     hibernate:

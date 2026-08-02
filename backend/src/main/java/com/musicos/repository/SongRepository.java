@@ -8,5 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SongRepository extends JpaRepository<Song, String> {
     List<Song> findByInstrumentOrderByTitleAsc(InstrumentId instrument);
+    List<Song> findByInstrumentOrderByDifficultyAscTitleAsc(InstrumentId instrument);
     Optional<Song> findFirstByInstrumentAndStatusOrderByTitleAsc(InstrumentId instrument, String status);
 }

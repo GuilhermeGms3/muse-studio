@@ -54,15 +54,19 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void seedInstruments() {
-        if (instruments.count() > 0) return;
-        instruments.saveAll(List.of(
+        var seeded = List.of(
                 new Instrument(InstrumentId.GUITAR, "Guitarra", "GTR",
                         List.of("Técnica", "Repertório", "Improvisação")),
                 new Instrument(InstrumentId.ACOUSTIC, "Violão", "VLA",
                         List.of("Acordes", "Levadas", "Fingerstyle")),
                 new Instrument(InstrumentId.KEYS, "Teclado", "KEY",
-                        List.of("Leitura", "Independência", "Harmonia"))
-        ));
+                        List.of("Leitura", "Independência", "Harmonia")),
+                new Instrument(InstrumentId.DRUMS, "Bateria", "BAT",
+                        List.of("Grooves", "Coordenação", "Viradas"))
+        );
+        seeded.forEach(instrument -> {
+            if (!instruments.existsById(instrument.getId())) instruments.save(instrument);
+        });
     }
 
     private void seedPlan() {
@@ -138,6 +142,25 @@ public class DataInitializer implements ApplicationRunner {
         CurriculumCatalog.all().forEach(skill -> {
             if (!skills.existsById(skill.getId())) skills.save(skill);
         });
+        DrumCurriculumCatalog.all().forEach(skill -> {
+            skills.findById(skill.getId()).ifPresentOrElse(existing -> {
+                existing.refreshDefinition(skill.getFriendlyTitle(), skill.getTechnicalName(), skill.getDomain(),
+                        skill.getDescription(), skill.getTargetBpm(), skill.getPrerequisites(),
+                        skill.getNextSkills(), skill.getInstruments());
+                skills.save(existing);
+            }, () -> skills.save(skill));
+        });
+        List.of("pulse", "subdivisions", "meter", "syncopation", "groove", "dynamics",
+                "ear-rhythm", "rhythm-reading", "song-sections", "section-practice", "memorization",
+                "performance", "recording-review", "stage-readiness").forEach(skillId ->
+                skills.findById(skillId).ifPresent(skill -> {
+                    skill.attachInstrument(InstrumentId.DRUMS);
+                    skills.save(skill);
+                }));
+        skills.findById("rhythm").ifPresent(skill -> {
+            skill.detachInstrument(InstrumentId.DRUMS);
+            skills.save(skill);
+        });
     }
 
     private void seedLibrary() {
@@ -206,7 +229,41 @@ public class DataInitializer implements ApplicationRunner {
                         List.of(
                                 new SongSection("a", "Seção A", 88, 60, "Refinar pedal"),
                                 new SongSection("b", "Seção B", 70, 54, "Equilibrar as mãos")
-                        ))
+                        )),
+                new Song("seven-nation-army-drums", "Seven Nation Army", "The White Stripes", "Kit padrão",
+                        "Em", 124, InstrumentId.DRUMS, 1, "learning",
+                        "Manter caixa em 2 e 4 e voltar ao groove depois das viradas.", 15,
+                        List.of("Rock Beat", "Consistência", "Viradas curtas"), List.of("Colcheias"),
+                        List.of(
+                                new SongSection("verse", "Verso", 20, 100, "Comece sem viradas",
+                                        List.of("drum-rock-groove", "drum-groove-consistency"),
+                                        "HH|x-x-x-x-|\nSD|----o---|\nBD|o-------|", 4, 50),
+                                new SongSection("chorus", "Refrão", 5, 90, "Caixa firme em 2 e 4",
+                                        List.of("drum-kick-variations", "drum-dynamics"),
+                                        "HH|x-x-x-x-|\nSD|--o---o-|\nBD|o---o---|", 51, 78),
+                                new SongSection("fills", "Viradas", 0, 70, "Uma virada de um tempo",
+                                        List.of("drum-one-beat-fill", "drum-fill-timing"),
+                                        "T1|------oo|\nSD|----oo--|\nBD|o-------|", 79, 96)
+                        )),
+                new Song("back-in-black-drums", "Back In Black", "AC/DC", "Kit padrão",
+                        "E", 94, InstrumentId.DRUMS, 2, "backlog",
+                        "Ouvir os espaços e não preencher demais.", 0,
+                        List.of("Rock Beat", "Chimbal aberto", "Dinâmica"), List.of("Colcheias", "Pausas"),
+                        List.of(
+                                new SongSection("intro", "Intro", 0, 75, "Contar as pausas em voz alta",
+                                        List.of("drum-groove-consistency", "drum-open-hihat"),
+                                        "HH|x-x-x-O-|\nSD|--o---o-|\nBD|o---o---|", 0, 24),
+                                new SongSection("verse", "Verso", 0, 75, "Tocar atrás da guitarra",
+                                        List.of("drum-kick-variations", "drum-dynamics"), null, 25, 82)
+                        )),
+                new Song("billie-jean-drums", "Billie Jean", "Michael Jackson", "Kit padrão",
+                        "F#m", 117, InstrumentId.DRUMS, 2, "backlog",
+                        "O desafio é repetir o mesmo groove sem perder a precisão.", 0,
+                        List.of("Consistência", "Chimbal", "Bumbo"), List.of("Colcheias"),
+                        List.of(new SongSection("main-groove", "Groove principal", 0, 90,
+                                "Grave dois minutos sem parar",
+                                List.of("drum-groove-consistency", "drum-kick-variations"),
+                                "HH|x-x-x-x-|\nSD|--o---o-|\nBD|o--o----|", 0, 120)))
         );
         seeded.forEach(seed -> songs.findById(seed.getId()).ifPresentOrElse(existing -> {
             if (existing.getSections().isEmpty()
@@ -215,11 +272,13 @@ public class DataInitializer implements ApplicationRunner {
                 songs.save(existing);
             }
         }, () -> songs.save(seed)));
+        RepertoireCatalog.all().forEach(song -> {
+            if (!songs.existsById(song.getId())) songs.save(song);
+        });
     }
 
     private void seedExercises() {
-        if (exercises.count() > 0) return;
-        exercises.saveAll(List.of(
+        var seeded = List.of(
                 new Exercise("ex1", "Cromático 1-2-3-4", "Alternate Picking", InstrumentId.GUITAR,
                         150, 118, 8, "Quatro notas por corda, subindo e descendo.", "alternate-picking"),
                 new Exercise("ex2", "Troca de corda em tercinas", "Alternate Picking", InstrumentId.GUITAR,
@@ -231,8 +290,43 @@ public class DataInitializer implements ApplicationRunner {
                 new Exercise("ex15", "Fingerstyle p-i-m-a", "Fingerstyle", InstrumentId.ACOUSTIC,
                         100, 68, 8, "Padrão fixo com baixo alternado.", "fingerstyle"),
                 new Exercise("ex17", "Leitura à primeira vista", "Leitura", InstrumentId.KEYS,
-                        70, 52, 10, "Um trecho novo por dia sem parar.", "note-reading")
-        ));
+                        70, 52, 10, "Um trecho novo por dia sem parar.", "note-reading"),
+                new Exercise("drum-ex-kit", "Nomear e tocar cada peça", "Mapa da Bateria",
+                        InstrumentId.DRUMS, 70, 60, 5,
+                        "Ouça o nome, toque a peça certa e volte as baquetas à posição de descanso.",
+                        "drum-kit-map"),
+                new Exercise("drum-ex-rock", "Groove básico de rock", "Rock Beat",
+                        InstrumentId.DRUMS, 100, 70, 8,
+                        "Chimbal em colcheias, caixa em 2 e 4 e bumbo em 1 e 3.",
+                        "drum-rock-groove"),
+                new Exercise("drum-ex-groove", "Dois minutos sem perder o groove", "Consistência",
+                        InstrumentId.DRUMS, 105, 75, 8,
+                        "Toque sem viradas. Grave e observe se o último compasso está no mesmo BPM do primeiro.",
+                        "drum-groove-consistency"),
+                new Exercise("drum-ex-single", "Oito por mão e alternado", "Single Stroke",
+                        InstrumentId.DRUMS, 120, 70, 7,
+                        "Oito golpes com a direita, oito com a esquerda e dezesseis alternados.",
+                        "drum-single-stroke"),
+                new Exercise("drum-ex-kick", "Quatro posições de bumbo", "Variações de Bumbo",
+                        InstrumentId.DRUMS, 100, 70, 8,
+                        "Mantenha caixa e chimbal fixos e mova apenas um ataque do bumbo.",
+                        "drum-kick-variations"),
+                new Exercise("drum-ex-fill-one", "Virada de um tempo", "Viradas",
+                        InstrumentId.DRUMS, 90, 60, 8,
+                        "Três compassos de groove, uma virada no tempo 4 e retorno ao bumbo no tempo 1.",
+                        "drum-one-beat-fill"),
+                new Exercise("drum-ex-fill-return", "Voltar no primeiro tempo", "Entrada e Saída",
+                        InstrumentId.DRUMS, 100, 65, 8,
+                        "Toque a virada mais simples possível e avalie apenas se o retorno caiu no tempo 1.",
+                        "drum-fill-timing"),
+                new Exercise("drum-ex-playalong", "Uma música sem parar", "Play-along",
+                        InstrumentId.DRUMS, 110, 80, 12,
+                        "Simplifique as viradas, marque as seções e continue tocando mesmo depois de um erro.",
+                        "drum-play-along")
+        );
+        seeded.forEach(exercise -> {
+            if (!exercises.existsById(exercise.getId())) exercises.save(exercise);
+        });
     }
 
     private void enrichLearningContent() {

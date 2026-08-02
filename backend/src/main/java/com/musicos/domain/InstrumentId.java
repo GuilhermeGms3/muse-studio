@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum InstrumentId {
     GUITAR("guitar"),
     ACOUSTIC("acoustic"),
-    KEYS("keys");
+    KEYS("keys"),
+    DRUMS("drums");
 
     private final String value;
 

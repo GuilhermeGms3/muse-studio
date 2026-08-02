@@ -46,9 +46,9 @@ public final class ApiModels {
 
     public record SongSectionView(String id, String name, int progress, Integer bpm, String note,
                                   List<String> skillIds, String tablature,
-                                  Integer startSeconds, Integer endSeconds) {
+                                  Integer startSeconds, Integer endSeconds, String tonePreset) {
         public SongSectionView(String id, String name, int progress, Integer bpm, String note) {
-            this(id, name, progress, bpm, note, List.of(), null, null, null);
+            this(id, name, progress, bpm, note, List.of(), null, null, null, null);
         }
     }
 

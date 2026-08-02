@@ -146,7 +146,8 @@ public class LearningContentService {
     public SongView saveSong(SongRequest request) {
         var sections = list(request.sections()).stream().map(section ->
                 new SongSection(section.id(), section.name(), section.progress(), section.bpm(), section.note(),
-                        list(section.skillIds()), section.tablature(), section.startSeconds(), section.endSeconds()))
+                        list(section.skillIds()), section.tablature(), section.startSeconds(), section.endSeconds(),
+                        section.tonePreset()))
                 .toList();
         var entity = songs.findById(request.id()).orElseGet(() -> new Song(
                 request.id(), request.title(), request.artist(), value(request.tuning()), value(request.musicalKey()),

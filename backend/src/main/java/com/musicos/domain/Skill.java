@@ -170,6 +170,24 @@ public class Skill {
     public void attachExercise(String exerciseId) {
         if (!exercises.contains(exerciseId)) exercises.add(exerciseId);
     }
+    public void attachInstrument(InstrumentId instrumentId) {
+        if (!instruments.contains(instrumentId)) instruments.add(instrumentId);
+    }
+    public void detachInstrument(InstrumentId instrumentId) {
+        instruments.remove(instrumentId);
+    }
+    public void refreshDefinition(String friendlyTitle, String technicalName, String domain,
+                                  String description, Integer targetBpm, List<String> prerequisites,
+                                  List<String> nextSkills, List<InstrumentId> instruments) {
+        this.friendlyTitle = friendlyTitle;
+        this.technicalName = technicalName;
+        this.domain = domain;
+        this.description = description;
+        this.targetBpm = targetBpm;
+        this.prerequisites = new ArrayList<>(prerequisites);
+        this.nextSkills = new ArrayList<>(nextSkills);
+        instruments.forEach(this::attachInstrument);
+    }
     public String getId() { return id; }
     public String getFriendlyTitle() { return friendlyTitle; }
     public String getTechnicalName() { return technicalName; }

@@ -28,8 +28,8 @@ public class SongRecommendationService {
         var profile = preferences.findById("default").orElse(null);
         var tastes = profile == null ? "rock blues" : String.join(" ", profile.getFavoriteGenres()) + " "
                 + String.join(" ", profile.getFavoriteArtists());
-        var query = (tastes + " " + value(skill) + " " + value(instrument) + " guitar lesson play along").trim();
-        if (apiKey == null || apiKey.isBlank()) return fallback(query, skill);
+        var query = (tastes + " " + value(skill) + " " + lessonTerms(instrument)).trim();
+        if (apiKey == null || apiKey.isBlank()) return fallback(query, skill, instrument);
         try {
             var response = youtube.get().uri(builder -> builder.path("/youtube/v3/search")
                     .queryParam("part", "snippet")
@@ -42,7 +42,7 @@ public class SongRecommendationService {
                     .queryParam("q", query)
                     .queryParam("key", apiKey)
                     .build()).retrieve().body(JsonNode.class);
-            if (response == null) return fallback(query, skill);
+            if (response == null) return fallback(query, skill, instrument);
             var result = new ArrayList<SongRecommendationView>();
             for (var item : response.path("items")) {
                 var videoId = item.path("id").path("videoId").asText();
@@ -54,13 +54,13 @@ public class SongRecommendationService {
                         reason(skill), "https://www.youtube.com/watch?v=" + videoId));
                 if (result.size() == 6) break;
             }
-            return result.isEmpty() ? fallback(query, skill) : result;
+            return result.isEmpty() ? fallback(query, skill, instrument) : result;
         } catch (RuntimeException ignored) {
-            return fallback(query, skill);
+            return fallback(query, skill, instrument);
         }
     }
 
-    private List<SongRecommendationView> fallback(String query, String skill) {
+    private List<SongRecommendationView> fallback(String query, String skill, String instrument) {
         var url = "https://www.youtube.com/results?search_query="
                 + URLEncoder.encode(query, StandardCharsets.UTF_8);
         return List.of(
@@ -69,7 +69,8 @@ public class SongRecommendationService {
                 new SongRecommendationView("", "Encontrar backing tracks para praticar", "YouTube", "",
                         "Aplicar a habilidade sem depender da música original",
                         "https://www.youtube.com/results?search_query="
-                                + URLEncoder.encode(value(skill) + " backing track", StandardCharsets.UTF_8)));
+                                + URLEncoder.encode(value(skill) + " " + value(instrument)
+                                + " backing track play along", StandardCharsets.UTF_8)));
     }
 
     private String reason(String skill) {
@@ -80,5 +81,14 @@ public class SongRecommendationService {
 
     private String value(String value) {
         return value == null ? "" : value;
+    }
+
+    private String lessonTerms(String instrument) {
+        return switch (value(instrument).toLowerCase()) {
+            case "drums" -> "drum lesson drumless play along";
+            case "keys" -> "piano keyboard lesson play along";
+            case "acoustic" -> "acoustic guitar lesson play along";
+            default -> "guitar lesson play along";
+        };
     }
 }

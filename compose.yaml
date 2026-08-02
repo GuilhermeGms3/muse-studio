@@ -1,0 +1,56 @@
+name: music-os
+
+services:
+  api:
+    image: ghcr.io/guilhermegms3/music-os-api:latest
+    container_name: music-os-api
+    restart: unless-stopped
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      MUSIC_OS_API_PORT: 8081
+      MUSIC_OS_DATA_DIR: /app/data
+      SPRING_DATASOURCE_URL: jdbc:h2:file:/app/data/music-os
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "127.0.0.1:8081:8081"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8081/api/v1/instruments"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+
+  web:
+    image: ghcr.io/guilhermegms3/music-os-web:latest
+    container_name: music-os-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+
+  updater:
+    image: nickfedor/watchtower:latest
+    container_name: music-os-updater
+    restart: unless-stopped
+    environment:
+      DOCKER_CONFIG: /config
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_LABEL_ENABLE: "true"
+      WATCHTOWER_POLL_INTERVAL: "60"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${USERPROFILE}/.docker/music-os:/config:ro

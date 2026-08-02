@@ -54,6 +54,33 @@
   --color-sidebar-accent-foreground: var(--foreground);
   --color-sidebar-border: var(--border);
   --color-sidebar-ring: var(--ring);
+  --color-background-app: var(--background-app);
+  --color-background-rail: var(--background-rail);
+  --color-background-workspace: var(--background-workspace);
+  --color-surface-card: var(--surface-card);
+  --color-surface-panel: var(--surface-panel);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-selected: var(--surface-selected);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-focus: var(--border-focus);
+  --color-border-context: var(--border-context);
+  --color-border-danger: var(--border-danger);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+  --color-action-primary: var(--action-primary);
+  --color-action-primary-hover: var(--action-primary-hover);
+  --color-action-secondary: var(--action-secondary);
+  --color-context-home: var(--context-home);
+  --color-context-practice: var(--context-practice);
+  --color-context-learn: var(--context-learn);
+  --color-context-library: var(--context-library);
+  --color-context-compose: var(--context-compose);
+  --color-context-review: var(--context-review);
+  --color-context-tools: var(--context-tools);
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --text-2xs: 0.625rem;
@@ -61,6 +88,7 @@
 }
 
 :root {
+  color-scheme: dark;
   --radius: 3px;
 
   --background: oklch(0.17 0.006 264);
@@ -100,11 +128,94 @@
   --info: oklch(0.65 0.09 245);
   --locked: oklch(0.42 0.006 264);
 
+  --background-app: var(--background);
+  --background-rail: var(--rail);
+  --background-workspace: var(--background);
+  --surface-card: var(--surface);
+  --surface-panel: var(--panel);
+  --surface-elevated: var(--popover);
+  --surface-hover: var(--surface-2);
+  --surface-selected: var(--surface);
+  --border-subtle: var(--border);
+  --border-default: var(--border);
+  --border-focus: var(--ring);
+  --border-context: var(--signal);
+  --border-danger: var(--destructive);
+  --text-primary: var(--foreground);
+  --text-secondary: var(--panel-foreground);
+  --text-muted: var(--muted-foreground);
+  --text-inverse: var(--signal-foreground);
+  --action-primary: var(--primary);
+  --action-primary-hover: var(--info);
+  --action-secondary: var(--secondary);
+  --context-home: oklch(0.62 0.04 245);
+  --context-practice: oklch(0.63 0.1 158);
+  --context-learn: oklch(0.65 0.09 245);
+  --context-library: oklch(0.62 0.07 285);
+  --context-compose: oklch(0.72 0.13 80);
+  --context-review: oklch(0.65 0.08 195);
+  --context-tools: oklch(0.6 0.03 245);
+
   --chart-1: oklch(0.62 0.1 245);
   --chart-2: oklch(0.63 0.1 158);
   --chart-3: oklch(0.68 0.15 55);
   --chart-4: oklch(0.6 0.05 264);
   --chart-5: oklch(0.72 0.13 80);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --background: oklch(0.965 0.004 255);
+  --foreground: oklch(0.25 0.012 255);
+  --rail: oklch(0.94 0.006 255);
+  --panel: oklch(0.99 0.002 255);
+  --panel-foreground: oklch(0.25 0.012 255);
+  --surface: oklch(0.985 0.003 255);
+  --surface-2: oklch(0.92 0.008 255);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.25 0.012 255);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.012 255);
+  --primary: oklch(0.52 0.12 245);
+  --primary-foreground: oklch(0.99 0.002 255);
+  --secondary: oklch(0.91 0.008 255);
+  --secondary-foreground: oklch(0.27 0.012 255);
+  --muted: oklch(0.93 0.006 255);
+  --muted-foreground: oklch(0.47 0.015 255);
+  --accent: oklch(0.91 0.014 245);
+  --accent-foreground: oklch(0.25 0.025 245);
+  --destructive: oklch(0.52 0.17 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.84 0.01 255);
+  --border-strong: oklch(0.72 0.015 255);
+  --input: oklch(0.88 0.01 255);
+  --ring: oklch(0.5 0.12 245);
+  --signal: oklch(0.58 0.15 55);
+  --signal-foreground: oklch(0.99 0.005 60);
+  --ok: oklch(0.5 0.12 158);
+  --warn: oklch(0.58 0.14 80);
+  --info: oklch(0.52 0.12 245);
+  --locked: oklch(0.65 0.008 255);
+  --background-app: var(--background);
+  --background-rail: var(--rail);
+  --background-workspace: var(--background);
+  --surface-card: var(--surface);
+  --surface-panel: var(--panel);
+  --surface-elevated: var(--popover);
+  --surface-hover: var(--surface-2);
+  --surface-selected: var(--surface);
+  --border-subtle: var(--border);
+  --border-default: var(--border);
+  --border-focus: var(--ring);
+  --border-context: var(--signal);
+  --border-danger: var(--destructive);
+  --text-primary: var(--foreground);
+  --text-secondary: var(--panel-foreground);
+  --text-muted: var(--muted-foreground);
+  --text-inverse: var(--signal-foreground);
+  --action-primary: var(--primary);
+  --action-primary-hover: var(--info);
+  --action-secondary: var(--secondary);
 }
 
 @layer base {
@@ -126,6 +237,21 @@
     line-height: 1.45;
     -webkit-font-smoothing: antialiased;
     overflow: hidden;
+  }
+
+  :focus-visible {
+    outline-color: var(--color-border-focus);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 
   ::selection {

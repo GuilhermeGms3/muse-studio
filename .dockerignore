@@ -1,0 +1,14 @@
+.git
+.github
+.lovable
+.output
+.tanstack
+.wrangler
+node_modules
+backend/target
+backend/data
+data
+*.log
+.env
+.env.*
+!.env.example

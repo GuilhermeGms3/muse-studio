@@ -42,10 +42,15 @@ final class LearningCatalog {
 
     static boolean isEditorial(String skillId) {
         return List.of("pulse", "subdivisions", "notes", "major-scale", "open-chords",
-                "alternate-picking", "harmonic-field").contains(skillId);
+                "alternate-picking", "harmonic-field").contains(skillId)
+                || skillId.startsWith("drum-");
     }
 
     private static LibraryContent editorialLesson(Skill skill, String id) {
+        if (skill.getInstruments().contains(InstrumentId.DRUMS)
+                && skill.getId().startsWith("drum-")) {
+            return drumLesson(skill, id);
+        }
         return switch (skill.getId()) {
             case "pulse" -> editorial(skill, id,
                     "O pulso é a caminhada constante por baixo da música. Antes de tocar notas, você precisa conseguir senti-lo sem correr ou frear.",
@@ -170,6 +175,78 @@ final class LearningCatalog {
                             "Estudar todos os tons antes de entender C maior."));
             default -> null;
         };
+    }
+
+    private static LibraryContent drumLesson(Skill skill, String id) {
+        var pattern = drumPattern(skill.getId());
+        var focus = drumFocus(skill.getId());
+        var steps = List.of(
+                new LessonStep("1. Entenda a função",
+                        focus + " Antes de tocar rápido, conte em voz alta e aponte onde cada ataque acontece.",
+                        pattern.count(), pattern.count(), pattern.notation(), "C5,C5,C5,C5"),
+                new LessonStep("2. Monte em camadas",
+                        "Comece somente com a condução. Acrescente a caixa e, por último, o bumbo. "
+                                + "Se o pulso mudar, retire a última camada e recupere o controle.",
+                        "Condução → caixa → bumbo", pattern.count(), pattern.notation(), "C5,G4,C5,G4"),
+                new LessonStep("3. Toque como música",
+                        "Faça três compassos estáveis e use o quarto para aplicar a habilidade. "
+                                + "Volte ao primeiro tempo sem parar, grave e avalie apenas uma coisa por vez.",
+                        "3 compassos de groove + 1 compasso de aplicação",
+                        "4/4 | groove | groove | groove | aplicação |",
+                        pattern.notation(), "C4,C4,G4,C4"));
+        return editorial(skill, id,
+                skill.getDescription() + " Use o notebook como guia: leia uma etapa, toque por alguns minutos "
+                        + "e só então avance.",
+                List.of("Tocar o padrão devagar sem tensão.",
+                        "Manter a contagem enquanto mãos e pés trabalham.",
+                        "Voltar ao groove no primeiro tempo."),
+                List.of(pattern.count(), pattern.notation()),
+                steps, "rhythm", pattern.notation(), pattern.notation(),
+                List.of("Acelerar quando entra o bumbo ou a virada.",
+                        "Parar e recomeçar depois de qualquer erro.",
+                        "Tocar forte para compensar falta de controle."));
+    }
+
+    private static DrumPattern drumPattern(String skillId) {
+        return switch (skillId) {
+            case "drum-kit-map" -> new DrumPattern(
+                    "Chimbal, caixa, bumbo, tons e pratos",
+                    "HH|x-------|\nSD|--o-----|\nBD|----o---|\nT1|------o-|");
+            case "drum-single-stroke", "drum-double-stroke", "drum-paradiddle", "drum-accents",
+                    "drum-flams", "drum-rebound", "drum-grip" -> new DrumPattern(
+                    "1 e 2 e 3 e 4 e",
+                    "SD|R-L-R-L-R-L-R-L-|");
+            case "drum-one-beat-fill", "drum-tom-movement", "drum-sixteenth-fill",
+                    "drum-fill-timing", "drum-fill-orchestration" -> new DrumPattern(
+                    "1 e 2 e 3 e 4 e",
+                    "HH|x-x-x-x---------|\nSD|----o-----R-L---|\nT1|-------------R--|\nFT|--------------L-|");
+            case "drum-open-hihat", "drum-hi-hat-foot" -> new DrumPattern(
+                    "1 e 2 e 3 e 4 e",
+                    "HH|x-x-x-x-O-x-x-x-|\nSD|----o-------o---|\nBD|o-------o-------|");
+            case "drum-shuffle" -> new DrumPattern(
+                    "1 a 2 a 3 a 4 a",
+                    "HH|x--x--x--x--|\nSD|---o-----o--|\nBD|o-----o-----|");
+            default -> new DrumPattern(
+                    "1 e 2 e 3 e 4 e",
+                    "HH|x-x-x-x-x-x-x-x-|\nSD|----o-------o---|\nBD|o-------o-o-----|");
+        };
+    }
+
+    private static String drumFocus(String skillId) {
+        return switch (skillId) {
+            case "drum-one-beat-fill", "drum-tom-movement", "drum-sixteenth-fill",
+                    "drum-fill-timing", "drum-fill-orchestration" ->
+                    "A virada só funciona quando termina no lugar certo.";
+            case "drum-grip", "drum-rebound", "drum-single-stroke", "drum-double-stroke",
+                    "drum-paradiddle", "drum-accents", "drum-flams" ->
+                    "O movimento deve aproveitar o rebote, sem apertar a baqueta.";
+            case "drum-kit-map", "drum-setup" ->
+                    "Organize o kit para alcançar cada peça sem inclinar ou torcer o corpo.";
+            default -> "O groove nasce da relação entre condução, caixa e bumbo.";
+        };
+    }
+
+    private record DrumPattern(String count, String notation) {
     }
 
     private static LibraryContent editorial(Skill skill, String id, String summary,

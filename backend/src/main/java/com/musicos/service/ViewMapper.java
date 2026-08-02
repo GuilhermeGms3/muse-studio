@@ -49,7 +49,7 @@ final class ViewMapper {
                 value.getSections().stream().map(section -> new SongSectionView(section.getSectionId(),
                         section.getName(), section.getProgress(), section.getBpm(), section.getNote(),
                         section.getSkillIds(), section.getTablature(), section.getStartSeconds(),
-                        section.getEndSeconds())).toList());
+                        section.getEndSeconds(), section.getTonePreset())).toList());
     }
 
     static ExerciseView exercise(Exercise value) {

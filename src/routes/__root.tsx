@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
@@ -11,8 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { WorkspaceProvider } from "../lib/workspace-store";
-import { WorkspaceShell } from "../components/workspace/WorkspaceShell";
+import { AppProviders } from "../app/providers/AppProviders";
+import { WorkspaceShell } from "../workspace/shell/WorkspaceShell";
 
 function NotFoundComponent() {
   return (
@@ -79,7 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Music OS — Estação de Estudos Musicais" },
+      { title: "Muse Studio — Estação de Estudos Musicais" },
       {
         name: "description",
         content:
@@ -111,7 +111,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
@@ -132,13 +132,11 @@ function RootComponent() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <WorkspaceProvider>
-        <WorkspaceShell>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-        </WorkspaceShell>
-      </WorkspaceProvider>
-    </QueryClientProvider>
+    <AppProviders queryClient={queryClient}>
+      <WorkspaceShell>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+      </WorkspaceShell>
+    </AppProviders>
   );
 }

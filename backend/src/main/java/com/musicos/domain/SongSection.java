@@ -13,6 +13,7 @@ public class SongSection {
     private String tablature;
     private Integer startSeconds;
     private Integer endSeconds;
+    private String tonePreset;
 
     protected SongSection() {
     }
@@ -24,6 +25,12 @@ public class SongSection {
     public SongSection(String sectionId, String name, int progress, Integer bpm, String note,
                        java.util.List<String> skillIds, String tablature,
                        Integer startSeconds, Integer endSeconds) {
+        this(sectionId, name, progress, bpm, note, skillIds, tablature, startSeconds, endSeconds, null);
+    }
+
+    public SongSection(String sectionId, String name, int progress, Integer bpm, String note,
+                       java.util.List<String> skillIds, String tablature,
+                       Integer startSeconds, Integer endSeconds, String tonePreset) {
         this.sectionId = sectionId;
         this.name = name;
         this.progress = progress;
@@ -33,6 +40,7 @@ public class SongSection {
         this.tablature = tablature;
         this.startSeconds = startSeconds;
         this.endSeconds = endSeconds;
+        this.tonePreset = tonePreset;
     }
 
     public String getSectionId() { return sectionId; }
@@ -47,4 +55,5 @@ public class SongSection {
     public String getTablature() { return tablature; }
     public Integer getStartSeconds() { return startSeconds; }
     public Integer getEndSeconds() { return endSeconds; }
+    public String getTonePreset() { return tonePreset; }
 }

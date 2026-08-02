@@ -106,7 +106,8 @@ public class CatalogService {
     }
 
     public List<SongView> songs(InstrumentId instrument) {
-        var result = instrument == null ? songs.findAll() : songs.findByInstrumentOrderByTitleAsc(instrument);
+        var result = instrument == null ? songs.findAll()
+                : songs.findByInstrumentOrderByDifficultyAscTitleAsc(instrument);
         return result.stream().map(ViewMapper::song).toList();
     }
 

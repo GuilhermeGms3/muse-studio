@@ -73,8 +73,9 @@ public class DiagnosticService {
 
     private List<String> techniquePath(InstrumentId instrument) {
         return switch (instrument) {
-            case ACOUSTIC -> List.of("open-chords", "chord-changes", "strumming");
+            case ACOUSTIC -> List.of("open-chords", "chord-transitions", "strumming");
             case KEYS -> List.of("keyboard-map", "major-scale", "keys-independence");
+            case DRUMS -> List.of("drum-kit-map", "drum-rock-groove", "drum-one-beat-fill");
             default -> List.of("guitar-posture", "sync", "alternate-picking");
         };
     }
