@@ -217,7 +217,7 @@ final class CurriculumCatalog {
         result.add(node("production-demo", "Transformar a composição em uma demo clara", "Produção de Demo",
                 "Composição", ALL, ids("arrangement", "recording-review"), ids(), "forma-musical"));
 
-        return result;
+        return result.stream().map(CurriculumTaxonomy::apply).toList();
     }
 
     private static Skill node(String id, String friendly, String technical, String domain,

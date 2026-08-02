@@ -46,6 +46,7 @@ public class DataInitializer implements ApplicationRunner {
         seedSkills();
         seedLibrary();
         seedSongs();
+        linkSongsToSkills();
         seedExercises();
         enrichLearningContent();
         seedProjects();
@@ -136,17 +137,18 @@ public class DataInitializer implements ApplicationRunner {
                         List.of(InstrumentId.GUITAR, InstrumentId.KEYS), List.of("harmonic-field"),
                         List.of("modos-gregos"), List.of(), List.of(), List.of())
         );
-        core.forEach(skill -> {
-            if (!skills.existsById(skill.getId())) skills.save(skill);
-        });
-        CurriculumCatalog.all().forEach(skill -> {
-            if (!skills.existsById(skill.getId())) skills.save(skill);
-        });
-        DrumCurriculumCatalog.all().forEach(skill -> {
+        core.forEach(CurriculumTaxonomy::apply);
+        var curriculum = new java.util.ArrayList<Skill>();
+        curriculum.addAll(core);
+        curriculum.addAll(CurriculumCatalog.all());
+        curriculum.addAll(DrumCurriculumCatalog.all());
+        curriculum.addAll(InstrumentCurriculumCatalog.all());
+        curriculum.forEach(skill -> {
             skills.findById(skill.getId()).ifPresentOrElse(existing -> {
                 existing.refreshDefinition(skill.getFriendlyTitle(), skill.getTechnicalName(), skill.getDomain(),
                         skill.getDescription(), skill.getTargetBpm(), skill.getPrerequisites(),
-                        skill.getNextSkills(), skill.getInstruments());
+                        skill.getNextSkills(), skill.getInstruments(), skill.getStage(), skill.getKind(),
+                        skill.getTrack());
                 skills.save(existing);
             }, () -> skills.save(skill));
         });
@@ -357,23 +359,33 @@ public class DataInitializer implements ApplicationRunner {
             }, () -> library.save(generatedLesson));
             skill.attachContent(contentId);
 
-            var exerciseId = skill.getExercises().stream().filter(exercises::existsById).findFirst()
-                    .orElse("practice-" + skill.getId());
-            var generatedExercise = LearningCatalog.exercise(skill, exerciseId);
-            exercises.findById(exerciseId).ifPresentOrElse(existing -> {
-                if (existing.getInstructions().isEmpty()) {
-                    existing.update(existing.getName(), existing.getTechnique(), existing.getInstrument(),
-                            existing.getTargetBpm(), existing.getCurrentBpm(), existing.getMinutes(),
-                            existing.getDescription(), skill.getId(), generatedExercise.getDifficulty(),
+            LearningCatalog.activities(skill).forEach(generatedExercise -> {
+                exercises.findById(generatedExercise.getId()).ifPresentOrElse(existing -> {
+                    existing.update(generatedExercise.getName(), generatedExercise.getTechnique(),
+                            generatedExercise.getInstrument(), generatedExercise.getTargetBpm(),
+                            existing.getCurrentBpm(), generatedExercise.getMinutes(),
+                            generatedExercise.getDescription(), skill.getId(), generatedExercise.getDifficulty(),
                             generatedExercise.getMinBpm(), generatedExercise.getBpmStep(),
                             generatedExercise.getPassAccuracy(), generatedExercise.getPassRepetitions(),
                             generatedExercise.getInstructions(), generatedExercise.getVariations());
+                    existing.updateLearningResources(generatedExercise.getActivityType(), generatedExercise.getStage(),
+                            generatedExercise.getVideoQuery(), generatedExercise.getReadingTitle(),
+                            generatedExercise.getReadingUrl(), generatedExercise.getReadingNote(),
+                            generatedExercise.getPracticeSongQuery());
                     exercises.save(existing);
-                }
-            }, () -> exercises.save(generatedExercise));
-            skill.attachExercise(exerciseId);
+                }, () -> exercises.save(generatedExercise));
+                skill.attachExercise(generatedExercise.getId());
+            });
             skills.save(skill);
         });
+    }
+
+    private void linkSongsToSkills() {
+        songs.findAll().forEach(song -> song.getSections().forEach(section ->
+                section.getSkillIds().forEach(skillId -> skills.findById(skillId).ifPresent(skill -> {
+                    skill.attachSong(song.getId());
+                    skills.save(skill);
+                }))));
     }
 
     private void seedPreferences() {

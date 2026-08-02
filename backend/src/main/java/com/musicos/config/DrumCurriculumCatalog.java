@@ -113,7 +113,7 @@ final class DrumCurriculumCatalog {
                 ids("drum-song-form", "drum-dynamics", "drum-ride-coordination"),
                 ids("performance"), 100));
 
-        return result;
+        return result.stream().map(CurriculumTaxonomy::apply).toList();
     }
 
     private static Skill node(String id, String friendly, String technical, String domain,

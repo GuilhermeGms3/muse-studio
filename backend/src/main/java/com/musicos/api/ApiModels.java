@@ -1,7 +1,10 @@
 package com.musicos.api;
 
 import com.musicos.domain.InstrumentId;
+import com.musicos.domain.LearningStage;
+import com.musicos.domain.LearningTrack;
 import com.musicos.domain.SessionStatus;
+import com.musicos.domain.SkillKind;
 import com.musicos.domain.SkillState;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -21,6 +24,7 @@ public final class ApiModels {
                                    String skillId) {}
 
     public record SkillView(String id, String friendlyTitle, String technicalName, String domain,
+                            LearningStage stage, SkillKind kind, LearningTrack track,
                             String description, SkillState state, double hours, int accuracy,
                             Integer currentBpm, Integer targetBpm, List<InstrumentId> instruments,
                             List<String> prerequisites, List<String> contents, List<String> exercises,
@@ -55,7 +59,10 @@ public final class ApiModels {
     public record ExerciseView(String id, String name, String technique, InstrumentId instrument,
                                int targetBpm, int currentBpm, int minutes, String description, String skillId,
                                int difficulty, int minBpm, int bpmStep, int passAccuracy, int passRepetitions,
-                               List<String> instructions, List<ExerciseVariationView> variations) {}
+                               List<String> instructions, List<ExerciseVariationView> variations,
+                               String activityType, LearningStage stage, String videoQuery,
+                               String readingTitle, String readingUrl, String readingNote,
+                               String practiceSongQuery) {}
 
     public record ExerciseVariationView(String name, String instructions, int bpmOffset, int durationMinutes) {}
     public record ExerciseAttemptView(UUID id, String exerciseId, Instant practicedAt, int bpm, int accuracy,

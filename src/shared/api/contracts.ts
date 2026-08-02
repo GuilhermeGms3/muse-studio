@@ -1,4 +1,23 @@
 export type InstrumentId = "guitar" | "acoustic" | "keys" | "drums";
+export type LearningStage =
+  | "first_steps"
+  | "beginner"
+  | "beginner_advanced"
+  | "early_intermediate"
+  | "intermediate"
+  | "upper_intermediate"
+  | "advanced";
+export type SkillKind = "knowledge" | "ability";
+export type LearningTrack =
+  | "technique"
+  | "rhythm"
+  | "ear"
+  | "reading"
+  | "harmony"
+  | "repertoire"
+  | "improvisation"
+  | "creation"
+  | "performance";
 export type SkillState =
   | "locked"
   | "available"
@@ -34,6 +53,9 @@ export interface Skill {
   friendlyTitle: string;
   technicalName: string;
   domain: string;
+  stage: LearningStage;
+  kind: SkillKind;
+  track: LearningTrack;
   description: string;
   state: SkillState;
   hours: number;
@@ -168,6 +190,22 @@ export interface Exercise {
     bpmOffset: number;
     durationMinutes: number;
   }[];
+  activityType:
+    | "understand"
+    | "imitate"
+    | "slow"
+    | "context"
+    | "song"
+    | "recall"
+    | "record"
+    | "transfer"
+    | "execute";
+  stage: LearningStage;
+  videoQuery?: string | null;
+  readingTitle?: string | null;
+  readingUrl?: string | null;
+  readingNote?: string | null;
+  practiceSongQuery?: string | null;
 }
 
 export interface ExerciseAttempt {

@@ -120,7 +120,14 @@ public class CatalogService {
         var result = technique == null || technique.isBlank()
                 ? exercises.findByInstrumentOrderByTechniqueAscNameAsc(instrument)
                 : exercises.findByInstrumentAndTechniqueIgnoreCaseOrderByNameAsc(instrument, technique);
-        return result.stream().map(ViewMapper::exercise).toList();
+        var skillsWithEditorialActivities = result.stream()
+                .filter(exercise -> exercise.getId().startsWith("activity-"))
+                .map(com.musicos.domain.Exercise::getSkillId)
+                .collect(java.util.stream.Collectors.toSet());
+        return result.stream()
+                .filter(exercise -> !exercise.getId().startsWith("practice-")
+                        || !skillsWithEditorialActivities.contains(exercise.getSkillId()))
+                .map(ViewMapper::exercise).toList();
     }
 
     public List<ProjectView> projects() {

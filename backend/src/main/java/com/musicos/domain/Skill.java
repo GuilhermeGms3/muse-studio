@@ -24,6 +24,15 @@ public class Skill {
     private String technicalName;
     private String domain;
 
+    @Enumerated(EnumType.STRING)
+    private LearningStage stage = LearningStage.INTERMEDIATE;
+
+    @Enumerated(EnumType.STRING)
+    private SkillKind kind = SkillKind.ABILITY;
+
+    @Enumerated(EnumType.STRING)
+    private LearningTrack track = LearningTrack.TECHNIQUE;
+
     @Column(length = 3000)
     private String description;
 
@@ -170,6 +179,9 @@ public class Skill {
     public void attachExercise(String exerciseId) {
         if (!exercises.contains(exerciseId)) exercises.add(exerciseId);
     }
+    public void attachSong(String songId) {
+        if (!songs.contains(songId)) songs.add(songId);
+    }
     public void attachInstrument(InstrumentId instrumentId) {
         if (!instruments.contains(instrumentId)) instruments.add(instrumentId);
     }
@@ -178,7 +190,8 @@ public class Skill {
     }
     public void refreshDefinition(String friendlyTitle, String technicalName, String domain,
                                   String description, Integer targetBpm, List<String> prerequisites,
-                                  List<String> nextSkills, List<InstrumentId> instruments) {
+                                  List<String> nextSkills, List<InstrumentId> instruments,
+                                  LearningStage stage, SkillKind kind, LearningTrack track) {
         this.friendlyTitle = friendlyTitle;
         this.technicalName = technicalName;
         this.domain = domain;
@@ -186,12 +199,23 @@ public class Skill {
         this.targetBpm = targetBpm;
         this.prerequisites = new ArrayList<>(prerequisites);
         this.nextSkills = new ArrayList<>(nextSkills);
+        this.stage = stage;
+        this.kind = kind;
+        this.track = track;
         instruments.forEach(this::attachInstrument);
+    }
+    public void configureCurriculum(LearningStage stage, SkillKind kind, LearningTrack track) {
+        this.stage = stage;
+        this.kind = kind;
+        this.track = track;
     }
     public String getId() { return id; }
     public String getFriendlyTitle() { return friendlyTitle; }
     public String getTechnicalName() { return technicalName; }
     public String getDomain() { return domain; }
+    public LearningStage getStage() { return stage == null ? LearningStage.INTERMEDIATE : stage; }
+    public SkillKind getKind() { return kind == null ? SkillKind.ABILITY : kind; }
+    public LearningTrack getTrack() { return track == null ? LearningTrack.TECHNIQUE : track; }
     public String getDescription() { return description; }
     public SkillState getState() { return state; }
     public double getHours() { return hours; }

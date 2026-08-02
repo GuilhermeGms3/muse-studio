@@ -75,6 +75,17 @@ public class SongRecommendationService {
         }
     }
 
+    public List<SongRecommendationView> recommendExercise(String topic, InstrumentId instrument) {
+        var query = value(topic).trim() + " " + instrumentLabel(instrument) + " aula tutorial";
+        if (apiKey == null || apiKey.isBlank()) return exerciseFallback(query, topic);
+        try {
+            var result = searchYoutube(query, 5, "Referência para a atividade");
+            return result.isEmpty() ? exerciseFallback(query, topic) : result;
+        } catch (RuntimeException ignored) {
+            return exerciseFallback(query, topic);
+        }
+    }
+
     public PracticeSongView searchPracticeSong(String rawQuery) {
         return searchPracticeSong(rawQuery, null);
     }
@@ -335,6 +346,11 @@ public class SongRecommendationService {
                         "https://www.youtube.com/results?search_query="
                                 + URLEncoder.encode(value(skill) + " " + value(instrument)
                                 + " backing track play along", StandardCharsets.UTF_8)));
+    }
+
+    private List<SongRecommendationView> exerciseFallback(String query, String topic) {
+        return List.of(new SongRecommendationView("", "Buscar aula sobre " + value(topic), "YouTube", "",
+                "Referência para observar antes de praticar", youtubeSearch(query)));
     }
 
     private String reason(String skill) {

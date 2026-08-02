@@ -254,29 +254,125 @@ final class LearningCatalog {
                                             List<LessonStep> steps, String diagramType, String diagramData,
                                             String tablature, List<String> mistakes) {
         return new LibraryContent(id, skill.getFriendlyTitle(), skill.getTechnicalName(), skill.getDomain(),
-                summary, skill.getId(), skill.getPrerequisites().isEmpty() ? "beginner" : "intermediate",
+                summary, skill.getId(), skill.getStage().value(),
                 16, diagramType, diagramData, tablature, objectives,
                 steps.stream().map(LessonStep::getExplanation).toList(), examples, mistakes, steps,
                 skill.getNextSkills().stream().map(next -> "lesson-" + next).toList());
     }
 
     static Exercise exercise(Skill skill, String id) {
+        return activity(skill, skill.getInstruments().getFirst(), id, "execute", "Executar", 8);
+    }
+
+    static List<Exercise> activities(Skill skill) {
+        var definitions = skill.getStage().order() <= 2
+                ? List.of(new ActivityDefinition("understand", "Compreender", 5),
+                new ActivityDefinition("imitate", "Imitar", 5),
+                new ActivityDefinition("slow", "Executar lentamente", 7),
+                new ActivityDefinition("context", "Aplicar em contexto", 8),
+                new ActivityDefinition("song", "Aplicar em música", 10),
+                new ActivityDefinition("record", "Gravar e avaliar", 8))
+                : List.of(new ActivityDefinition("imitate", "Imitar uma referência", 6),
+                new ActivityDefinition("context", "Aplicar em contexto", 9),
+                new ActivityDefinition("song", "Aplicar em música", 12),
+                new ActivityDefinition("recall", "Recordar sem ajuda", 8),
+                new ActivityDefinition("record", "Gravar e avaliar", 10),
+                new ActivityDefinition("transfer", "Transferir e criar", 12));
+        var primary = skill.getInstruments().getFirst();
+        return skill.getInstruments().stream().flatMap(instrument -> definitions.stream().map(definition -> {
+            var instrumentSuffix = instrument == primary ? "" : "-" + instrument.value();
+            return activity(skill, instrument,
+                    "activity-" + skill.getId() + instrumentSuffix + "-" + definition.type(), definition.type(),
+                    definition.label(), definition.minutes());
+        })).toList();
+    }
+
+    private static Exercise activity(Skill skill, InstrumentId instrument, String id, String type,
+                                     String label, int minutes) {
         var target = skill.getTargetBpm() == null ? targetFor(skill) : skill.getTargetBpm();
         var current = skill.getCurrentBpm() == null ? Math.max(40, target - 30) : skill.getCurrentBpm();
-        var instrument = skill.getInstruments().get(0);
-        return new Exercise(id, "Aplicação guiada: " + skill.getTechnicalName(), skill.getTechnicalName(),
-                instrument, target, current, 8,
-                "Três ciclos curtos: compreender, executar e aplicar musicalmente.", skill.getId(),
-                difficulty(skill), Math.max(30, current - 20), 4, 85, 3,
-                List.of(
-                        "Faça uma tentativa lenta sem metrônomo para observar o movimento.",
-                        "Ligue o metrônomo no BPM atual e complete três repetições limpas.",
-                        "Grave a última repetição e anote o principal ajuste."),
-                List.of(
-                        new ExerciseVariation("Controle", "Reduza 20 BPM e elimine tensão e ruídos.", -20, 4),
+        var source = sourceFor(instrument, skill);
+        return new Exercise(id, label + ": " + skill.getTechnicalName(), skill.getTechnicalName(),
+                instrument, target, current, minutes, activityDescription(type, skill), skill.getId(),
+                difficulty(skill), Math.max(30, current - 20), 4,
+                Math.min(90, 75 + skill.getStage().order() * 3),
+                3, instructions(type, skill),
+                List.of(new ExerciseVariation("Controle", "Reduza 20 BPM e elimine tensão e ruídos.", -20, 4),
                         new ExerciseVariation("Aplicação", "Use a ideia em uma frase ou progressão musical.", 0, 5),
-                        new ExerciseVariation("Desafio", "Suba um passo mantendo a mesma precisão.", 4, 3)));
+                        new ExerciseVariation("Desafio", "Mude tonalidade ou contexto sem perder o controle.", 4, 4)))
+                .withLearningResources(type, skill.getStage(),
+                        skill.getTechnicalName() + " " + instrumentLabel(instrument) + " aula tutorial",
+                        source.title(), source.url(), source.note(),
+                        skill.getTechnicalName() + " " + instrumentLabel(instrument) + " play along");
     }
+
+    private static String activityDescription(String type, Skill skill) {
+        return switch (type) {
+            case "understand" -> "Entenda o som, o movimento e a função de " + skill.getTechnicalName() + ".";
+            case "imitate" -> "Observe uma referência curta e reproduza sem acrescentar dificuldade.";
+            case "slow" -> "Construa controle em velocidade confortável antes de buscar fluência.";
+            case "context" -> "Use a habilidade em uma frase, groove ou progressão curta.";
+            case "song" -> "Leve a habilidade para um trecho de repertório real e mantenha o pulso.";
+            case "recall" -> "Execute sem consultar diagramas, cifras ou instruções.";
+            case "record" -> "Grave uma tomada, escute e escolha um ajuste mensurável.";
+            case "transfer" -> "Transfira a habilidade para outra tonalidade, textura ou arranjo.";
+            default -> "Pratique em ciclos curtos de observação, execução e aplicação musical.";
+        };
+    }
+
+    private static List<String> instructions(String type, Skill skill) {
+        return switch (type) {
+            case "understand" -> List.of("Leia a explicação e identifique o objetivo musical.",
+                    "Assista à referência procurando um único detalhe.", "Explique com suas palavras antes de tocar.");
+            case "imitate" -> List.of("Escolha dois compassos da referência.",
+                    "Cante ou marque o ritmo antes de tocar.", "Imite três vezes sem acelerar.");
+            case "slow" -> List.of("Ajuste o metrônomo no BPM mínimo.",
+                    "Execute movimentos pequenos e relaxados.", "Suba somente após três repetições limpas.");
+            case "context" -> List.of("Escolha uma frase, groove ou progressão de dois compassos.",
+                    "Aplique " + skill.getTechnicalName() + " mantendo o pulso.", "Repita começando em pontos diferentes.");
+            case "song" -> List.of("Escolha uma música que use esta habilidade.",
+                    "Isole uma seção curta e pratique com o playback.", "Toque a seção inteira sem interromper.");
+            case "recall" -> List.of("Feche a aula, cifra ou diagrama.",
+                    "Reconstrua a ideia de memória.", "Confira a referência e corrija apenas o que divergiu.");
+            case "record" -> List.of("Grave uma tomada completa sem reiniciar.",
+                    "Avalie pulso, clareza e tensão.", "Registre um ajuste e grave uma segunda tomada.");
+            case "transfer" -> List.of("Mude tonalidade, região ou orquestração.",
+                    "Crie uma variação mantendo a função musical.", "Grave o resultado dentro de uma forma completa.");
+            default -> List.of("Observe o movimento.", "Pratique com metrônomo.", "Aplique musicalmente.");
+        };
+    }
+
+    private static Source sourceFor(InstrumentId instrument, Skill skill) {
+        if (skill.getKind() == SkillKind.KNOWLEDGE || skill.getTrack() == LearningTrack.HARMONY
+                || skill.getTrack() == LearningTrack.EAR || skill.getTrack() == LearningTrack.READING) {
+            return new Source("Open Music Theory", "https://viva.pressbooks.pub/openmusictheory/",
+                    "Livro aberto para consultar o conceito e ouvir exemplos antes da prática.");
+        }
+        return switch (instrument) {
+            case GUITAR -> new Source("Método completo para guitarra, Op. 59",
+                    "https://imslp.org/wiki/M%C3%A9thode_compl%C3%A8te_pour_la_guitare%2C_Op.59_%28Carcassi%2C_Matteo%29",
+                    "Método em domínio público para técnica e leitura relacionadas.");
+            case ACOUSTIC -> new Source("Wikibooks Guitar", "https://en.wikibooks.org/wiki/Guitar",
+                    "Leitura aberta de apoio sobre técnica e acompanhamento.");
+            case KEYS -> new Source("Piano Basics",
+                    "https://openbooks.library.baylor.edu/pianobasics/front-matter/preface/",
+                    "Livro didático aberto com fundamentos, leitura e prática progressiva.");
+            case DRUMS -> new Source("Learn to Play Drums", "https://en.wikibooks.org/wiki/Learn_to_Play_Drums",
+                    "Guia aberto para revisar montagem, técnica, leitura e grooves.");
+        };
+    }
+
+    private static String instrumentLabel(InstrumentId instrument) {
+        return switch (instrument) {
+            case GUITAR -> "guitarra";
+            case ACOUSTIC -> "violão";
+            case KEYS -> "teclado";
+            case DRUMS -> "bateria";
+        };
+    }
+
+    private record ActivityDefinition(String type, String label, int minutes) {}
+    private record Source(String title, String url, String note) {}
 
     private static List<String> examples(Skill skill) {
         return switch (skill.getDomain()) {
@@ -310,12 +406,11 @@ final class LearningCatalog {
     }
 
     private static String level(Skill skill) {
-        return skill.getPrerequisites().isEmpty() ? "beginner"
-                : skill.getPrerequisites().size() >= 2 ? "advanced" : "intermediate";
+        return skill.getStage().value();
     }
 
     private static int difficulty(Skill skill) {
-        return "advanced".equals(level(skill)) ? 4 : "intermediate".equals(level(skill)) ? 3 : 1;
+        return Math.min(5, 1 + skill.getStage().order());
     }
 
     private static int targetFor(Skill skill) {

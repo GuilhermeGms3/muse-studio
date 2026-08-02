@@ -10,6 +10,8 @@ import {
   useSkills,
   useSongs,
   type Skill,
+  type SkillKind,
+  type LearningTrack,
   type SkillState,
 } from "@/lib/music-api";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
@@ -19,7 +21,10 @@ const stateText: Record<string, string> = {
   available: "Disponível",
   learning: "Estudando",
   practicing: "Praticando",
+  consistent: "Consistente",
   mastered: "Dominada",
+  natural: "Natural",
+  expert: "Especialista",
 };
 
 const stateFill: Record<string, string> = {
@@ -29,6 +34,30 @@ const stateFill: Record<string, string> = {
   practicing: "var(--color-signal)",
   mastered: "var(--color-ok)",
 };
+
+const stages = [
+  ["first_steps", "Primeiros passos", "Oriento-me no instrumento e produzo som controlado."],
+  ["beginner", "Iniciante", "Executo padrões básicos e minhas primeiras músicas."],
+  ["beginner_advanced", "Iniciante avançado", "Toco cinco músicas completas mantendo o tempo."],
+  ["early_intermediate", "Intermediário inicial", "Aplico teoria e técnica de forma consciente."],
+  ["intermediate", "Intermediário", "Controlo vocabulário, leitura, ouvido e improvisação."],
+  ["upper_intermediate", "Intermediário avançado", "Integro, interpreto, transcrevo e performo."],
+  ["advanced", "Avançado", "Crio arranjos e adapto linguagem com alto controle."],
+] as const;
+
+const trackText: Record<LearningTrack, string> = {
+  technique: "Técnica",
+  rhythm: "Ritmo",
+  ear: "Ouvido",
+  reading: "Leitura",
+  harmony: "Harmonia",
+  repertoire: "Repertório",
+  improvisation: "Improvisação",
+  creation: "Criação",
+  performance: "Performance",
+};
+
+const kindText: Record<SkillKind, string> = { knowledge: "Conhecimento", ability: "Habilidade" };
 
 function simpleState(state: SkillState) {
   if (["consistent", "mastered", "natural", "expert"].includes(state)) return "mastered";
@@ -43,21 +72,22 @@ export function SkillsPage() {
   const exercisesQuery = useExercises(instrument);
   const songsQuery = useSongs();
   const [selectedId, setSelectedId] = useState("bends");
-  const [selectedDomain, setSelectedDomain] = useState("");
+  const [selectedTrack, setSelectedTrack] = useState<LearningTrack>("technique");
+  const [selectedKind, setSelectedKind] = useState<SkillKind>("ability");
   const [registering, setRegistering] = useState(false);
   const [accuracy, setAccuracy] = useState(80);
   const [bpm, setBpm] = useState(80);
 
   useEffect(() => {
     const startingPoint = {
-      guitar: ["bends", "Expressão"],
-      acoustic: ["open-chords", "Violão"],
-      keys: ["keyboard-map", "Teclado"],
-      drums: ["drum-kit-map", "Primeiros passos"],
+      guitar: "guitar-posture",
+      acoustic: "acoustic-posture",
+      keys: "piano-posture",
+      drums: "drum-kit-map",
     } as const;
-    const [skillId, domain] = startingPoint[instrument];
-    setSelectedId(skillId);
-    setSelectedDomain(domain);
+    setSelectedId(startingPoint[instrument]);
+    setSelectedTrack("technique");
+    setSelectedKind("ability");
   }, [instrument]);
 
   const mutation = useMutation({
@@ -82,42 +112,25 @@ export function SkillsPage() {
   const selected = skills.find((skill) => skill.id === selectedId) ?? skills[0];
   if (!selected) return <QueryState error={new Error("Nenhuma habilidade encontrada.")} />;
   const byId = new Map(skills.map((skill) => [skill.id, skill]));
-  const domains = Array.from(new Set(skills.map((skill) => skill.domain)));
-  const activeDomain = selectedDomain || selected.domain;
-  const focusedSkills = skills.filter((skill) => skill.domain === activeDomain);
-  const depthCache = new Map<string, number>();
-  const depthFor = (skill: Skill, trail = new Set<string>()): number => {
-    if (depthCache.has(skill.id)) return depthCache.get(skill.id)!;
-    if (trail.has(skill.id)) return 0;
-    const localRequirements = skill.prerequisites
-      .map((id) => byId.get(id))
-      .filter((item): item is Skill => item?.domain === activeDomain);
-    const nextTrail = new Set(trail).add(skill.id);
-    const depth = localRequirements.length
-      ? Math.max(...localRequirements.map((item) => depthFor(item, nextTrail))) + 1
-      : 0;
-    depthCache.set(skill.id, depth);
-    return depth;
-  };
-  const groupedByDepth = new Map<number, Skill[]>();
-  focusedSkills.forEach((skill) => {
-    const depth = depthFor(skill);
-    groupedByDepth.set(depth, [...(groupedByDepth.get(depth) ?? []), skill]);
-  });
+  const focusedSkills = skills.filter(
+    (skill) => skill.track === selectedTrack && skill.kind === selectedKind,
+  );
   const layout = focusedSkills.map((skill) => {
-    const depth = depthFor(skill);
-    const row = groupedByDepth.get(depth)?.findIndex((item) => item.id === skill.id) ?? 0;
-    return { skill, x: 54 + depth * 230, y: 58 + row * 72 };
+    const column = stages.findIndex(([id]) => id === skill.stage);
+    const stageSkills = focusedSkills.filter((candidate) => candidate.stage === skill.stage);
+    const row = stageSkills.findIndex((item) => item.id === skill.id);
+    return { skill, x: 30 + column * 215, y: 132 + row * 68 };
   });
 
   const nodeById = new Map(layout.map((node) => [node.skill.id, node]));
-  const svgWidth = Math.max(860, ...layout.map((node) => node.x + 210));
+  const svgWidth = 1535;
   const svgHeight = Math.max(540, ...layout.map((node) => node.y + 70));
   const selectSkill = (id: string) => {
     const skill = byId.get(id);
     if (!skill) return;
     setSelectedId(id);
-    setSelectedDomain(skill.domain);
+    setSelectedTrack(skill.track);
+    setSelectedKind(skill.kind);
   };
   const relatedLibrary = (libraryQuery.data ?? []).filter((item) =>
     selected.contents.includes(item.id),
@@ -135,28 +148,46 @@ export function SkillsPage() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-px overflow-hidden bg-border lg:grid-cols-[1fr_350px]">
+      <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-px overflow-auto bg-border lg:grid-cols-[minmax(0,1fr)_350px] lg:overflow-hidden">
         <Panel
-          title={`Skill Tree · ${skills.length} habilidades`}
+          title={`Knowledge Tree · ${skills.length} skills`}
           bodyClassName="p-0"
           actions={
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="flex border border-border" aria-label="Tipo de skill">
+                {(Object.keys(kindText) as SkillKind[]).map((kind) => (
+                  <button
+                    key={kind}
+                    type="button"
+                    onClick={() => setSelectedKind(kind)}
+                    className={`h-6 px-2 text-2xs ${selectedKind === kind ? "bg-signal text-signal-foreground" : "bg-surface text-muted-foreground"}`}
+                  >
+                    {kindText[kind]}
+                  </button>
+                ))}
+              </div>
               <select
-                value={activeDomain}
+                value={selectedTrack}
                 onChange={(event) => {
-                  const domain = event.target.value;
-                  setSelectedDomain(domain);
+                  const track = event.target.value as LearningTrack;
+                  setSelectedTrack(track);
                   const first =
                     skills.find(
-                      (skill) => skill.domain === domain && simpleState(skill.state) !== "locked",
-                    ) ?? skills.find((skill) => skill.domain === domain);
+                      (skill) =>
+                        skill.track === track &&
+                        skill.kind === selectedKind &&
+                        simpleState(skill.state) !== "locked",
+                    ) ??
+                    skills.find((skill) => skill.track === track && skill.kind === selectedKind);
                   if (first) setSelectedId(first.id);
                 }}
                 aria-label="Trilha musical"
                 className="h-6 border border-border bg-surface px-2 text-2xs outline-none focus:border-ring"
               >
-                {domains.map((domain) => (
-                  <option key={domain}>{domain}</option>
+                {(Object.keys(trackText) as LearningTrack[]).map((track) => (
+                  <option key={track} value={track}>
+                    {trackText[track]}
+                  </option>
                 ))}
               </select>
               <div className="hidden items-center gap-2 xl:flex">
@@ -165,7 +196,10 @@ export function SkillsPage() {
                     key={key}
                     className="flex items-center gap-1 text-2xs text-muted-foreground"
                   >
-                    <span className="size-2" style={{ background: stateFill[key] }} />
+                    <span
+                      className="size-2"
+                      style={{ background: stateFill[simpleState(key as SkillState)] }}
+                    />
                     {label}
                   </span>
                 ))}
@@ -175,15 +209,25 @@ export function SkillsPage() {
         >
           <div className="h-full w-full overflow-auto bg-rail">
             <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
-              <text
-                x="54"
-                y="27"
-                fill="var(--color-muted-foreground)"
-                fontFamily="var(--font-mono)"
-                fontSize="10"
-              >
-                {activeDomain.toUpperCase()} · {focusedSkills.length} HABILIDADES
-              </text>
+              {stages.map(([id, label, outcome], index) => (
+                <g key={id}>
+                  <rect
+                    x={20 + index * 215}
+                    y="18"
+                    width="204"
+                    height="92"
+                    rx="2"
+                    fill="var(--color-surface)"
+                    stroke="var(--color-border-strong)"
+                  />
+                  <text x={30 + index * 215} y="39" fill="var(--color-signal)" fontSize="10">
+                    {label.toUpperCase()}
+                  </text>
+                  <foreignObject x={30 + index * 215} y="49" width="184" height="52">
+                    <p className="text-2xs leading-relaxed text-muted-foreground">{outcome}</p>
+                  </foreignObject>
+                </g>
+              ))}
               {layout.flatMap((node) =>
                 node.skill.prerequisites.map((requirement) => {
                   const from = nodeById.get(requirement);
@@ -264,6 +308,17 @@ export function SkillsPage() {
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
               {selected.description}
             </p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <span className="border border-border px-2 py-1 text-2xs text-signal">
+                {stages.find(([id]) => id === selected.stage)?.[1]}
+              </span>
+              <span className="border border-border px-2 py-1 text-2xs text-muted-foreground">
+                {kindText[selected.kind]}
+              </span>
+              <span className="border border-border px-2 py-1 text-2xs text-muted-foreground">
+                {trackText[selected.track]}
+              </span>
+            </div>
             <div className="mt-3 flex items-center gap-3">
               <Meter
                 value={selected.progress}

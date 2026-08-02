@@ -95,6 +95,13 @@ public class LearningController {
         return recommendations.recommend(skill, instrument);
     }
 
+    @GetMapping("/recommendations/exercises")
+    public List<SongRecommendationView> exerciseRecommendations(
+            @RequestParam String topic,
+            @RequestParam String instrument) {
+        return recommendations.recommendExercise(topic, InstrumentId.from(instrument));
+    }
+
     @GetMapping("/practice-songs/search")
     public PracticeSongView searchPracticeSong(
             @RequestParam String query,

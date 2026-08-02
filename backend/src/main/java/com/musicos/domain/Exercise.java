@@ -31,6 +31,16 @@ public class Exercise {
     private Integer bpmStep;
     private Integer passAccuracy;
     private Integer passRepetitions;
+    private String activityType;
+
+    @Enumerated(EnumType.STRING)
+    private LearningStage stage;
+
+    private String videoQuery;
+    private String readingTitle;
+    private String readingUrl;
+    private String readingNote;
+    private String practiceSongQuery;
 
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> instructions = new ArrayList<>();
@@ -94,6 +104,26 @@ public class Exercise {
         this.variations = new ArrayList<>(variations);
     }
 
+    public Exercise withLearningResources(String activityType, LearningStage stage, String videoQuery,
+                                          String readingTitle, String readingUrl, String readingNote,
+                                          String practiceSongQuery) {
+        this.activityType = activityType;
+        this.stage = stage;
+        this.videoQuery = videoQuery;
+        this.readingTitle = readingTitle;
+        this.readingUrl = readingUrl;
+        this.readingNote = readingNote;
+        this.practiceSongQuery = practiceSongQuery;
+        return this;
+    }
+
+    public void updateLearningResources(String activityType, LearningStage stage, String videoQuery,
+                                        String readingTitle, String readingUrl, String readingNote,
+                                        String practiceSongQuery) {
+        withLearningResources(activityType, stage, videoQuery, readingTitle, readingUrl, readingNote,
+                practiceSongQuery);
+    }
+
     public void recordResult(int bpm, boolean passed) {
         if (passed && bpm >= currentBpm) currentBpm = Math.min(targetBpm, bpm + getBpmStep());
     }
@@ -114,4 +144,11 @@ public class Exercise {
     public int getPassRepetitions() { return passRepetitions == null ? 3 : passRepetitions; }
     public List<String> getInstructions() { return List.copyOf(instructions); }
     public List<ExerciseVariation> getVariations() { return List.copyOf(variations); }
+    public String getActivityType() { return activityType == null ? "execute" : activityType; }
+    public LearningStage getStage() { return stage == null ? LearningStage.INTERMEDIATE : stage; }
+    public String getVideoQuery() { return videoQuery; }
+    public String getReadingTitle() { return readingTitle; }
+    public String getReadingUrl() { return readingUrl; }
+    public String getReadingNote() { return readingNote; }
+    public String getPracticeSongQuery() { return practiceSongQuery; }
 }

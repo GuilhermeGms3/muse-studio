@@ -24,7 +24,8 @@ final class ViewMapper {
 
     static SkillView skill(Skill value, int progress, java.util.List<String> nextRequirements) {
         return new SkillView(value.getId(), value.getFriendlyTitle(), value.getTechnicalName(), value.getDomain(),
-                value.getDescription(), value.getState(), value.getHours(), value.getAccuracy(),
+                value.getStage(), value.getKind(), value.getTrack(), value.getDescription(), value.getState(),
+                value.getHours(), value.getAccuracy(),
                 value.getCurrentBpm(), value.getTargetBpm(), value.getInstruments(), value.getPrerequisites(),
                 value.getContents(), value.getExercises(), value.getSongs(), value.getNextSkills(),
                 value.getPracticeDays(), value.getReviewCount(), value.getExerciseCompletions(),
@@ -59,7 +60,9 @@ final class ViewMapper {
                 value.getPassAccuracy(), value.getPassRepetitions(), value.getInstructions(),
                 value.getVariations().stream().map(variation -> new ExerciseVariationView(
                         variation.getName(), variation.getInstructions(), variation.getBpmOffset(),
-                        variation.getDurationMinutes())).toList());
+                        variation.getDurationMinutes())).toList(), value.getActivityType(), value.getStage(),
+                value.getVideoQuery(), value.getReadingTitle(), value.getReadingUrl(), value.getReadingNote(),
+                value.getPracticeSongQuery());
     }
 
     static ExerciseAttemptView exerciseAttempt(ExerciseAttempt value) {

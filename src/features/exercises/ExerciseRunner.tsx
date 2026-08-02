@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, Gauge, Play, X } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { BookOpen, Check, ExternalLink, Gauge, Music2, Play, X } from "lucide-react";
 import type { Exercise } from "@/lib/music-api";
 import { recordExerciseAttempt } from "@/lib/music-api";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
 import { PracticeRecorder } from "@/features/practice/recording/PracticeRecorder";
 import { CatalogEditor } from "@/shared/catalog/CatalogEditor";
+import { getExerciseRecommendations } from "@/shared/api/learning";
+import { PracticeMediaPanel } from "@/features/practice-song/PracticeMediaPanel";
 
 export function ExerciseRunner({ exercise, onClose }: { exercise: Exercise; onClose: () => void }) {
   const { setMetronome } = useWorkspace();
@@ -14,6 +16,12 @@ export function ExerciseRunner({ exercise, onClose }: { exercise: Exercise; onCl
   const [accuracy, setAccuracy] = useState(85);
   const [repetitions, setRepetitions] = useState(exercise.passRepetitions);
   const [difficulty, setDifficulty] = useState(3);
+  const media = useQuery({
+    queryKey: ["exercise-video", exercise.videoQuery, exercise.instrument],
+    queryFn: () =>
+      getExerciseRecommendations(exercise.videoQuery || exercise.technique, exercise.instrument),
+    staleTime: 30 * 60 * 1000,
+  });
   const attempt = useMutation({
     mutationFn: () =>
       recordExerciseAttempt(exercise.id, {
@@ -48,6 +56,41 @@ export function ExerciseRunner({ exercise, onClose }: { exercise: Exercise; onCl
             {exercise.description}
           </p>
         </div>
+        <div className="flex flex-wrap gap-1.5">
+          <span className="border border-border px-2 py-1 text-2xs text-signal">
+            {exercise.stage.replaceAll("_", " ")}
+          </span>
+          <span className="border border-border px-2 py-1 text-2xs text-muted-foreground">
+            {exercise.activityType}
+          </span>
+        </div>
+        {media.data && <PracticeMediaPanel title="Vídeo de referência" items={media.data} />}
+        {exercise.readingUrl && (
+          <a
+            href={exercise.readingUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="block border border-border bg-surface p-3 hover:border-signal"
+          >
+            <span className="flex items-center gap-2 text-xs font-medium">
+              <BookOpen className="size-4 text-signal" />
+              {exercise.readingTitle}
+              <ExternalLink className="ml-auto size-3 text-muted-foreground" />
+            </span>
+            <span className="mt-1 block text-2xs leading-relaxed text-muted-foreground">
+              {exercise.readingNote}
+            </span>
+          </a>
+        )}
+        {exercise.practiceSongQuery && (
+          <a
+            href={`/treino-musica?q=${encodeURIComponent(exercise.practiceSongQuery)}`}
+            className="flex items-center gap-2 border border-border bg-surface p-3 text-xs hover:border-signal"
+          >
+            <Music2 className="size-4 text-signal" />
+            Aplicar em uma música
+          </a>
+        )}
         <div>
           <span className="label-tech">Como fazer</span>
           <ol className="mt-2 space-y-2">
