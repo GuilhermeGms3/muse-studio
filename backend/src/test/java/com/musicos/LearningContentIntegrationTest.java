@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+@SpringBootTest(properties = "music-os.youtube.api-key=")
 class LearningContentIntegrationTest {
     @Autowired
     private LibraryContentRepository library;
@@ -63,5 +63,22 @@ class LearningContentIntegrationTest {
         assertThat(preferences.sessionMinutes()).isEqualTo(45);
         assertThat(result).isNotEmpty();
         assertThat(result.getFirst().youtubeUrl()).startsWith("https://www.youtube.com/");
+    }
+
+    @Test
+    void practiceSongSearchReturnsOneSongWithInstrumentWorkspaces() {
+        var result = recommendations.searchPracticeSong("Sweet Child O' Mine");
+
+        assertThat(result.title()).isEqualTo("Sweet Child O' Mine");
+        assertThat(result.instruments()).extracting(PracticeInstrumentView::instrument)
+                .containsExactly(InstrumentId.DRUMS, InstrumentId.GUITAR,
+                        InstrumentId.ACOUSTIC, InstrumentId.KEYS);
+        assertThat(result.instruments()).filteredOn(item -> item.instrument() == InstrumentId.GUITAR)
+                .allSatisfy(item -> {
+                    assertThat(item.available()).isTrue();
+                    assertThat(item.tablature()).isNotEmpty();
+                    assertThat(item.videos()).isNotEmpty();
+                    assertThat(item.backingTracks()).isNotEmpty();
+                });
     }
 }

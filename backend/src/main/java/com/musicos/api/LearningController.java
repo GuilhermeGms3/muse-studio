@@ -94,6 +94,11 @@ public class LearningController {
         return recommendations.recommend(skill, instrument);
     }
 
+    @GetMapping("/practice-songs/search")
+    public PracticeSongView searchPracticeSong(@RequestParam String query) {
+        return recommendations.searchPracticeSong(query);
+    }
+
     @PutMapping("/songs/{id}")
     public SongView saveSong(@PathVariable String id, @Valid @RequestBody SongRequest request) {
         if (!id.equals(request.id())) throw new IllegalArgumentException("ID divergente");

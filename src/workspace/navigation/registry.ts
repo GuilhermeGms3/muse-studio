@@ -92,6 +92,15 @@ export const navigationRegistry: NavigationEntry[] = [
     legacyOrder: 1,
   },
   {
+    id: "practice.song-workspace",
+    context: "practice",
+    label: "Treinar música",
+    path: "/treino-musica",
+    matchPaths: ["/treino-musica/"],
+    icon: Music2,
+    hint: "Tablatura, vídeo e playback",
+  },
+  {
     id: "practice.repertoire",
     context: "practice",
     label: "Repertório",
@@ -241,6 +250,7 @@ export function contextForPath(pathname: string): MacroContextId {
   if (["/sessao", "/plano", "/exercicios", "/ouvido", "/metronomo"].includes(pathname)) {
     return "practice";
   }
+  if (pathname === "/treino-musica" || pathname.startsWith("/treino-musica/")) return "practice";
   if (pathname === "/skills" || pathname === "/mapa") return "learning";
   if (pathname === "/biblioteca" || pathname.startsWith("/biblioteca/")) return "library";
   if (pathname === "/repertorio" || pathname.startsWith("/repertorio/")) return "practice";
@@ -260,6 +270,7 @@ export function titleForRegisteredPath(pathname: string): string {
     "/biblioteca": "Biblioteca",
     "/skills": "Skill Tree",
     "/mapa": "Mapa do Conhecimento",
+    "/treino-musica": "Treinar música",
     "/repertorio": "Repertório",
     "/exercicios": "Exercícios",
     "/ouvido": "Ear Training",
@@ -269,6 +280,7 @@ export function titleForRegisteredPath(pathname: string): string {
   };
   if (titles[pathname]) return titles[pathname];
   if (pathname.startsWith("/biblioteca/")) return "Biblioteca";
+  if (pathname.startsWith("/treino-musica/")) return "Treino musical";
   if (pathname.startsWith("/repertorio/")) return "Repertório";
   if (pathname.startsWith("/projetos/")) return "Projeto";
   return pathname;

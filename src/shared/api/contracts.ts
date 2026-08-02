@@ -118,6 +118,33 @@ export interface Song {
   sections: SongSection[];
 }
 
+export interface PracticeTabSection {
+  id: string;
+  name: string;
+  bpm?: number;
+  tablature: string;
+}
+
+export interface PracticeInstrument {
+  instrument: InstrumentId;
+  label: string;
+  available: boolean;
+  localSongId?: string;
+  bpm?: number;
+  tablatureUrl: string;
+  tablature: PracticeTabSection[];
+  videos: SongRecommendation[];
+  backingTracks: SongRecommendation[];
+}
+
+export interface PracticeSong {
+  id: string;
+  title: string;
+  artist: string;
+  thumbnailUrl: string;
+  instruments: PracticeInstrument[];
+}
+
 export interface Exercise {
   id: string;
   name: string;

@@ -203,6 +203,26 @@ public final class ApiModels {
     public record SongRecommendationView(String videoId, String title, String channel, String thumbnailUrl,
                                          String reason, String youtubeUrl) {}
 
+    public record PracticeTabSectionView(String id, String name, Integer bpm, String tablature) {}
+
+    public record PracticeInstrumentView(
+            InstrumentId instrument,
+            String label,
+            boolean available,
+            String localSongId,
+            Integer bpm,
+            String tablatureUrl,
+            List<PracticeTabSectionView> tablature,
+            List<SongRecommendationView> videos,
+            List<SongRecommendationView> backingTracks) {}
+
+    public record PracticeSongView(
+            String id,
+            String title,
+            String artist,
+            String thumbnailUrl,
+            List<PracticeInstrumentView> instruments) {}
+
     public record SongRequest(
             @NotNull String id, @NotNull String title, @NotNull String artist, String tuning,
             String musicalKey, @Min(1) int bpm, @NotNull InstrumentId instrument,

@@ -1,5 +1,11 @@
 import { apiRequest, useApiQuery } from "./client";
-import type { InstrumentId, PlanActivity, Song, SongRecommendation } from "./contracts";
+import type {
+  InstrumentId,
+  PlanActivity,
+  PracticeSong,
+  Song,
+  SongRecommendation,
+} from "./contracts";
 
 export const useSongs = (instrument?: InstrumentId) =>
   useApiQuery<Song[]>(
@@ -11,6 +17,9 @@ export const getSongRecommendations = (skill: string, instrument: InstrumentId) 
   apiRequest<SongRecommendation[]>(
     `/recommendations/songs?skill=${encodeURIComponent(skill)}&instrument=${instrument}`,
   );
+
+export const searchPracticeSong = (query: string) =>
+  apiRequest<PracticeSong>(`/practice-songs/search?query=${encodeURIComponent(query)}`);
 
 export const saveSong = (song: Song) =>
   apiRequest<Song>(`/songs/${song.id}`, {

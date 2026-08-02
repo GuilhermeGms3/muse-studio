@@ -11,6 +11,7 @@ export type WorkspaceTabType =
   | "lesson"
   | "repertoire"
   | "song"
+  | "song-practice"
   | "exercises"
   | "ear-training"
   | "metronome"
@@ -47,6 +48,8 @@ export function tabTypeForPath(path: string): WorkspaceTabType {
   if (path === "/biblioteca") return "library";
   if (path.startsWith("/repertorio/")) return "song";
   if (path === "/repertorio") return "repertoire";
+  if (path === "/treino-musica") return "song-practice";
+  if (path.startsWith("/treino-musica/")) return "song-practice";
   if (path === "/exercicios") return "exercises";
   if (path === "/ouvido") return "ear-training";
   if (path === "/metronomo") return "metronome";
