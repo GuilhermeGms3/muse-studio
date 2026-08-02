@@ -214,6 +214,7 @@ public final class ApiModels {
             String tablatureUrl,
             List<PracticeTabSectionView> tablature,
             List<SongRecommendationView> videos,
+            List<SongRecommendationView> vocalTracks,
             List<SongRecommendationView> backingTracks) {}
 
     public record PracticeSongView(

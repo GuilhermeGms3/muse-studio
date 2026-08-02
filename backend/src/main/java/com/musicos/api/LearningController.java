@@ -2,6 +2,7 @@ package com.musicos.api;
 
 import static com.musicos.api.ApiModels.*;
 
+import com.musicos.domain.InstrumentId;
 import com.musicos.service.LearningContentService;
 import com.musicos.service.SongRecommendationService;
 import jakarta.validation.Valid;
@@ -95,8 +96,11 @@ public class LearningController {
     }
 
     @GetMapping("/practice-songs/search")
-    public PracticeSongView searchPracticeSong(@RequestParam String query) {
-        return recommendations.searchPracticeSong(query);
+    public PracticeSongView searchPracticeSong(
+            @RequestParam String query,
+            @RequestParam(required = false) String instrument) {
+        return recommendations.searchPracticeSong(query,
+                instrument == null || instrument.isBlank() ? null : InstrumentId.from(instrument));
     }
 
     @PutMapping("/songs/{id}")

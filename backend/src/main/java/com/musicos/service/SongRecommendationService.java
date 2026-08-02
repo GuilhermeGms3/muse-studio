@@ -76,18 +76,24 @@ public class SongRecommendationService {
     }
 
     public PracticeSongView searchPracticeSong(String rawQuery) {
+        return searchPracticeSong(rawQuery, null);
+    }
+
+    public PracticeSongView searchPracticeSong(String rawQuery, InstrumentId requestedInstrument) {
         var query = value(rawQuery).trim();
         if (query.isBlank()) throw new IllegalArgumentException("Informe uma m\u00fasica para pesquisar");
-        var cacheKey = normalize(query);
+        var cacheKey = normalize(query) + ":" + (requestedInstrument == null ? "overview" : requestedInstrument.value());
         var cached = practiceCache.get(cacheKey);
         if (cached != null && cached.valid()) return cached.song();
 
-        var result = apiKey == null || apiKey.isBlank() ? practiceFallback(query) : practiceFromYoutube(query);
+        var result = apiKey == null || apiKey.isBlank()
+                ? practiceFallback(query)
+                : practiceFromYoutube(query, requestedInstrument);
         practiceCache.put(cacheKey, new CachedPracticeSong(result, System.currentTimeMillis()));
         return result;
     }
 
-    private PracticeSongView practiceFromYoutube(String query) {
+    private PracticeSongView practiceFromYoutube(String query, InstrumentId requestedInstrument) {
         try {
             var canonical = searchYoutube(query + " official audio", 5, "Refer\u00eancia da m\u00fasica");
             if (canonical.isEmpty()) return practiceFallback(query);
@@ -95,10 +101,10 @@ public class SongRecommendationService {
             var title = cleanTitle(identity.title(), query);
             var artist = cleanArtist(identity.title(), query, identity.channel());
             var instruments = List.of(
-                    practiceInstrument(query, title, artist, InstrumentId.DRUMS),
-                    practiceInstrument(query, title, artist, InstrumentId.GUITAR),
-                    practiceInstrument(query, title, artist, InstrumentId.ACOUSTIC),
-                    practiceInstrument(query, title, artist, InstrumentId.KEYS));
+                    practiceInstrument(query, title, artist, InstrumentId.DRUMS, requestedInstrument),
+                    practiceInstrument(query, title, artist, InstrumentId.GUITAR, requestedInstrument),
+                    practiceInstrument(query, title, artist, InstrumentId.ACOUSTIC, requestedInstrument),
+                    practiceInstrument(query, title, artist, InstrumentId.KEYS, requestedInstrument));
             return new PracticeSongView(slug(title), title, artist, identity.thumbnailUrl(), instruments);
         } catch (RuntimeException ignored) {
             return practiceFallback(query);
@@ -106,9 +112,17 @@ public class SongRecommendationService {
     }
 
     private PracticeInstrumentView practiceInstrument(String query, String canonicalTitle, String artist,
-                                                       InstrumentId instrument) {
+                                                       InstrumentId instrument, InstrumentId requestedInstrument) {
         var local = findLocalSong(query, canonicalTitle, instrument);
+        if (requestedInstrument == null || requestedInstrument != instrument) {
+            return practiceInstrument(query, artist, instrument, local, List.of(), List.of(), List.of(), true);
+        }
         var videos = searchYoutube(query + lessonTermsFor(instrument), 8, "Refer\u00eancia e aula").stream()
+                .filter(video -> relevant(query, video.title()))
+                .limit(5)
+                .toList();
+        var vocalTracks = searchYoutube(query + vocalTrackTermsFor(instrument), 8,
+                "Voz e base sem " + instrumentLabel(instrument).toLowerCase(Locale.ROOT)).stream()
                 .filter(video -> relevant(query, video.title()))
                 .limit(5)
                 .toList();
@@ -116,12 +130,13 @@ public class SongRecommendationService {
                 .filter(video -> relevant(query, video.title()))
                 .limit(5)
                 .toList();
-        return practiceInstrument(query, artist, instrument, local, videos, backingTracks,
-                local != null || !videos.isEmpty() || !backingTracks.isEmpty());
+        return practiceInstrument(query, artist, instrument, local, videos, vocalTracks, backingTracks,
+                local != null || !videos.isEmpty() || !vocalTracks.isEmpty() || !backingTracks.isEmpty());
     }
 
     private PracticeInstrumentView practiceInstrument(String query, String artist, InstrumentId instrument, Song local,
                                                        List<SongRecommendationView> videos,
+                                                       List<SongRecommendationView> vocalTracks,
                                                        List<SongRecommendationView> backingTracks,
                                                        boolean available) {
         var tabs = local == null ? List.<PracticeTabSectionView>of() : local.getSections().stream()
@@ -131,7 +146,7 @@ public class SongRecommendationService {
                 .toList();
         return new PracticeInstrumentView(instrument, instrumentLabel(instrument), available,
                 local == null ? null : local.getId(), local == null ? null : local.getBpm(),
-                tablatureUrl(query, artist, instrument), tabs, videos, backingTracks);
+                tablatureUrl(query, artist, instrument), tabs, videos, vocalTracks, backingTracks);
     }
 
     private PracticeSongView practiceFallback(String query) {
@@ -145,7 +160,11 @@ public class SongRecommendationService {
                             "YouTube", "", "Refer\u00eancia e aula", lessonUrl));
                     var backingTracks = List.of(new SongRecommendationView("", "Buscar playback para " + instrumentLabel(instrument),
                             "YouTube", "", "Playback para praticar", backingUrl));
-                    return practiceInstrument(query, "", instrument, local, videos, backingTracks, local != null);
+                    var vocalTracks = List.of(new SongRecommendationView("",
+                            "Buscar voz e base sem " + instrumentLabel(instrument).toLowerCase(Locale.ROOT),
+                            "YouTube", "", "Faixa para ocupar o instrumento",
+                            youtubeSearch(query + vocalTrackTermsFor(instrument))));
+                    return practiceInstrument(query, "", instrument, local, videos, vocalTracks, backingTracks, true);
                 })
                 .toList();
         return new PracticeSongView(slug(query), query, "Artista a confirmar", "", instruments);
@@ -218,6 +237,15 @@ public class SongRecommendationService {
             case GUITAR -> " guitar backing track no guitar play along";
             case ACOUSTIC -> " acoustic backing track karaoke instrumental";
             case KEYS -> " piano backing track no piano karaoke";
+        };
+    }
+
+    private String vocalTrackTermsFor(InstrumentId instrument) {
+        return switch (instrument) {
+            case DRUMS -> " playback com voz sem bateria drumless with vocals";
+            case GUITAR -> " playback com voz sem guitarra no guitar with vocals";
+            case ACOUSTIC -> " playback com voz sem violao karaoke acustico";
+            case KEYS -> " playback com voz sem piano no piano with vocals";
         };
     }
 

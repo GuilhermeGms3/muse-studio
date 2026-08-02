@@ -16,7 +16,7 @@ export function WorkspaceTabs() {
     const index = tabs.findIndex((tab) => tabKey(tab) === key);
     const fallback = tabs[index + 1] ?? tabs[index - 1];
     closeTab(key);
-    if (path === pathname) navigate({ to: fallback?.path ?? "/" });
+    if (path.split("?")[0] === pathname) navigate({ to: fallback?.path ?? "/" });
   };
 
   return (
@@ -27,7 +27,7 @@ export function WorkspaceTabs() {
     >
       {tabs.map((tab) => {
         const key = tabKey(tab);
-        const active = tab.path === pathname;
+        const active = tab.path.split("?")[0] === pathname;
         return (
           <div
             key={key}

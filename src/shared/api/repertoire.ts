@@ -18,8 +18,10 @@ export const getSongRecommendations = (skill: string, instrument: InstrumentId) 
     `/recommendations/songs?skill=${encodeURIComponent(skill)}&instrument=${instrument}`,
   );
 
-export const searchPracticeSong = (query: string) =>
-  apiRequest<PracticeSong>(`/practice-songs/search?query=${encodeURIComponent(query)}`);
+export const searchPracticeSong = (query: string, instrument?: InstrumentId) =>
+  apiRequest<PracticeSong>(
+    `/practice-songs/search?query=${encodeURIComponent(query)}${instrument ? `&instrument=${instrument}` : ""}`,
+  );
 
 export const saveSong = (song: Song) =>
   apiRequest<Song>(`/songs/${song.id}`, {

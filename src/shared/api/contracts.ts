@@ -134,6 +134,7 @@ export interface PracticeInstrument {
   tablatureUrl: string;
   tablature: PracticeTabSection[];
   videos: SongRecommendation[];
+  vocalTracks: SongRecommendation[];
   backingTracks: SongRecommendation[];
 }
 

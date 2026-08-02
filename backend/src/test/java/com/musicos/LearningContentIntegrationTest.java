@@ -67,7 +67,7 @@ class LearningContentIntegrationTest {
 
     @Test
     void practiceSongSearchReturnsOneSongWithInstrumentWorkspaces() {
-        var result = recommendations.searchPracticeSong("Sweet Child O' Mine");
+        var result = recommendations.searchPracticeSong("Sweet Child O' Mine", InstrumentId.GUITAR);
 
         assertThat(result.title()).isEqualTo("Sweet Child O' Mine");
         assertThat(result.instruments()).extracting(PracticeInstrumentView::instrument)
@@ -78,6 +78,7 @@ class LearningContentIntegrationTest {
                     assertThat(item.available()).isTrue();
                     assertThat(item.tablature()).isNotEmpty();
                     assertThat(item.videos()).isNotEmpty();
+                    assertThat(item.vocalTracks()).isNotEmpty();
                     assertThat(item.backingTracks()).isNotEmpty();
                 });
     }

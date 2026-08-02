@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
-import { ExternalLink, Gauge, Library } from "lucide-react";
+import { ExternalLink, Gauge, Library, LoaderCircle } from "lucide-react";
 import { searchPracticeSong, type InstrumentId, type PracticeTabSection } from "@/lib/music-api";
 import { InteractiveTab } from "@/shared/music/InteractiveTab";
 import { QueryState } from "@/shared/ui/query/QueryState";
@@ -17,11 +17,17 @@ export function SongPracticeWorkspace({ query }: { query?: string }) {
     from: "/treino-musica/$songId/$instrument",
   });
   const instrument = rawInstrument as InstrumentId;
-  const resolvedQuery = query?.trim() || songId.replaceAll("-", " ");
+  const resolvedQuery =
+    query?.trim() ||
+    songId
+      .replaceAll("-", " ")
+      .replace(/\b(clipe oficial|official (video|audio)|lyrics?)\b/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
   const { openTab, setInstrument, setMetronome } = useWorkspace();
   const songQuery = useQuery({
-    queryKey: ["practice-song", resolvedQuery],
-    queryFn: () => searchPracticeSong(resolvedQuery),
+    queryKey: ["practice-song", resolvedQuery, instrument],
+    queryFn: () => searchPracticeSong(resolvedQuery, instrument),
   });
   const practice = songQuery.data?.instruments.find((item) => item.instrument === instrument);
   const [selectedTab, setSelectedTab] = useState(0);
@@ -33,9 +39,10 @@ export function SongPracticeWorkspace({ query }: { query?: string }) {
 
   useEffect(() => {
     if (!songQuery.data || !practice) return;
-    const path = `/treino-musica/${songId}/${instrument}`;
+    const routePath = `/treino-musica/${songId}/${instrument}`;
+    const path = `${routePath}?q=${encodeURIComponent(resolvedQuery)}`;
     openTab({
-      id: path,
+      id: routePath,
       path,
       title: `${songQuery.data.title} · ${practice.label}`,
       type: "song-practice",
@@ -43,7 +50,7 @@ export function SongPracticeWorkspace({ query }: { query?: string }) {
       context: "practice",
     });
     setInstrument(instrument);
-  }, [instrument, openTab, practice, setInstrument, songId, songQuery.data]);
+  }, [instrument, openTab, practice, resolvedQuery, setInstrument, songId, songQuery.data]);
 
   const tabs = practice?.tablature ?? [];
   const activeTab = tabs[selectedTab] ?? tabs[0];
@@ -61,6 +68,7 @@ export function SongPracticeWorkspace({ query }: { query?: string }) {
     setMaterialMode(tabs.length ? "tab" : "chords");
   }, [instrument, songId, tabs.length]);
 
+  if (songQuery.isPending) return <PracticeSongLoading instrument={instrument} />;
   if (!songQuery.data) return <QueryState error={songQuery.error} />;
   if (!practice?.available) {
     return (
@@ -195,9 +203,57 @@ export function SongPracticeWorkspace({ query }: { query?: string }) {
             title="Vídeo de referência"
             items={tabTutorials.length ? tabTutorials : practice.videos}
           />
+          <PracticeMediaPanel
+            title={`Voz e base sem ${practice.label.toLowerCase()}`}
+            items={practice.vocalTracks ?? []}
+          />
           <PracticeMediaPanel title="Playback" items={practice.backingTracks} />
         </div>
       </div>
     </div>
+  );
+}
+
+const instrumentNames: Record<InstrumentId, string> = {
+  drums: "Bateria",
+  guitar: "Guitarra",
+  acoustic: "Violão",
+  keys: "Teclado",
+};
+
+function PracticeSongLoading({ instrument }: { instrument: InstrumentId }) {
+  const label = instrumentNames[instrument];
+
+  return (
+    <div className="min-h-full bg-background-workspace" aria-busy="true" aria-live="polite">
+      <Breadcrumb trail={["Praticar", "Treinar música", label]} />
+      <header className="flex min-h-24 items-center gap-3 border-b border-border bg-surface-panel p-4">
+        <LoaderCircle className="size-5 animate-spin text-signal" aria-hidden="true" />
+        <div>
+          <p className="text-sm font-medium">Buscando material para {label}</p>
+          <p className="mt-1 text-2xs text-text-muted">Preparando a área de treino...</p>
+        </div>
+      </header>
+
+      <div className="grid gap-3 p-3 xl:grid-cols-[minmax(0,1.6fr)_minmax(340px,0.8fr)]">
+        <LoadingPanel title="Material musical" className="min-h-[420px]" />
+        <div className="grid min-w-0 content-start gap-3">
+          <LoadingPanel title="Vídeo de referência" />
+          <LoadingPanel title={`Voz e base sem ${label.toLowerCase()}`} />
+          <LoadingPanel title="Playback" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LoadingPanel({ title, className = "" }: { title: string; className?: string }) {
+  return (
+    <section className={`min-w-0 border border-border bg-surface-panel ${className}`}>
+      <div className="label-tech flex h-8 items-center border-b border-border px-2">{title}</div>
+      <div className="flex aspect-video items-center justify-center bg-background-rail">
+        <LoaderCircle className="size-4 animate-spin text-text-muted" aria-hidden="true" />
+      </div>
+    </section>
   );
 }

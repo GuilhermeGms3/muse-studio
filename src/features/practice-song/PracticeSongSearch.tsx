@@ -15,7 +15,7 @@ const instrumentIcons = {
 
 export function PracticeSongSearch() {
   const [query, setQuery] = useState("");
-  const search = useMutation({ mutationFn: searchPracticeSong });
+  const search = useMutation({ mutationFn: (value: string) => searchPracticeSong(value) });
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
