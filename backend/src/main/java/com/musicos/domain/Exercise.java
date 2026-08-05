@@ -1,6 +1,7 @@
 package com.musicos.domain;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
@@ -9,6 +10,7 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.FetchType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "exercises")
@@ -42,6 +44,24 @@ public class Exercise {
     private String readingNote;
     private String practiceSongQuery;
 
+    private String observableObjective;
+
+    @jakarta.persistence.Column(length = 2000)
+    private String practiceConditions;
+
+    @jakarta.persistence.Column(length = 2000)
+    private String successCriteria;
+
+    @Embedded
+    private DifficultyDemand difficultyDemand;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @jakarta.persistence.CollectionTable(name = "exercise_competencies",
+            joinColumns = @jakarta.persistence.JoinColumn(name = "exercise_id"))
+    @jakarta.persistence.OrderColumn(name = "position")
+    @jakarta.persistence.Column(name = "competency_id")
+    private List<String> competencyIds = new ArrayList<>();
+
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> instructions = new ArrayList<>();
 
@@ -67,6 +87,8 @@ public class Exercise {
         this.bpmStep = 4;
         this.passAccuracy = 85;
         this.passRepetitions = 3;
+        this.difficultyDemand = DifficultyDemand.unspecified();
+        if (skillId != null && !skillId.isBlank()) this.competencyIds.add(skillId);
     }
 
     public Exercise(String id, String name, String technique, InstrumentId instrument, int targetBpm,
@@ -87,6 +109,7 @@ public class Exercise {
                        int minutes, String description, String skillId, int difficulty, int minBpm, int bpmStep,
                        int passAccuracy, int passRepetitions, List<String> instructions,
                        List<ExerciseVariation> variations) {
+        var previousSkillId = this.skillId;
         this.name = name;
         this.technique = technique;
         this.instrument = instrument;
@@ -102,6 +125,11 @@ public class Exercise {
         this.passRepetitions = passRepetitions;
         this.instructions = new ArrayList<>(instructions);
         this.variations = new ArrayList<>(variations);
+        if (competencyIds.isEmpty()
+                || (competencyIds.size() == 1 && Objects.equals(competencyIds.getFirst(), previousSkillId))) {
+            this.competencyIds = skillId == null || skillId.isBlank()
+                    ? new ArrayList<>() : new ArrayList<>(List.of(skillId));
+        }
     }
 
     public Exercise withLearningResources(String activityType, LearningStage stage, String videoQuery,
@@ -128,6 +156,23 @@ public class Exercise {
         if (passed && bpm >= currentBpm) currentBpm = Math.min(targetBpm, bpm + getBpmStep());
     }
 
+    public void configurePedagogicalDefinition(String observableObjective, String practiceConditions,
+                                                String successCriteria, DifficultyDemand difficultyDemand,
+                                                List<String> competencyIds) {
+        this.observableObjective = DomainRules.requiredText(observableObjective, "observableObjective");
+        this.practiceConditions = DomainRules.requiredText(practiceConditions, "practiceConditions");
+        this.successCriteria = DomainRules.requiredText(successCriteria, "successCriteria");
+        this.difficultyDemand = difficultyDemand == null ? DifficultyDemand.unspecified() : difficultyDemand;
+        this.competencyIds = new ArrayList<>(DomainRules.distinctIds(competencyIds));
+        if (this.competencyIds.isEmpty()) {
+            throw new IllegalArgumentException("exercício precisa desenvolver uma competência");
+        }
+    }
+
+    public void migrateLegacyCompetency() {
+        if (competencyIds.isEmpty() && skillId != null && !skillId.isBlank()) competencyIds.add(skillId);
+    }
+
     public String getId() { return id; }
     public String getName() { return name; }
     public String getTechnique() { return technique; }
@@ -151,4 +196,11 @@ public class Exercise {
     public String getReadingUrl() { return readingUrl; }
     public String getReadingNote() { return readingNote; }
     public String getPracticeSongQuery() { return practiceSongQuery; }
+    public String getObservableObjective() { return observableObjective; }
+    public String getPracticeConditions() { return practiceConditions; }
+    public String getSuccessCriteria() { return successCriteria; }
+    public DifficultyDemand getDifficultyDemand() {
+        return difficultyDemand == null ? DifficultyDemand.unspecified() : difficultyDemand;
+    }
+    public List<String> getCompetencyIds() { return List.copyOf(competencyIds); }
 }
