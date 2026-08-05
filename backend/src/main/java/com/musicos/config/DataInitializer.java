@@ -329,6 +329,21 @@ public class DataInitializer implements ApplicationRunner {
         seeded.forEach(exercise -> {
             if (!exercises.existsById(exercise.getId())) exercises.save(exercise);
         });
+        TeachingContentCatalog.exercises().forEach(generated ->
+                exercises.findById(generated.getId()).ifPresentOrElse(existing -> {
+                    existing.update(generated.getName(), generated.getTechnique(), generated.getInstrument(),
+                            generated.getTargetBpm(), existing.getCurrentBpm(), generated.getMinutes(),
+                            generated.getDescription(), generated.getSkillId(), generated.getDifficulty(),
+                            generated.getMinBpm(), generated.getBpmStep(), generated.getPassAccuracy(),
+                            generated.getPassRepetitions(), generated.getInstructions(), generated.getVariations());
+                    existing.updateLearningResources(generated.getActivityType(), generated.getStage(),
+                            generated.getVideoQuery(), generated.getReadingTitle(), generated.getReadingUrl(),
+                            generated.getReadingNote(), generated.getPracticeSongQuery());
+                    existing.configurePedagogicalDefinition(generated.getObservableObjective(),
+                            generated.getPracticeConditions(), generated.getSuccessCriteria(),
+                            generated.getDifficultyDemand(), generated.getCompetencyIds());
+                    exercises.save(existing);
+                }, () -> exercises.save(generated)));
     }
 
     private void enrichLearningContent() {
@@ -359,23 +374,9 @@ public class DataInitializer implements ApplicationRunner {
             }, () -> library.save(generatedLesson));
             skill.attachContent(contentId);
 
-            LearningCatalog.activities(skill).forEach(generatedExercise -> {
-                exercises.findById(generatedExercise.getId()).ifPresentOrElse(existing -> {
-                    existing.update(generatedExercise.getName(), generatedExercise.getTechnique(),
-                            generatedExercise.getInstrument(), generatedExercise.getTargetBpm(),
-                            existing.getCurrentBpm(), generatedExercise.getMinutes(),
-                            generatedExercise.getDescription(), skill.getId(), generatedExercise.getDifficulty(),
-                            generatedExercise.getMinBpm(), generatedExercise.getBpmStep(),
-                            generatedExercise.getPassAccuracy(), generatedExercise.getPassRepetitions(),
-                            generatedExercise.getInstructions(), generatedExercise.getVariations());
-                    existing.updateLearningResources(generatedExercise.getActivityType(), generatedExercise.getStage(),
-                            generatedExercise.getVideoQuery(), generatedExercise.getReadingTitle(),
-                            generatedExercise.getReadingUrl(), generatedExercise.getReadingNote(),
-                            generatedExercise.getPracticeSongQuery());
-                    exercises.save(existing);
-                }, () -> exercises.save(generatedExercise));
-                skill.attachExercise(generatedExercise.getId());
-            });
+            TeachingContentCatalog.exercises().stream()
+                    .filter(exercise -> exercise.getCompetencyIds().contains(skill.getId()))
+                    .forEach(exercise -> skill.attachExercise(exercise.getId()));
             skills.save(skill);
         });
     }

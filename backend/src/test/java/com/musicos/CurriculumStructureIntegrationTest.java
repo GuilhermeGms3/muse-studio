@@ -2,6 +2,7 @@ package com.musicos;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.musicos.config.TeachingContentCatalog;
 import com.musicos.domain.InstrumentId;
 import com.musicos.domain.LearningStage;
 import com.musicos.domain.LearningTrack;
@@ -30,26 +31,16 @@ class CurriculumStructureIntegrationTest {
     }
 
     @Test
-    void everySkillHasSixVariedActivitiesAndOpenLearningResources() {
-        skills.findAll().forEach(skill -> {
-            var activities = skill.getExercises().stream()
-                    .filter(id -> id.startsWith("activity-"))
-                    .map(exercises::findById)
-                    .flatMap(java.util.Optional::stream)
-                    .toList();
-            assertThat(activities).hasSize(6 * skill.getInstruments().size());
-            for (var instrument : skill.getInstruments()) {
-                var instrumentActivities = activities.stream()
-                        .filter(activity -> activity.getInstrument() == instrument).toList();
-                assertThat(instrumentActivities).hasSize(6);
-                assertThat(instrumentActivities).extracting(activity -> activity.getActivityType())
-                        .doesNotHaveDuplicates();
-            }
-            assertThat(activities).allSatisfy(activity -> {
-                assertThat(activity.getStage()).isEqualTo(skill.getStage());
-                assertThat(activity.getVideoQuery()).isNotBlank();
-                assertThat(activity.getReadingUrl()).startsWith("https://");
-            });
+    void genericActivitiesAreNotGeneratedAndTeachingExercisesHaveObservableDefinitions() {
+        assertThat(skills.findAll()).allSatisfy(skill ->
+                assertThat(skill.getExercises()).noneMatch(id -> id.startsWith("activity-")));
+
+        assertThat(TeachingContentCatalog.exercises()).allSatisfy(definition -> {
+            var exercise = exercises.findById(definition.getId()).orElseThrow();
+            assertThat(exercise.getObservableObjective()).isNotBlank();
+            assertThat(exercise.getPracticeConditions()).isNotBlank();
+            assertThat(exercise.getSuccessCriteria()).isNotBlank();
+            assertThat(exercise.getCompetencyIds()).hasSize(1);
         });
     }
 }

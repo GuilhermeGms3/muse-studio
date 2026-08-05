@@ -1,8 +1,11 @@
 package com.musicos.service;
 
+import com.musicos.config.TeachingContentCatalog;
+import com.musicos.domain.Assessment;
 import com.musicos.domain.Competency;
 import com.musicos.domain.CompetencyPrerequisite;
 import com.musicos.domain.Curriculum;
+import com.musicos.domain.DifficultyDemand;
 import com.musicos.domain.InstrumentId;
 import com.musicos.domain.InstrumentProfile;
 import com.musicos.domain.LearningContentRelation;
@@ -11,6 +14,8 @@ import com.musicos.domain.LearningPath;
 import com.musicos.domain.LearningPathStep;
 import com.musicos.domain.LearningStage;
 import com.musicos.domain.Lesson;
+import com.musicos.domain.Mission;
+import com.musicos.repository.AssessmentRepository;
 import com.musicos.repository.CompetencyRepository;
 import com.musicos.repository.CurriculumRepository;
 import com.musicos.repository.ExerciseRepository;
@@ -20,6 +25,7 @@ import com.musicos.repository.LearningGoalRepository;
 import com.musicos.repository.LearningPathRepository;
 import com.musicos.repository.LessonRepository;
 import com.musicos.repository.LibraryContentRepository;
+import com.musicos.repository.MissionRepository;
 import com.musicos.repository.SkillRepository;
 import com.musicos.repository.SongRepository;
 import com.musicos.repository.UserPreferencesRepository;
@@ -52,15 +58,18 @@ public class PedagogicalDomainMigration {
     private final LearningGoalRepository learningGoals;
     private final LearningContentRelationRepository contentRelations;
     private final SongRepository songs;
+    private final AssessmentRepository assessments;
+    private final MissionRepository missions;
 
     public PedagogicalDomainMigration(SkillRepository skills, CompetencyRepository competencies,
                                       LibraryContentRepository libraryContents, LessonRepository lessons,
                                       ExerciseRepository exercises, UserPreferencesRepository preferences,
                                       InstrumentProfileRepository instrumentProfiles,
                                       CurriculumRepository curricula, LearningPathRepository learningPaths,
-                                      LearningGoalRepository learningGoals,
-                                      LearningContentRelationRepository contentRelations,
-                                      SongRepository songs) {
+                                       LearningGoalRepository learningGoals,
+                                       LearningContentRelationRepository contentRelations,
+                                       SongRepository songs, AssessmentRepository assessments,
+                                       MissionRepository missions) {
         this.skills = skills;
         this.competencies = competencies;
         this.libraryContents = libraryContents;
@@ -73,6 +82,8 @@ public class PedagogicalDomainMigration {
         this.learningGoals = learningGoals;
         this.contentRelations = contentRelations;
         this.songs = songs;
+        this.assessments = assessments;
+        this.missions = missions;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -85,6 +96,46 @@ public class PedagogicalDomainMigration {
         migrateInstrumentProfiles();
         migrateLearningPaths();
         migrateContentRelations();
+        seedTeachingMissions();
+    }
+
+    private void seedTeachingMissions() {
+        TeachingContentCatalog.units().forEach(unit -> {
+            var curriculumId = legacyCurriculumId(unit.instrument());
+            if (!curricula.existsById(curriculumId)) {
+                throw new IllegalStateException("Currículo ausente para Mission editorial: " + curriculumId);
+            }
+            if (!competencies.existsById(unit.competencyId())) {
+                throw new IllegalStateException("Competência ausente para Mission editorial: "
+                        + unit.competencyId());
+            }
+            if (!lessons.existsById(unit.lessonId())) {
+                throw new IllegalStateException("Lesson ausente para Mission editorial: " + unit.lessonId());
+            }
+            var missingExercises = unit.exerciseIds().stream().filter(id -> !exercises.existsById(id)).toList();
+            if (!missingExercises.isEmpty()) {
+                throw new IllegalStateException("Exercises ausentes para Mission editorial: " + missingExercises);
+            }
+
+            var assessmentId = unit.id() + "-assessment";
+            if (!assessments.existsById(assessmentId)) {
+                var assessment = new Assessment(assessmentId, unit.assessmentTitle(), unit.assessmentPurpose(),
+                        Assessment.Type.PERFORMANCE, "teaching-runner-v1", unit.assessmentInstructions(),
+                        unit.assessmentConditions(), unit.allowedSupport(), unit.inconclusiveRule(), 6, 3,
+                        DifficultyDemand.unspecified(), List.of(unit.competencyId()), unit.criterionKeys());
+                assessment.activate();
+                assessments.save(assessment);
+            }
+            if (!missions.existsById(unit.id())) {
+                var mission = new Mission(unit.id(), curriculumId, unit.title(), unit.objective(), unit.context(),
+                        unit.motivation(), unit.estimatedMinutes(), unit.instrument(), unit.stage(),
+                        unit.completionCriteria(), unit.expectedEvidence(), unit.musicalApplication(), null,
+                        DifficultyDemand.unspecified(), List.of(unit.competencyId()), List.of(unit.lessonId()),
+                        unit.exerciseIds(), List.of(assessmentId));
+                mission.activate();
+                missions.save(mission);
+            }
+        });
     }
 
     private void migrateCompetencies() {

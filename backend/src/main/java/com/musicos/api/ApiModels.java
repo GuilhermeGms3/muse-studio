@@ -132,11 +132,29 @@ public final class ApiModels {
                                        String observation, String conditions, Instant occurredAt,
                                        Instant validUntil) {}
 
+    public record MissionPrerequisiteView(String competencyId, String title, String type,
+                                          int depth, boolean direct, boolean satisfied,
+                                          boolean blocking, String reason) {}
+
+    public record MissionCompetencyView(String competencyId, String title, String observableAction,
+                                        String observationConditions, String curriculumStatus,
+                                        String masteryState, boolean unlocked, String curriculumReason,
+                                        String evidenceConfidence, List<String> missingCriteria,
+                                        String nextObservation) {}
+
+    public record MissionCoachView(String missionStatus, String whyMission,
+                                   List<CoachEvidenceView> citedEvidence,
+                                   String nextStatus, String nextMessage,
+                                   List<CoachRecommendationView> nextRecommendations) {}
+
     public record MissionWorkspaceView(MissionSummaryView mission, List<MissionLessonView> lessons,
                                        List<ExerciseView> exercises,
                                        List<MissionAssessmentView> assessments,
                                        List<ExerciseAttemptView> feedback,
-                                       List<LearningEvidenceView> evidence) {}
+                                       List<LearningEvidenceView> evidence,
+                                       List<MissionPrerequisiteView> prerequisites,
+                                       List<MissionCompetencyView> competencies,
+                                       MissionCoachView coach) {}
 
     public record HomeView(String greeting, String message, int expectedMinutes,
                            List<PlanActivityView> todayPlan, ContinueView continueFrom,

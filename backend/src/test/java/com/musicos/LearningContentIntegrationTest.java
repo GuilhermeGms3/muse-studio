@@ -3,6 +3,7 @@ package com.musicos;
 import static com.musicos.api.ApiModels.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.musicos.config.TeachingContentCatalog;
 import com.musicos.domain.InstrumentId;
 import com.musicos.repository.ExerciseRepository;
 import com.musicos.repository.LibraryContentRepository;
@@ -36,7 +37,8 @@ class LearningContentIntegrationTest {
             assertThat(lesson.getSteps()).hasSizeGreaterThanOrEqualTo(3);
             assertThat(lesson.getCommonMistakes()).isNotEmpty();
         });
-        assertThat(exercises.count()).isGreaterThan(75);
+        assertThat(exercises.findAll()).extracting(item -> item.getId())
+                .containsAll(TeachingContentCatalog.exercises().stream().map(item -> item.getId()).toList());
     }
 
     @Test

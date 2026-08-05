@@ -171,13 +171,13 @@ class PedagogicalDomainIntegrationTest {
     }
 
     @Test
-    void coachDoesNotInventMissionForMigratedProfileWithoutEvidenceOrActiveMission() {
+    void coachDoesNotInventEvidenceForEditorialMissionWithoutObservations() {
         var profile = profiles.findByOwnerIdAndInstrument("default", InstrumentId.GUITAR).orElseThrow();
 
         var answer = coach.whatShouldIDoToday(profile.getId());
 
-        assertThat(answer.status()).isEqualTo(Coach.AnswerStatus.NO_ELIGIBLE_MISSION);
+        assertThat(answer.status()).isEqualTo(Coach.AnswerStatus.INSUFFICIENT_EVIDENCE);
         assertThat(answer.recommendations()).isEmpty();
-        assertThat(answer.message()).contains("não criou uma alternativa fictícia");
+        assertThat(answer.message()).contains("sem inventar justificativa");
     }
 }

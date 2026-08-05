@@ -262,6 +262,40 @@ export interface LearningEvidence {
   validUntil?: string;
 }
 
+export interface MissionPrerequisite {
+  competencyId: string;
+  title: string;
+  type: string;
+  depth: number;
+  direct: boolean;
+  satisfied: boolean;
+  blocking: boolean;
+  reason: string;
+}
+
+export interface MissionCompetency {
+  competencyId: string;
+  title: string;
+  observableAction: string;
+  observationConditions: string;
+  curriculumStatus: string;
+  masteryState: string;
+  unlocked: boolean;
+  curriculumReason: string;
+  evidenceConfidence: string;
+  missingCriteria: string[];
+  nextObservation: string;
+}
+
+export interface MissionCoach {
+  missionStatus: string;
+  whyMission: string;
+  citedEvidence: CoachEvidence[];
+  nextStatus: string;
+  nextMessage: string;
+  nextRecommendations: CoachRecommendation[];
+}
+
 export interface MissionWorkspaceData {
   mission: {
     id: string;
@@ -285,6 +319,9 @@ export interface MissionWorkspaceData {
   assessments: MissionAssessment[];
   feedback: ExerciseAttempt[];
   evidence: LearningEvidence[];
+  prerequisites: MissionPrerequisite[];
+  competencies: MissionCompetency[];
+  coach: MissionCoach;
 }
 
 export interface ExerciseAttempt {
