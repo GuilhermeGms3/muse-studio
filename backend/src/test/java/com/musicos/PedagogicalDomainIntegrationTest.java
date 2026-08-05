@@ -3,6 +3,7 @@ package com.musicos;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.musicos.domain.InstrumentId;
+import com.musicos.domain.Evidence;
 import com.musicos.domain.LearningContentRelation;
 import com.musicos.domain.LearningPathStep;
 import com.musicos.repository.CompetencyRepository;
@@ -18,6 +19,8 @@ import com.musicos.repository.MasteryRepository;
 import com.musicos.repository.SkillRepository;
 import com.musicos.service.PedagogicalDomainMigration;
 import com.musicos.service.CurriculumEngine;
+import com.musicos.service.EvidenceEngine;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,6 +43,7 @@ class PedagogicalDomainIntegrationTest {
     @Autowired LearningContentRelationRepository contentRelations;
     @Autowired PedagogicalDomainMigration migration;
     @Autowired CurriculumEngine curriculumEngine;
+    @Autowired EvidenceEngine evidenceEngine;
     @Autowired JdbcTemplate jdbc;
 
     @Test
@@ -100,7 +104,7 @@ class PedagogicalDomainIntegrationTest {
                 "select \"version\" from \"flyway_schema_history\" where \"success\" = true "
                         + "order by \"installed_rank\" desc limit 1",
                 String.class);
-        assertThat(version).isEqualTo("2");
+        assertThat(version).isEqualTo("3");
     }
 
     @Test
@@ -136,6 +140,31 @@ class PedagogicalDomainIntegrationTest {
                 .anySatisfy(prerequisite -> {
                     assertThat(prerequisite.competencyId()).isEqualTo("rhythm");
                     assertThat(prerequisite.blocking()).isFalse();
+                });
+    }
+
+    @Test
+    void evidenceEngineCollectsObservableEvidenceWithoutInventingMasteryForLegacyPolicy() {
+        var profile = profiles.findByOwnerIdAndInstrument("default", InstrumentId.GUITAR).orElseThrow();
+        var occurredAt = Instant.now().minusSeconds(10);
+
+        var result = evidenceEngine.collect(new EvidenceEngine.Observation(
+                profile.getId(), "alternate-picking", "controlled-alternation",
+                Evidence.Type.EXECUTION, Evidence.State.VALID, Evidence.FunctionalWeight.PRIMARY,
+                Evidence.Reliability.MODERATE, Evidence.Result.SUPPORTS, Evidence.SourceType.SESSION,
+                "integration-session", "integration-session", 2,
+                "Alternância observada em execução contínua.", "BPM 60, sem acompanhamento.",
+                "manual-observation-v1", null, null, null, occurredAt, null));
+
+        assertThat(evidence.findById(result.evidenceId())).isPresent();
+        assertThat(result.report().policyComplete()).isFalse();
+        assertThat(result.report().confidence()).isEqualTo(EvidenceEngine.Confidence.POLICY_INCOMPLETE);
+        assertThat(result.report().masteryState()).isEqualTo(com.musicos.domain.Mastery.State.DEVELOPING);
+        assertThat(mastery.findByInstrumentProfileIdAndCompetencyId(profile.getId(), "alternate-picking"))
+                .get()
+                .satisfies(hypothesis -> {
+                    assertThat(hypothesis.isMandatoryCriteriaCovered()).isFalse();
+                    assertThat(hypothesis.getSupportingEvidenceIds()).containsExactly(result.evidenceId());
                 });
     }
 }

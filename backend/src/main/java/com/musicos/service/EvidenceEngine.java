@@ -289,7 +289,7 @@ public class EvidenceEngine {
         if (independentCount > 0 || !limitingStrong.isEmpty()) return Mastery.State.DEVELOPING;
         if (!contributingSupport.isEmpty()) return Mastery.State.INITIAL_HYPOTHESIS;
         if (currentMastery != null && isEstablished(currentMastery.getState())) {
-            return currentMastery.getState();
+            return Mastery.State.REVALIDATION_NEEDED;
         }
         return Mastery.State.UNOBSERVED;
     }
@@ -313,44 +313,44 @@ public class EvidenceEngine {
         var effectiveValidUntil = boundedValidity(item.getOccurredAt(), item.getValidUntil(), competency);
         if (supersededIds.contains(item.getId())) {
             return new Classified(item, Evidence.State.SUPERSEDED, false, false, effectiveValidUntil,
-                    "Substitu�da por uma observa��o posterior audit�vel.");
+                    "Substituída por uma observação posterior auditável.");
         }
         if (item.getState() == Evidence.State.INVALID || item.getState() == Evidence.State.SUPERSEDED) {
             return new Classified(item, item.getState(), false, false, effectiveValidUntil,
-                    "Estado da evid�ncia n�o permite uso na hip�tese.");
+                    "Estado da evidência não permite uso na hipótese.");
         }
         if (item.getState() == Evidence.State.PROVISIONAL || item.getState() == Evidence.State.CONTESTED) {
             return new Classified(item, item.getState(), false, false, effectiveValidUntil,
-                    "A observa��o ainda precisa de valida��o ou resolu��o.");
+                    "A observação ainda precisa de validação ou resolução.");
         }
         if (item.getState() == Evidence.State.AGED
-                || effectiveValidUntil != null && evaluatedAt.isAfter(effectiveValidUntil)) {
+                || effectiveValidUntil != null && !evaluatedAt.isBefore(effectiveValidUntil)) {
             return new Classified(item, Evidence.State.AGED, false, false, effectiveValidUntil,
-                    "A observa��o permanece hist�rica, mas perdeu validade para inferir o estado atual.");
+                    "A observação permanece histórica, mas perdeu validade para inferir o estado atual.");
         }
         if (item.getState() == Evidence.State.CONTRADICTORY) {
             return new Classified(item, Evidence.State.CONTRADICTORY, false, false, effectiveValidUntil,
-                    "A observa��o explicita conflito e exige interpreta��o antes de contribuir.");
+                    "A observação explicita conflito e exige interpretação antes de contribuir.");
         }
         if (item.getFunctionalWeight() == Evidence.FunctionalWeight.NOT_ADMISSIBLE) {
             return new Classified(item, item.getState(), false, false, effectiveValidUntil,
-                    "A pol�tica classifica esta fonte como n�o admiss�vel para a conclus�o.");
+                    "A política classifica esta fonte como não admissível para a conclusão.");
         }
         if (item.getReliability() == Evidence.Reliability.LOW) {
             return new Classified(item, item.getState(), false, false, effectiveValidUntil,
-                    "Confiabilidade baixa: resultado preservado, mas n�o interpretado como acerto ou falha musical.");
+                    "Confiabilidade baixa: resultado preservado, mas não interpretado como acerto ou falha musical.");
         }
         if (item.getResult() == Evidence.Result.INCONCLUSIVE) {
             return new Classified(item, item.getState(), false, false, effectiveValidUntil,
-                    "Resultado inconclusivo n�o altera a hip�tese de dom�nio.");
+                    "Resultado inconclusivo não altera a hipótese de domínio.");
         }
         var primary = isPrimaryRole(item.getFunctionalWeight()) && item.getState() == Evidence.State.VALID;
         var contributes = item.getFunctionalWeight() != Evidence.FunctionalWeight.CONTEXTUAL;
         var reason = primary
-                ? "Observa��o prim�ria admiss�vel sob a pol�tica declarada."
+                ? "Observação primária admissível sob a política declarada."
                 : contributes
-                ? "Observa��o limitada ou corroboradora; informa sem sustentar dom�nio sozinha."
-                : "Evid�ncia contextual preservada apenas para interpreta��o.";
+                ? "Observação limitada ou corroboradora; informa sem sustentar domínio sozinha."
+                : "Evidência contextual preservada apenas para interpretação.";
         return new Classified(item, item.getState(), contributes, primary, effectiveValidUntil, reason);
     }
 
@@ -389,7 +389,7 @@ public class EvidenceEngine {
     }
 
     private int countWeight(List<Classified> classified, Evidence.FunctionalWeight weight) {
-        return (int) classified.stream().filter(Classified::contributes)
+        return (int) classified.stream()
                 .filter(item -> item.evidence().getFunctionalWeight() == weight).count();
     }
 
@@ -415,35 +415,35 @@ public class EvidenceEngine {
                              List<String> supportingIds, List<String> limitingIds) {
         var parts = new ArrayList<String>();
         parts.add(policyComplete
-                ? "Pol�tica configurada e avaliada por categorias funcionais."
-                : "Pol�tica incompleta; as observa��es n�o podem sustentar conclus�o de dom�nio prov�vel.");
-        parts.add("Crit�rios obrigat�rios cobertos: " + covered + "; ausentes: " + missing + ".");
-        parts.add("Evid�ncias prim�rias independentes atuais: " + independentCount + ".");
-        parts.add("Aplica��o: " + observed(application) + "; transfer�ncia: " + observed(transfer)
-                + "; reten��o: " + observed(retention) + ".");
-        if (conflict) parts.add("Conflito compar�vel ou explicitamente declarado permanece sem resolu��o.");
-        if (negativePattern) parts.add("Resultados limitantes independentes pedem reavalia��o focal.");
-        if (temporalRevalidation) parts.add("As observa��es prim�rias dispon�veis envelheceram.");
-        parts.add("Sustentada por " + supportingIds.size() + " observa��es admiss�veis e limitada por "
+                ? "Política configurada e avaliada por categorias funcionais."
+                : "Política incompleta; as observações não podem sustentar conclusão de domínio provável.");
+        parts.add("Critérios obrigatórios cobertos: " + covered + "; ausentes: " + missing + ".");
+        parts.add("Evidências primárias independentes atuais: " + independentCount + ".");
+        parts.add("Aplicação: " + observed(application) + "; transferência: " + observed(transfer)
+                + "; retenção: " + observed(retention) + ".");
+        if (conflict) parts.add("Conflito comparável ou explicitamente declarado permanece sem resolução.");
+        if (negativePattern) parts.add("Resultados limitantes independentes pedem reavaliação focal.");
+        if (temporalRevalidation) parts.add("As observações primárias disponíveis envelheceram.");
+        parts.add("Sustentada por " + supportingIds.size() + " observações admissíveis e limitada por "
                 + limitingIds.size() + ".");
         return String.join(" ", parts);
     }
 
     private String observed(boolean value) {
-        return value ? "observada" : "ainda n�o observada";
+        return value ? "observada" : "ainda não observada";
     }
 
     private String nextObservation(boolean policyComplete, List<String> missing, int independentCount,
                                    boolean application, boolean retention, boolean conflict,
                                    boolean temporalRevalidation) {
-        if (!policyComplete) return "Configurar e calibrar a pol�tica da compet�ncia antes de uma conclus�o forte.";
-        if (conflict) return "Realizar avalia��o focal sob condi��es compar�veis para investigar o conflito.";
-        if (temporalRevalidation) return "Obter uma observa��o curta e atual de revalida��o.";
-        if (!missing.isEmpty()) return "Observar diretamente o crit�rio obrigat�rio: " + missing.getFirst() + ".";
-        if (independentCount < 2) return "Obter outra observa��o prim�ria em momento ou contexto independente.";
-        if (!application) return "Observar a compet�ncia em aplica��o musical relevante.";
-        if (!retention) return "Reobservar ap�s o intervalo definido pela pol�tica para investigar reten��o.";
-        return "Manter uso em contextos musicais variados e revalidar quando a pol�tica indicar.";
+        if (!policyComplete) return "Configurar e calibrar a política da competência antes de uma conclusão forte.";
+        if (conflict) return "Realizar avaliação focal sob condições comparáveis para investigar o conflito.";
+        if (temporalRevalidation) return "Obter uma observação curta e atual de revalidação.";
+        if (!missing.isEmpty()) return "Observar diretamente o critério obrigatório: " + missing.getFirst() + ".";
+        if (independentCount < 2) return "Obter outra observação primária em momento ou contexto independente.";
+        if (!application) return "Observar a competência em aplicação musical relevante.";
+        if (!retention) return "Reobservar após o intervalo definido pela política para investigar retenção.";
+        return "Manter uso em contextos musicais variados e revalidar quando a política indicar.";
     }
 
     private void validateObservation(
@@ -465,20 +465,20 @@ public class EvidenceEngine {
             throw new IllegalArgumentException("challengeLevel deve estar entre 1 e 5");
         }
         if (observation.occurredAt().isAfter(Instant.now())) {
-            throw new IllegalArgumentException("occurredAt n�o pode estar no futuro");
+            throw new IllegalArgumentException("occurredAt não pode estar no futuro");
         }
         if (observation.validUntil() != null && !observation.validUntil().isAfter(observation.occurredAt())) {
             throw new IllegalArgumentException("validUntil deve ser posterior a occurredAt");
         }
         if (observation.state() == Evidence.State.AGED || observation.state() == Evidence.State.SUPERSEDED) {
-            throw new IllegalArgumentException("AGED e SUPERSEDED s�o estados derivados pelo motor");
+            throw new IllegalArgumentException("AGED e SUPERSEDED são estados derivados pelo motor");
         }
         if (isPrimaryRole(observation.functionalWeight()) && observation.state() == Evidence.State.VALID
                 && isBlank(observation.protocolVersion())) {
-            throw new IllegalArgumentException("evid�ncia prim�ria v�lida exige protocolVersion");
+            throw new IllegalArgumentException("evidência primária válida exige protocolVersion");
         }
         if (isNonPerformanceType(observation.type()) && isPrimaryRole(observation.functionalWeight())) {
-            throw new IllegalArgumentException("evid�ncia declarativa, contextual ou de processo n�o sustenta dom�nio sozinha");
+            throw new IllegalArgumentException("evidência declarativa, contextual ou de processo não sustenta domínio sozinha");
         }
         validateSupersession(observation);
     }
@@ -486,14 +486,14 @@ public class EvidenceEngine {
     private void validateSupersession(Observation observation) {
         if (isBlank(observation.supersedesEvidenceId())) return;
         var previous = evidence.findById(observation.supersedesEvidenceId())
-                .orElseThrow(() -> new NotFoundException("Evid�ncia substitu�da n�o encontrada"));
+                .orElseThrow(() -> new NotFoundException("Evidência substituída não encontrada"));
         if (!previous.getInstrumentProfileId().equals(observation.instrumentProfileId())
                 || !previous.getCompetencyId().equals(observation.competencyId())
                 || !previous.getCriterionKey().equals(observation.criterionKey())) {
-            throw new IllegalArgumentException("substitui��o deve preservar perfil, compet�ncia e crit�rio");
+            throw new IllegalArgumentException("substituição deve preservar perfil, competência e critério");
         }
         if (observation.occurredAt().isBefore(previous.getOccurredAt())) {
-            throw new IllegalArgumentException("evid�ncia substituta n�o pode anteceder a observa��o original");
+            throw new IllegalArgumentException("evidência substituta não pode anteceder a observação original");
         }
     }
 
@@ -503,11 +503,11 @@ public class EvidenceEngine {
     }
 
     private void validateProfileCompetency(InstrumentProfile profile, Competency competency) {
-        if (!profile.isActive()) throw new IllegalStateException("Perfil instrumental est� inativo");
-        if (!competency.isActive()) throw new IllegalStateException("Compet�ncia est� inativa");
+        if (!profile.isActive()) throw new IllegalStateException("Perfil instrumental está inativo");
+        if (!competency.isActive()) throw new IllegalStateException("Competência está inativa");
         if (!competency.getInstruments().isEmpty()
                 && !competency.getInstruments().contains(profile.getInstrument())) {
-            throw new IllegalArgumentException("Compet�ncia n�o pertence ao instrumento do perfil");
+            throw new IllegalArgumentException("Competência não pertence ao instrumento do perfil");
         }
     }
 
@@ -522,13 +522,13 @@ public class EvidenceEngine {
     private InstrumentProfile requireProfile(String id) {
         requiredText(id, "instrumentProfileId");
         return profiles.findById(id)
-                .orElseThrow(() -> new NotFoundException("Perfil instrumental n�o encontrado: " + id));
+                .orElseThrow(() -> new NotFoundException("Perfil instrumental não encontrado: " + id));
     }
 
     private Competency requireCompetency(String id) {
         requiredText(id, "competencyId");
         return competencies.findById(id)
-                .orElseThrow(() -> new NotFoundException("Compet�ncia n�o encontrada: " + id));
+                .orElseThrow(() -> new NotFoundException("Competência não encontrada: " + id));
     }
 
     private String policyVersion(Competency competency) {
@@ -536,7 +536,7 @@ public class EvidenceEngine {
     }
 
     private void requiredText(String value, String field) {
-        if (isBlank(value)) throw new IllegalArgumentException(field + " � obrigat�rio");
+        if (isBlank(value)) throw new IllegalArgumentException(field + " é obrigatório");
     }
 
     private boolean isBlank(String value) {
