@@ -61,9 +61,20 @@ class AdaptiveLearningIntegrationTest {
         assertThat(plan.stream().anyMatch(value -> value.skillId() != null)).isTrue();
 
         var backup = data.backup();
-        assertThat(backup.version()).isEqualTo("music-os-backup-v1");
+        assertThat(backup.version()).isEqualTo("muse-studio-backup-v2");
         assertThat(backup.skillProgress()).isNotEmpty();
         assertThat(backup.journal()).isNotEmpty();
+        assertThat(backup.pedagogy()).isNotNull();
+        assertThat(backup.pedagogy().instrumentProfiles()).isNotEmpty();
+        assertThat(backup.pedagogy().learningGoals()).isNotEmpty();
+        assertThat(backup.pedagogy().learningPaths()).isNotEmpty();
         assertThat(data.restore(backup).message()).contains("restaurado");
+
+        var legacyBackup = new BackupSnapshot("music-os-backup-v1", backup.exportedAt(),
+                backup.preferences(), backup.lessons(), backup.exercises(), backup.songs(),
+                backup.projects(), backup.skillProgress(), backup.journal(), null);
+        var legacyResult = data.restore(legacyBackup);
+        assertThat(legacyResult.instrumentProfiles()).isZero();
+        assertThat(legacyResult.evidence()).isZero();
     }
 }

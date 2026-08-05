@@ -88,6 +88,41 @@ public class LearningGoal {
     public void achieve() { this.status = Status.ACHIEVED; this.updatedAt = Instant.now(); }
     public void abandon() { this.status = Status.ABANDONED; this.updatedAt = Instant.now(); }
 
+    public static LearningGoal restoreSnapshot(
+            String id, String instrumentProfileId, String curriculumId, String title,
+            String desiredOutcome, String musicalContext, Type type, Status status, int priority,
+            LocalDate targetDate, List<String> priorityCompetencyIds, List<String> repertoireIds,
+            Instant createdAt, Instant updatedAt) {
+        var goal = new LearningGoal(instrumentProfileId, curriculumId, title, desiredOutcome,
+                musicalContext, type, priority, targetDate, priorityCompetencyIds, repertoireIds);
+        goal.id = DomainRules.requiredText(id, "id");
+        goal.status = DomainRules.required(status, "status");
+        goal.createdAt = createdAt == null ? Instant.now() : createdAt;
+        goal.updatedAt = updatedAt == null ? goal.createdAt : updatedAt;
+        return goal;
+    }
+
+    public void restoreState(String instrumentProfileId, String curriculumId, String title,
+                             String desiredOutcome, String musicalContext, Type type, Status status,
+                             int priority, LocalDate targetDate, List<String> priorityCompetencyIds,
+                             List<String> repertoireIds, Instant createdAt, Instant updatedAt) {
+        if (!this.instrumentProfileId.equals(instrumentProfileId)) {
+            throw new IllegalArgumentException("backup de objetivo diverge do perfil persistido");
+        }
+        this.curriculumId = curriculumId;
+        this.title = DomainRules.requiredText(title, "title");
+        this.desiredOutcome = DomainRules.requiredText(desiredOutcome, "desiredOutcome");
+        this.musicalContext = DomainRules.requiredText(musicalContext, "musicalContext");
+        this.type = DomainRules.required(type, "type");
+        this.status = DomainRules.required(status, "status");
+        this.priority = DomainRules.between(priority, 1, 5, "priority");
+        this.targetDate = targetDate;
+        this.priorityCompetencyIds = new ArrayList<>(DomainRules.distinctIds(priorityCompetencyIds));
+        this.repertoireIds = new ArrayList<>(DomainRules.distinctIds(repertoireIds));
+        this.createdAt = createdAt == null ? this.createdAt : createdAt;
+        this.updatedAt = updatedAt == null ? Instant.now() : updatedAt;
+    }
+
     public String getId() { return id; }
     public String getInstrumentProfileId() { return instrumentProfileId; }
     public String getCurriculumId() { return curriculumId; }

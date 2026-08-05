@@ -69,6 +69,18 @@ public class AssessmentAttempt {
         }
     }
 
+    public static AssessmentAttempt restoreSnapshot(
+            UUID id, String assessmentId, String instrumentProfileId, ObserverType observerType,
+            int challengeLevel, String artifactReference, String note, Instant completedAt,
+            List<String> evidenceIds) {
+        var attempt = new AssessmentAttempt(assessmentId, instrumentProfileId, observerType,
+                challengeLevel, artifactReference, note);
+        attempt.id = DomainRules.required(id, "id");
+        attempt.completedAt = completedAt == null ? Instant.now() : completedAt;
+        attempt.attachEvidence(evidenceIds);
+        return attempt;
+    }
+
     public UUID getId() { return id; }
     public String getAssessmentId() { return assessmentId; }
     public String getInstrumentProfileId() { return instrumentProfileId; }

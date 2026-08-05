@@ -81,6 +81,36 @@ public class InstrumentProfile {
         this.updatedAt = Instant.now();
     }
 
+    public static InstrumentProfile restoreSnapshot(
+            String id, String ownerId, InstrumentId instrument, String displayName,
+            LearningStage currentStage, String curriculumId, String legacyPreferencesId,
+            boolean primaryProfile, boolean active, Instant createdAt, Instant updatedAt) {
+        var profile = new InstrumentProfile(id, ownerId, instrument, displayName, currentStage,
+                curriculumId, legacyPreferencesId);
+        profile.primaryProfile = primaryProfile;
+        profile.active = active;
+        profile.createdAt = createdAt == null ? Instant.now() : createdAt;
+        profile.updatedAt = updatedAt == null ? profile.createdAt : updatedAt;
+        return profile;
+    }
+
+    public void restoreState(String ownerId, InstrumentId instrument, String displayName,
+                             LearningStage currentStage, String curriculumId,
+                             String legacyPreferencesId, boolean primaryProfile, boolean active,
+                             Instant createdAt, Instant updatedAt) {
+        if (!this.ownerId.equals(ownerId) || this.instrument != instrument) {
+            throw new IllegalArgumentException("backup de perfil diverge da identidade persistida");
+        }
+        this.displayName = DomainRules.requiredText(displayName, "displayName");
+        this.currentStage = DomainRules.required(currentStage, "currentStage");
+        this.curriculumId = curriculumId;
+        this.legacyPreferencesId = legacyPreferencesId;
+        this.primaryProfile = primaryProfile;
+        this.active = active;
+        this.createdAt = createdAt == null ? this.createdAt : createdAt;
+        this.updatedAt = updatedAt == null ? Instant.now() : updatedAt;
+    }
+
     public String getId() { return id; }
     public String getOwnerId() { return ownerId; }
     public InstrumentId getInstrument() { return instrument; }

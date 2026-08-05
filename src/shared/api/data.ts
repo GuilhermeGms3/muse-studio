@@ -15,6 +15,11 @@ export const restoreBackup = (snapshot: unknown) =>
     exercises: number;
     songs: number;
     projects: number;
+    instrumentProfiles: number;
+    learningGoals: number;
+    learningPaths: number;
+    evidence: number;
+    assessmentAttempts: number;
     message: string;
   }>("/data/restore", { method: "POST", body: JSON.stringify(snapshot) });
 

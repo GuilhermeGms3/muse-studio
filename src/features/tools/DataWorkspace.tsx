@@ -1,5 +1,16 @@
 import { Cable, Database, Download, FileAudio, FolderOpen, Upload } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Breadcrumb } from "@/workspace/navigation/Breadcrumb";
 import { QueryState } from "@/shared/ui/query/QueryState";
 import {
@@ -28,9 +39,13 @@ function saveBlob(blob: Blob, name: string) {
 
 export function DataPage() {
   const status = useDataStatus();
+  const queryClient = useQueryClient();
   const { metronome, setMetronome } = useWorkspace();
   const restoreInput = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageKind, setMessageKind] = useState<"success" | "error">("success");
+  const [busy, setBusy] = useState<"backup" | "journal" | "restore" | "import" | null>(null);
+  const [pendingRestore, setPendingRestore] = useState<File | null>(null);
   const [imports, setImports] = useState<ImportedFile[]>([]);
   const [dragging, setDragging] = useState(false);
   const [midiDevice, setMidiDevice] = useState("Desconectado");
@@ -39,34 +54,57 @@ export function DataPage() {
   if (!status.data) return <QueryState error={status.error} />;
 
   const exportFile = async (kind: "backup" | "journal") => {
-    const blob = await downloadDataFile(kind === "backup" ? "/data/backup" : "/data/journal.csv");
-    saveBlob(
-      blob,
-      kind === "backup" ? `music-os-backup-${Date.now()}.json` : "music-os-journal.csv",
-    );
-    setMessage(kind === "backup" ? "Backup exportado." : "Histórico exportado.");
+    setBusy(kind);
+    try {
+      const blob = await downloadDataFile(kind === "backup" ? "/data/backup" : "/data/journal.csv");
+      saveBlob(
+        blob,
+        kind === "backup" ? `muse-studio-backup-${Date.now()}.json` : "muse-studio-journal.csv",
+      );
+      setMessageKind("success");
+      setMessage(kind === "backup" ? "Backup de dados exportado." : "Histórico exportado.");
+    } catch (reason) {
+      setMessageKind("error");
+      setMessage((reason as Error).message);
+    } finally {
+      setBusy(null);
+    }
   };
 
-  const restore = async (file?: File) => {
+  const restore = async (file: File | null) => {
     if (!file) return;
+    setBusy("restore");
     try {
       const result = await restoreBackup(JSON.parse(await file.text()));
+      await queryClient.invalidateQueries();
+      setMessageKind("success");
       setMessage(result.message);
     } catch (reason) {
-      setMessage((reason as Error).message);
+      setMessageKind("error");
+      setMessage(
+        `A restauração não foi concluída. Os dados atuais foram preservados. ${(reason as Error).message}`,
+      );
+    } finally {
+      setBusy(null);
+      setPendingRestore(null);
+      if (restoreInput.current) restoreInput.current.value = "";
     }
   };
 
   const importFiles = async (files: FileList | File[]) => {
+    setBusy("import");
     for (const file of Array.from(files)) {
       try {
         const imported = await importMusicFile(file);
         setImports((values) => [imported, ...values]);
+        setMessageKind("success");
         setMessage(`${file.name} importado.`);
       } catch (reason) {
+        setMessageKind("error");
         setMessage((reason as Error).message);
       }
     }
+    setBusy(null);
   };
 
   const connectMidi = async () => {
@@ -77,28 +115,34 @@ export function DataPage() {
       setMidiDevice("Web MIDI indisponível");
       return;
     }
-    const access = await midiNavigator.requestMIDIAccess();
-    const inputs = Array.from(access.inputs.values());
-    setMidiDevice(
-      inputs
-        .map((input) => input.name)
-        .filter(Boolean)
-        .join(", ") || "Nenhuma entrada",
-    );
-    inputs.forEach((input) => {
-      input.onmidimessage = (event) => {
-        const [statusByte, data1, data2] = event.data;
-        const command = statusByte & 0xf0;
-        if (command === 0x90 && data2 > 0) {
-          setMidiEvent(`Nota ${data1} · velocidade ${data2}`);
-          if (data1 === 36) setMetronome({ playing: !metronome.playing });
-        }
-        if (command === 0xb0 && data1 === 64 && data2 > 0) {
-          setMidiEvent("Pedal · metrônomo");
-          setMetronome({ playing: !metronome.playing });
-        }
-      };
-    });
+    try {
+      const access = await midiNavigator.requestMIDIAccess();
+      const inputs = Array.from(access.inputs.values());
+      setMidiDevice(
+        inputs
+          .map((input) => input.name)
+          .filter(Boolean)
+          .join(", ") || "Nenhuma entrada",
+      );
+      inputs.forEach((input) => {
+        input.onmidimessage = (event) => {
+          const [statusByte, data1, data2] = event.data;
+          const command = statusByte & 0xf0;
+          if (command === 0x90 && data2 > 0) {
+            setMidiEvent(`Nota ${data1} · velocidade ${data2}`);
+            if (data1 === 36) setMetronome({ playing: !metronome.playing });
+          }
+          if (command === 0xb0 && data1 === 64 && data2 > 0) {
+            setMidiEvent("Pedal · metrônomo");
+            setMetronome({ playing: !metronome.playing });
+          }
+        };
+      });
+    } catch {
+      setMidiDevice("Não foi possível acessar o dispositivo MIDI");
+      setMessageKind("error");
+      setMessage("Verifique a permissão do navegador e tente conectar o dispositivo novamente.");
+    }
   };
 
   return (
@@ -120,19 +164,30 @@ export function DataPage() {
                 </p>
               </div>
               <div className="flex items-center gap-1 bg-surface p-2">
-                <Action icon={Download} label="Backup" onClick={() => exportFile("backup")} />
+                <Action
+                  icon={Download}
+                  label={busy === "backup" ? "Exportando..." : "Backup"}
+                  disabled={busy !== null}
+                  onClick={() => exportFile("backup")}
+                />
                 <Action
                   icon={Upload}
-                  label="Restaurar"
+                  label={busy === "restore" ? "Restaurando..." : "Restaurar"}
+                  disabled={busy !== null}
                   onClick={() => restoreInput.current?.click()}
                 />
-                <Action icon={Download} label="CSV" onClick={() => exportFile("journal")} />
+                <Action
+                  icon={Download}
+                  label={busy === "journal" ? "Exportando..." : "CSV"}
+                  disabled={busy !== null}
+                  onClick={() => exportFile("journal")}
+                />
                 <input
                   ref={restoreInput}
                   type="file"
                   accept=".json"
                   hidden
-                  onChange={(event) => restore(event.target.files?.[0])}
+                  onChange={(event) => setPendingRestore(event.target.files?.[0] ?? null)}
                 />
               </div>
             </div>
@@ -152,9 +207,10 @@ export function DataPage() {
               onDrop={(event) => {
                 event.preventDefault();
                 setDragging(false);
-                importFiles(event.dataTransfer.files);
+                if (busy === null) void importFiles(event.dataTransfer.files);
               }}
-              className={`flex min-h-24 cursor-pointer items-center justify-center gap-3 bg-surface p-4 text-xs ${dragging ? "outline outline-1 outline-signal" : ""}`}
+              aria-disabled={busy !== null}
+              className={`flex min-h-24 items-center justify-center gap-3 bg-surface p-4 text-xs ${busy !== null ? "cursor-not-allowed opacity-60" : "cursor-pointer"} ${dragging ? "outline outline-1 outline-signal" : ""}`}
             >
               <FileAudio className="size-5 text-muted-foreground" />
               Áudio, MIDI, MusicXML ou Guitar Pro
@@ -162,8 +218,9 @@ export function DataPage() {
                 type="file"
                 multiple
                 hidden
+                disabled={busy !== null}
                 accept=".wav,.mp3,.ogg,.flac,.m4a,.mid,.midi,.musicxml,.xml,.mxl,.gp,.gp3,.gp4,.gp5,.gpx"
-                onChange={(event) => event.target.files && importFiles(event.target.files)}
+                onChange={(event) => event.target.files && void importFiles(event.target.files)}
               />
             </label>
             {imports.map((item) => (
@@ -184,6 +241,7 @@ export function DataPage() {
             </header>
             <div className="flex items-center gap-3 bg-surface p-3">
               <button
+                type="button"
                 onClick={connectMidi}
                 className="h-8 border border-border px-3 text-xs hover:border-signal"
               >
@@ -196,12 +254,43 @@ export function DataPage() {
             </div>
           </section>
           {message && (
-            <p className="mt-3 border-l border-signal pl-2 text-xs text-muted-foreground">
+            <p
+              role={messageKind === "error" ? "alert" : "status"}
+              className={`mt-3 border-l pl-2 text-xs ${messageKind === "error" ? "border-destructive text-destructive" : "border-signal text-muted-foreground"}`}
+            >
               {message}
             </p>
           )}
         </div>
       </main>
+      <AlertDialog
+        open={pendingRestore !== null}
+        onOpenChange={(open) => {
+          if (!open && busy !== "restore") {
+            setPendingRestore(null);
+            if (restoreInput.current) restoreInput.current.value = "";
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restaurar este backup?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Registros com o mesmo identificador serão atualizados. Dados adicionais serão
+              preservados, mas a operação não pode ser desfeita automaticamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy === "restore"}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={busy === "restore"}
+              onClick={() => void restore(pendingRestore)}
+            >
+              {busy === "restore" ? "Restaurando..." : "Restaurar backup"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -210,15 +299,19 @@ function Action({
   icon: Icon,
   label,
   onClick,
+  disabled = false,
 }: {
   icon: typeof Download;
   label: string;
   onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="inline-flex h-8 items-center gap-2 border border-border px-3 text-xs hover:border-signal"
+      disabled={disabled}
+      className="inline-flex h-8 items-center gap-2 border border-border px-3 text-xs hover:border-signal disabled:cursor-not-allowed disabled:opacity-50"
     >
       <Icon className="size-3" />
       {label}

@@ -226,11 +226,64 @@ public final class ApiModels {
                                       Instant nextReviewAt) {}
     public record JournalBackup(Instant practicedAt, long durationSeconds, InstrumentId instrument,
                                 List<String> worked, String difficulties, String improvements, String notes) {}
+    public record InstrumentProfileBackup(
+            String id, String ownerId, InstrumentId instrument, String displayName,
+            LearningStage currentStage, String curriculumId, String legacyPreferencesId,
+            boolean primaryProfile, boolean active, Instant createdAt, Instant updatedAt) {}
+    public record LearningGoalBackup(
+            String id, String instrumentProfileId, String curriculumId, String title,
+            String desiredOutcome, String musicalContext,
+            com.musicos.domain.LearningGoal.Type type,
+            com.musicos.domain.LearningGoal.Status status,
+            int priority, LocalDate targetDate, List<String> priorityCompetencyIds,
+            List<String> repertoireIds, Instant createdAt, Instant updatedAt) {}
+    public record LearningPathStepBackup(
+            String competencyId, com.musicos.domain.LearningPathStep.Kind kind,
+            com.musicos.domain.LearningPathStep.Readiness readiness, String rationale) {}
+    public record LearningPathBackup(
+            String id, String instrumentProfileId, String curriculumId, String title,
+            String derivationVersion, String derivationReason,
+            com.musicos.domain.LearningPath.Status status, List<String> learningGoalIds,
+            List<LearningPathStepBackup> steps, Instant createdAt, Instant updatedAt) {}
+    public record EvidenceBackup(
+            String id, String instrumentProfileId, String competencyId, String criterionKey,
+            com.musicos.domain.Evidence.Type type, com.musicos.domain.Evidence.State state,
+            com.musicos.domain.Evidence.FunctionalWeight functionalWeight,
+            com.musicos.domain.Evidence.Reliability reliability,
+            com.musicos.domain.Evidence.Result result,
+            com.musicos.domain.Evidence.SourceType sourceType,
+            String sourceId, String independenceKey, int challengeLevel,
+            String observation, String conditions, String protocolVersion, String analyzerVersion,
+            String artifactReference, String supersedesEvidenceId, Instant occurredAt,
+            Instant capturedAt, Instant validUntil) {}
+    public record MasteryBackup(
+            String id, String instrumentProfileId, String competencyId,
+            com.musicos.domain.Mastery.State state, String evidencePolicyVersion,
+            boolean mandatoryCriteriaCovered, int independentEvidenceCount,
+            boolean applicationObserved, boolean transferObserved, boolean retentionObserved,
+            boolean unresolvedConflict, String rationale, Instant assessedAt,
+            Instant lastEvidenceAt, Instant nextReviewAt,
+            List<String> supportingEvidenceIds, List<String> limitingEvidenceIds) {}
+    public record AssessmentAttemptBackup(
+            UUID id, String assessmentId, String instrumentProfileId,
+            com.musicos.domain.AssessmentAttempt.ObserverType observerType,
+            int challengeLevel, String artifactReference, String note, Instant completedAt,
+            List<String> evidenceIds) {}
+    public record PedagogicalBackup(
+            List<InstrumentProfileBackup> instrumentProfiles,
+            List<LearningGoalBackup> learningGoals,
+            List<LearningPathBackup> learningPaths,
+            List<EvidenceBackup> evidence,
+            List<MasteryBackup> mastery,
+            List<AssessmentAttemptBackup> assessmentAttempts) {}
     public record BackupSnapshot(String version, Instant exportedAt, PreferencesView preferences,
                                  List<LibraryContentRequest> lessons, List<ExerciseRequest> exercises,
                                  List<SongRequest> songs, List<ProjectRequest> projects,
-                                 List<SkillProgressBackup> skillProgress, List<JournalBackup> journal) {}
-    public record RestoreResult(int lessons, int exercises, int songs, int projects, String message) {}
+                                 List<SkillProgressBackup> skillProgress, List<JournalBackup> journal,
+                                 PedagogicalBackup pedagogy) {}
+    public record RestoreResult(int lessons, int exercises, int songs, int projects,
+                                int instrumentProfiles, int learningGoals, int learningPaths,
+                                int evidence, int assessmentAttempts, String message) {}
     public record ImportedFileView(String id, String name, String type, long size, Instant importedAt,
                                    String storedPath) {}
     public record DataStatusView(String dataDirectory, long lessons, long exercises, long songs,

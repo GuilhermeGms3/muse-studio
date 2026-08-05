@@ -98,6 +98,38 @@ public class LearningPath {
     public void resume() { this.status = Status.ACTIVE; this.updatedAt = Instant.now(); }
     public void supersede() { this.status = Status.SUPERSEDED; this.updatedAt = Instant.now(); }
 
+    public static LearningPath restoreSnapshot(
+            String id, String instrumentProfileId, String curriculumId, String title,
+            String derivationVersion, String derivationReason, Status status,
+            List<String> learningGoalIds, List<LearningPathStep> steps,
+            Instant createdAt, Instant updatedAt) {
+        var path = new LearningPath(id, instrumentProfileId, curriculumId, title,
+                derivationVersion, derivationReason, learningGoalIds, steps);
+        path.status = DomainRules.required(status, "status");
+        path.createdAt = createdAt == null ? Instant.now() : createdAt;
+        path.updatedAt = updatedAt == null ? path.createdAt : updatedAt;
+        return path;
+    }
+
+    public void restoreState(String instrumentProfileId, String curriculumId, String title,
+                             String derivationVersion, String derivationReason, Status status,
+                             List<String> learningGoalIds, List<LearningPathStep> steps,
+                             Instant createdAt, Instant updatedAt) {
+        if (!this.instrumentProfileId.equals(instrumentProfileId)) {
+            throw new IllegalArgumentException("backup de caminho diverge do perfil persistido");
+        }
+        this.curriculumId = DomainRules.requiredText(curriculumId, "curriculumId");
+        this.title = DomainRules.requiredText(title, "title");
+        this.derivationVersion = DomainRules.requiredText(derivationVersion, "derivationVersion");
+        this.derivationReason = DomainRules.requiredText(derivationReason, "derivationReason");
+        this.status = DomainRules.required(status, "status");
+        this.learningGoalIds = new ArrayList<>(DomainRules.distinctIds(learningGoalIds));
+        this.steps = steps == null ? new ArrayList<>() : new ArrayList<>(steps.stream().distinct().toList());
+        if (this.steps.isEmpty()) throw new IllegalArgumentException("learning path precisa de ao menos um passo");
+        this.createdAt = createdAt == null ? this.createdAt : createdAt;
+        this.updatedAt = updatedAt == null ? Instant.now() : updatedAt;
+    }
+
     public String getId() { return id; }
     public String getInstrumentProfileId() { return instrumentProfileId; }
     public String getCurriculumId() { return curriculumId; }

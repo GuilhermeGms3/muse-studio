@@ -93,6 +93,22 @@ public class Evidence {
         this.validUntil = validUntil;
     }
 
+    public static Evidence restoreSnapshot(
+            String id, String instrumentProfileId, String competencyId, String criterionKey,
+            Type type, State state, FunctionalWeight functionalWeight, Reliability reliability,
+            Result result, SourceType sourceType, String sourceId, String independenceKey,
+            int challengeLevel, String observation, String conditions, String protocolVersion,
+            String analyzerVersion, String artifactReference, String supersedesEvidenceId,
+            Instant occurredAt, Instant capturedAt, Instant validUntil) {
+        var restored = new Evidence(instrumentProfileId, competencyId, criterionKey, type, state,
+                functionalWeight, reliability, result, sourceType, sourceId, independenceKey,
+                challengeLevel, observation, conditions, protocolVersion, analyzerVersion,
+                artifactReference, supersedesEvidenceId, occurredAt, validUntil);
+        restored.id = DomainRules.requiredText(id, "id");
+        restored.capturedAt = capturedAt == null ? Instant.now() : capturedAt;
+        return restored;
+    }
+
     public boolean isAgedAt(Instant instant) {
         return validUntil != null && instant.isAfter(validUntil);
     }
