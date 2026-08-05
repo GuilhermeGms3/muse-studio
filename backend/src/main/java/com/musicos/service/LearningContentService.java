@@ -24,12 +24,16 @@ public class LearningContentService {
     private final SkillRepository skills;
     private final SongRepository songs;
     private final MusicProjectRepository projects;
+    private final InstrumentProfileRepository instrumentProfiles;
+    private final EvidenceEngine evidenceEngine;
 
     public LearningContentService(LibraryContentRepository library, ExerciseRepository exercises,
                                   ExerciseAttemptRepository exerciseAttempts,
                                   EarTrainingAttemptRepository earAttempts,
                                   UserPreferencesRepository preferences, SkillRepository skills,
-                                  SongRepository songs, MusicProjectRepository projects) {
+                                  SongRepository songs, MusicProjectRepository projects,
+                                  InstrumentProfileRepository instrumentProfiles,
+                                  EvidenceEngine evidenceEngine) {
         this.library = library;
         this.exercises = exercises;
         this.exerciseAttempts = exerciseAttempts;
@@ -38,6 +42,8 @@ public class LearningContentService {
         this.skills = skills;
         this.songs = songs;
         this.projects = projects;
+        this.instrumentProfiles = instrumentProfiles;
+        this.evidenceEngine = evidenceEngine;
     }
 
     @Transactional
@@ -95,7 +101,32 @@ public class LearningContentService {
                 skills.save(skill);
             });
         }
+        recordProvisionalExerciseEvidence(entity, attempt, request, passed);
         return exerciseAttempt(attempt);
+    }
+
+    private void recordProvisionalExerciseEvidence(Exercise exercise, ExerciseAttempt attempt,
+                                                    ExerciseAttemptRequest request, boolean passed) {
+        var profile = instrumentProfiles.findByOwnerIdAndInstrument("default", exercise.getInstrument())
+                .orElse(null);
+        if (profile == null || exercise.getCompetencyIds().isEmpty()) return;
+        var attemptKey = attempt.getId().toString();
+        var observation = "Auto-observação de prática: " + request.repetitions()
+                + " repetição(ões), " + request.bpm() + " BPM e dificuldade percebida "
+                + request.perceivedDifficulty() + "/5. O critério local foi "
+                + (passed ? "relatado como atingido." : "relatado como ainda não atingido.");
+        var conditions = exercise.getPracticeConditions() == null || exercise.getPracticeConditions().isBlank()
+                ? exercise.getDescription() : exercise.getPracticeConditions();
+        for (var competencyId : exercise.getCompetencyIds()) {
+            evidenceEngine.collect(new EvidenceEngine.Observation(
+                    profile.getId(), competencyId, "pratica-formativa", Evidence.Type.PROCESS,
+                    Evidence.State.PROVISIONAL, Evidence.FunctionalWeight.CORROBORATING,
+                    Evidence.Reliability.LOW,
+                    passed ? Evidence.Result.SUPPORTS : Evidence.Result.CHALLENGES,
+                    Evidence.SourceType.EXERCISE, attemptKey, attemptKey,
+                    Math.max(1, Math.min(5, exercise.getDifficulty())), observation, conditions,
+                    null, null, null, null, attempt.getPracticedAt(), null));
+        }
     }
 
     public List<ExerciseAttemptView> exerciseHistory(String exerciseId) {

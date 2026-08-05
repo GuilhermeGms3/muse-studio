@@ -156,6 +156,27 @@ public final class ApiModels {
                                        List<MissionCompetencyView> competencies,
                                        MissionCoachView coach) {}
 
+    public record AssessmentCriterionObservationRequest(
+            @NotNull String criterionKey,
+            @NotNull com.musicos.domain.Evidence.Result result,
+            @NotNull String observation) {}
+
+    public record AssessmentAttemptRequest(
+            @NotNull InstrumentId instrument,
+            @NotNull com.musicos.domain.AssessmentAttempt.ObserverType observerType,
+            @Min(1) @jakarta.validation.constraints.Max(5) int challengeLevel,
+            String note,
+            List<@jakarta.validation.Valid AssessmentCriterionObservationRequest> observations) {}
+
+    public record AssessmentCriterionResultView(
+            String evidenceId, String competencyId, String criterionKey,
+            String result, String state, String reliability,
+            String confidence, String nextObservation) {}
+
+    public record AssessmentAttemptView(
+            java.util.UUID id, String assessmentId, String observerType, Instant completedAt,
+            String artifactReference, List<AssessmentCriterionResultView> results) {}
+
     public record HomeView(String greeting, String message, int expectedMinutes,
                            List<PlanActivityView> todayPlan, ContinueView continueFrom,
                            ObjectiveView currentObjective, int streakDays, CoachHomeView coach) {}

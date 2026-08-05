@@ -109,6 +109,20 @@ public class Competency {
         return evidencePolicyKey != null && !evidencePolicyKey.isBlank() && !mandatoryCriterionKeys.isEmpty();
     }
 
+    public void configureEvidencePolicy(String evidencePolicyKey, List<String> mandatoryCriterionKeys,
+                                        Integer retentionWindowDays) {
+        this.evidencePolicyKey = DomainRules.requiredText(evidencePolicyKey, "evidencePolicyKey");
+        this.mandatoryCriterionKeys = new ArrayList<>(DomainRules.distinctIds(mandatoryCriterionKeys));
+        if (this.mandatoryCriterionKeys.isEmpty()) {
+            throw new IllegalArgumentException("política de evidência precisa de critérios obrigatórios");
+        }
+        if (retentionWindowDays != null && retentionWindowDays < 1) {
+            throw new IllegalArgumentException("retentionWindowDays deve ser positivo");
+        }
+        this.retentionWindowDays = retentionWindowDays;
+        this.updatedAt = Instant.now();
+    }
+
     public void deactivate() {
         this.active = false;
         this.updatedAt = Instant.now();

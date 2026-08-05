@@ -109,6 +109,11 @@ public class PedagogicalDomainMigration {
                 throw new IllegalStateException("Competência ausente para Mission editorial: "
                         + unit.competencyId());
             }
+            competencies.findById(unit.competencyId()).ifPresent(competency -> {
+                competency.configureEvidencePolicy(
+                        "teaching-runner-v1:" + unit.competencyId(), unit.criterionKeys(), null);
+                competencies.save(competency);
+            });
             if (!lessons.existsById(unit.lessonId())) {
                 throw new IllegalStateException("Lesson ausente para Mission editorial: " + unit.lessonId());
             }

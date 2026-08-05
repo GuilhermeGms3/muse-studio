@@ -19,16 +19,19 @@ public class LearningController {
     private final com.musicos.service.DiagnosticService diagnostic;
     private final com.musicos.service.RepertoirePlanningService repertoirePlanning;
     private final LearningWorkspaceService workspace;
+    private final com.musicos.service.AssessmentService assessments;
 
     public LearningController(LearningContentService learning, SongRecommendationService recommendations,
                               com.musicos.service.DiagnosticService diagnostic,
                               com.musicos.service.RepertoirePlanningService repertoirePlanning,
-                              LearningWorkspaceService workspace) {
+                              LearningWorkspaceService workspace,
+                              com.musicos.service.AssessmentService assessments) {
         this.learning = learning;
         this.recommendations = recommendations;
         this.diagnostic = diagnostic;
         this.repertoirePlanning = repertoirePlanning;
         this.workspace = workspace;
+        this.assessments = assessments;
     }
 
     @GetMapping("/missions/{id}")
@@ -71,6 +74,12 @@ public class LearningController {
     @GetMapping("/exercises/{id}/attempts")
     public List<ExerciseAttemptView> exerciseHistory(@PathVariable String id) {
         return learning.exerciseHistory(id);
+    }
+
+    @PostMapping("/assessments/{id}/attempts")
+    public AssessmentAttemptView recordAssessment(@PathVariable String id,
+                                                   @Valid @RequestBody AssessmentAttemptRequest request) {
+        return assessments.record(id, request);
     }
 
     @PostMapping("/ear-training/attempts")

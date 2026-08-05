@@ -245,6 +245,29 @@ export interface MissionAssessment {
   criterionKeys: string[];
 }
 
+export type AssessmentObserverType = "SELF" | "EXTERNAL";
+export type AssessmentCriterionResult = "SUPPORTS" | "CHALLENGES" | "INCONCLUSIVE";
+
+export interface AssessmentAttemptResult {
+  evidenceId: string;
+  competencyId: string;
+  criterionKey: string;
+  result: AssessmentCriterionResult;
+  state: string;
+  reliability: string;
+  confidence: string;
+  nextObservation: string;
+}
+
+export interface AssessmentAttempt {
+  id: string;
+  assessmentId: string;
+  observerType: AssessmentObserverType;
+  completedAt: string;
+  artifactReference?: string;
+  results: AssessmentAttemptResult[];
+}
+
 export interface LearningEvidence {
   id: string;
   competencyId: string;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowRight,
@@ -21,8 +21,16 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { Exercise, InstrumentId, MissionWorkspaceData } from "@/shared/api/contracts";
+import type {
+  AssessmentCriterionResult,
+  AssessmentObserverType,
+  Exercise,
+  InstrumentId,
+  MissionAssessment,
+  MissionWorkspaceData,
+} from "@/shared/api/contracts";
 import { getExerciseRecommendations } from "@/shared/api/learning";
+import { recordAssessmentAttempt } from "@/shared/api/missions";
 import { PracticeRecorder } from "@/features/practice/recording/PracticeRecorder";
 import { PracticeMediaPanel } from "@/features/practice-song/PracticeMediaPanel";
 import { cn } from "@/shared/utils/cn";
@@ -177,6 +185,7 @@ export function TeachingRunner({
             <StepContent
               stepId={step.id}
               data={data}
+              instrument={instrument}
               video={video.data}
               videoPending={video.isFetching}
             />
@@ -219,11 +228,13 @@ export function TeachingRunner({
 function StepContent({
   stepId,
   data,
+  instrument,
   video,
   videoPending,
 }: {
   stepId: string;
   data: MissionWorkspaceData;
+  instrument: InstrumentId;
   video?: Awaited<ReturnType<typeof getExerciseRecommendations>>;
   videoPending: boolean;
 }) {
@@ -384,7 +395,8 @@ function StepContent({
                   {item.passed ? "Critério observado" : "Nova tentativa recomendada"}
                 </p>
                 <p className="mt-1 text-muted-foreground">
-                  Precisão registrada: {item.accuracy} · dificuldade declarada: {item.difficulty}
+                  Precisão autodeclarada: {item.accuracy}% · dificuldade percebida:{" "}
+                  {item.difficulty}/5
                 </p>
               </div>
               <span className="num text-muted-foreground">
@@ -407,21 +419,12 @@ function StepContent({
       return data.assessments.length ? (
         <div className="space-y-4">
           {data.assessments.map((assessment) => (
-            <article key={assessment.id} className="border border-border bg-rail p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <h3 className="text-sm font-semibold">{assessment.title}</h3>
-                <span className="label-tech">{assessment.type}</span>
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">{assessment.purpose}</p>
-              <p className="mt-4 text-sm leading-relaxed">{assessment.instructions}</p>
-              <DefinitionGrid
-                items={[
-                  ["Condições", assessment.conditions],
-                  ["Apoio permitido", assessment.allowedSupport],
-                  ["Se for inconclusivo", assessment.inconclusiveRule],
-                ]}
-              />
-            </article>
+            <AssessmentRunner
+              key={assessment.id}
+              assessment={assessment}
+              missionId={data.mission.id}
+              instrument={instrument}
+            />
           ))}
         </div>
       ) : (
@@ -543,6 +546,200 @@ function ExerciseTeachingCard({
       >
         Abrir ambiente do exercício <ArrowRight className="size-3.5" />
       </Link>
+    </article>
+  );
+}
+
+function AssessmentRunner({
+  assessment,
+  missionId,
+  instrument,
+}: {
+  assessment: MissionAssessment;
+  missionId: string;
+  instrument: InstrumentId;
+}) {
+  const queryClient = useQueryClient();
+  const [observerType, setObserverType] = useState<AssessmentObserverType>("SELF");
+  const [challengeLevel, setChallengeLevel] = useState(3);
+  const [note, setNote] = useState("");
+  const [observations, setObservations] = useState(() =>
+    Object.fromEntries(
+      assessment.criterionKeys.map((criterionKey) => [
+        criterionKey,
+        { result: "INCONCLUSIVE" as AssessmentCriterionResult, observation: "" },
+      ]),
+    ),
+  );
+  const attempt = useMutation({
+    mutationFn: () =>
+      recordAssessmentAttempt(assessment.id, {
+        instrument,
+        observerType,
+        challengeLevel,
+        note: note.trim() || undefined,
+        observations: assessment.criterionKeys.map((criterionKey) => ({
+          criterionKey,
+          ...observations[criterionKey],
+          observation: observations[criterionKey].observation.trim(),
+        })),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["mission", missionId, instrument] });
+      queryClient.invalidateQueries({ queryKey: ["home"] });
+      queryClient.invalidateQueries({ queryKey: ["skills"] });
+    },
+  });
+  const ready = assessment.criterionKeys.every(
+    (criterionKey) => observations[criterionKey]?.observation.trim().length > 0,
+  );
+
+  return (
+    <article className="border border-border bg-rail p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">{assessment.title}</h3>
+          <p className="mt-2 text-xs text-muted-foreground">{assessment.purpose}</p>
+        </div>
+        <span className="label-tech">{assessment.type}</span>
+      </div>
+      <p className="mt-4 text-sm leading-relaxed">{assessment.instructions}</p>
+      <DefinitionGrid
+        items={[
+          ["Condições", assessment.conditions],
+          ["Apoio permitido", assessment.allowedSupport],
+          ["Se for inconclusivo", assessment.inconclusiveRule],
+        ]}
+      />
+
+      <div className="mt-5 border-t border-border pt-4">
+        <p className="label-tech">Registrar observação estruturada</p>
+        <p className="mt-1 max-w-3xl text-2xs leading-relaxed text-muted-foreground">
+          Auto-observação é preservada como evidência provisória e não comprova domínio. Uma
+          observação externa seguindo este protocolo pode contribuir como evidência primária.
+        </p>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <label className="text-xs">
+            <span className="mb-1 block text-muted-foreground">Fonte da observação</span>
+            <select
+              value={observerType}
+              onChange={(event) => setObserverType(event.target.value as AssessmentObserverType)}
+              className="h-9 w-full border border-border bg-surface px-2"
+            >
+              <option value="SELF">Auto-observação</option>
+              <option value="EXTERNAL">Professor ou observador externo</option>
+            </select>
+          </label>
+          <label className="text-xs">
+            <span className="mb-1 flex justify-between text-muted-foreground">
+              <span>Desafio observado</span>
+              <span className="num">{challengeLevel}/5</span>
+            </span>
+            <input
+              type="range"
+              min="1"
+              max="5"
+              value={challengeLevel}
+              onChange={(event) => setChallengeLevel(Number(event.target.value))}
+              className="w-full"
+            />
+          </label>
+        </div>
+
+        <div className="mt-4 space-y-3">
+          {assessment.criterionKeys.map((criterionKey) => {
+            const current = observations[criterionKey];
+            return (
+              <fieldset key={criterionKey} className="border border-border bg-surface p-3">
+                <legend className="label-tech px-1">{criterionKey}</legend>
+                <div className="grid gap-3 md:grid-cols-[180px_1fr]">
+                  <label className="text-xs">
+                    <span className="mb-1 block text-muted-foreground">Resultado observado</span>
+                    <select
+                      value={current.result}
+                      onChange={(event) =>
+                        setObservations((values) => ({
+                          ...values,
+                          [criterionKey]: {
+                            ...values[criterionKey],
+                            result: event.target.value as AssessmentCriterionResult,
+                          },
+                        }))
+                      }
+                      className="h-9 w-full border border-border bg-panel px-2"
+                    >
+                      <option value="INCONCLUSIVE">Inconclusivo</option>
+                      <option value="SUPPORTS">Critério observado</option>
+                      <option value="CHALLENGES">Critério ainda não observado</option>
+                    </select>
+                  </label>
+                  <label className="text-xs">
+                    <span className="mb-1 block text-muted-foreground">O que foi observado?</span>
+                    <textarea
+                      value={current.observation}
+                      onChange={(event) =>
+                        setObservations((values) => ({
+                          ...values,
+                          [criterionKey]: {
+                            ...values[criterionKey],
+                            observation: event.target.value,
+                          },
+                        }))
+                      }
+                      rows={2}
+                      className="w-full resize-y border border-border bg-panel px-2 py-1.5"
+                    />
+                  </label>
+                </div>
+              </fieldset>
+            );
+          })}
+        </div>
+
+        <label className="mt-3 block text-xs">
+          <span className="mb-1 block text-muted-foreground">Contexto adicional (opcional)</span>
+          <textarea
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            rows={2}
+            className="w-full resize-y border border-border bg-surface px-2 py-1.5"
+          />
+        </label>
+
+        <button
+          type="button"
+          disabled={!ready || attempt.isPending}
+          onClick={() => attempt.mutate()}
+          className="mt-4 inline-flex h-10 items-center gap-2 border border-context-review bg-context-review px-4 text-xs font-semibold text-background disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <FileCheck2 className="size-4" />
+          {attempt.isPending ? "Registrando observações..." : "Registrar Assessment"}
+        </button>
+
+        {attempt.error ? (
+          <p
+            role="alert"
+            className="mt-3 border-l-2 border-destructive pl-3 text-xs text-destructive"
+          >
+            O Assessment não foi salvo. As observações permanecem nesta tela.{" "}
+            {attempt.error.message}
+          </p>
+        ) : null}
+        {attempt.data ? (
+          <div role="status" className="mt-3 border-l-2 border-ok pl-3 text-xs">
+            <p className="font-medium">Assessment registrado com rastreabilidade.</p>
+            <p className="mt-1 text-2xs text-muted-foreground">
+              {attempt.data.observerType === "SELF"
+                ? "As observações são provisórias e não sustentam domínio sozinhas."
+                : "As observações externas entraram no Evidence Engine conforme o protocolo."}
+            </p>
+            <p className="num mt-1 text-2xs text-context-review">
+              Evidências: {attempt.data.results.map((item) => item.evidenceId).join(", ")}
+            </p>
+          </div>
+        ) : null}
+      </div>
     </article>
   );
 }
