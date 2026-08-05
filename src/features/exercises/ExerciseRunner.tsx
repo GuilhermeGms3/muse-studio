@@ -1,21 +1,22 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Check, ExternalLink, Gauge, Music2, Play, X } from "lucide-react";
+import { BookOpen, Check, ExternalLink, Gauge, Music2, Play } from "lucide-react";
 import type { Exercise } from "@/lib/music-api";
-import { recordExerciseAttempt } from "@/lib/music-api";
+import { recordExerciseAttempt, useExerciseHistory } from "@/lib/music-api";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
 import { PracticeRecorder } from "@/features/practice/recording/PracticeRecorder";
 import { CatalogEditor } from "@/shared/catalog/CatalogEditor";
 import { getExerciseRecommendations } from "@/shared/api/learning";
 import { PracticeMediaPanel } from "@/features/practice-song/PracticeMediaPanel";
 
-export function ExerciseRunner({ exercise, onClose }: { exercise: Exercise; onClose: () => void }) {
+export function ExerciseRunner({ exercise }: { exercise: Exercise }) {
   const { setMetronome } = useWorkspace();
   const queryClient = useQueryClient();
   const [bpm, setBpm] = useState(exercise.currentBpm);
   const [accuracy, setAccuracy] = useState(85);
   const [repetitions, setRepetitions] = useState(exercise.passRepetitions);
   const [difficulty, setDifficulty] = useState(3);
+  const history = useExerciseHistory(exercise.id);
   const media = useQuery({
     queryKey: ["exercise-video", exercise.videoQuery, exercise.instrument],
     queryFn: () =>
@@ -35,21 +36,17 @@ export function ExerciseRunner({ exercise, onClose }: { exercise: Exercise; onCl
       queryClient.invalidateQueries({ queryKey: ["exercises"] });
       queryClient.invalidateQueries({ queryKey: ["skills"] });
       queryClient.invalidateQueries({ queryKey: ["plan"] });
+      queryClient.invalidateQueries({ queryKey: ["exercise-attempts", exercise.id] });
     },
   });
 
   return (
-    <aside className="min-h-0 overflow-auto bg-panel">
+    <main className="h-full min-h-0 overflow-auto bg-panel">
       <div className="flex items-center justify-between border-b border-border bg-surface px-3 py-2">
         <span className="label-tech">Prática guiada</span>
-        <div className="flex items-center gap-2">
-          <CatalogEditor kind="exercise" instrument={exercise.instrument} initial={exercise} />
-          <button onClick={onClose} title="Fechar">
-            <X className="size-4" />
-          </button>
-        </div>
+        <CatalogEditor kind="exercise" instrument={exercise.instrument} initial={exercise} />
       </div>
-      <div className="space-y-4 p-3">
+      <div className="mx-auto max-w-5xl space-y-4 p-5">
         <div>
           <h2 className="text-sm font-semibold">{exercise.name}</h2>
           <p className="mt-1 text-2xs leading-relaxed text-muted-foreground">
@@ -102,6 +99,15 @@ export function ExerciseRunner({ exercise, onClose }: { exercise: Exercise; onCl
             ))}
           </ol>
         </div>
+        {(exercise.observableObjective ||
+          exercise.practiceConditions ||
+          exercise.successCriteria) && (
+          <div className="grid gap-px bg-border md:grid-cols-3">
+            <Definition label="Objetivo observável" value={exercise.observableObjective} />
+            <Definition label="Condições" value={exercise.practiceConditions} />
+            <Definition label="Critério" value={exercise.successCriteria} />
+          </div>
+        )}
         <div className="border-y border-border py-3">
           <label className="flex items-center justify-between text-xs">
             <span className="label-tech">BPM</span>
@@ -205,7 +211,37 @@ export function ExerciseRunner({ exercise, onClose }: { exercise: Exercise; onCl
             </p>
           )}
         </div>
+        <section className="border-t border-border pt-3">
+          <span className="label-tech">Feedback anterior</span>
+          {history.data?.length ? (
+            <div className="mt-2 divide-y divide-border border-y border-border">
+              {history.data.slice(0, 5).map((item) => (
+                <div key={item.id} className="flex items-center justify-between gap-3 py-2 text-xs">
+                  <span>{item.passed ? "Critério observado" : "Nova tentativa recomendada"}</span>
+                  <span className="num text-muted-foreground">
+                    {item.bpm} BPM · {item.repetitions} rep.
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Nenhuma tentativa registrada neste exercício.
+            </p>
+          )}
+        </section>
       </div>
-    </aside>
+    </main>
+  );
+}
+
+function Definition({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div className="bg-surface p-3">
+      <span className="label-tech">{label}</span>
+      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+        {value || "Ainda não especificado para este exercício."}
+      </p>
+    </div>
   );
 }

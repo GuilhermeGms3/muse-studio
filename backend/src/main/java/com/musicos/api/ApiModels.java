@@ -62,7 +62,9 @@ public final class ApiModels {
                                List<String> instructions, List<ExerciseVariationView> variations,
                                String activityType, LearningStage stage, String videoQuery,
                                String readingTitle, String readingUrl, String readingNote,
-                               String practiceSongQuery) {}
+                               String practiceSongQuery, String observableObjective,
+                               String practiceConditions, String successCriteria,
+                               List<String> competencyIds) {}
 
     public record ExerciseVariationView(String name, String instructions, int bpmOffset, int durationMinutes) {}
     public record ExerciseAttemptView(UUID id, String exerciseId, Instant practicedAt, int bpm, int accuracy,
@@ -104,6 +106,37 @@ public final class ApiModels {
     public record CoachHomeView(String status, CoachProfileView profile, Instant evaluatedAt,
                                 Integer availableMinutes, List<CoachGoalView> activeGoals,
                                 List<CoachRecommendationView> recommendations, String message) {}
+
+    public record MissionSummaryView(String id, String curriculumId, String title,
+                                     String observableObjective, String context, String motivation,
+                                     int estimatedMinutes, InstrumentId instrument, LearningStage stage,
+                                     String status, String completionCriteria, String expectedEvidence,
+                                     String musicalApplication, String easierMissionId,
+                                     List<String> competencyIds) {}
+
+    public record MissionLessonView(String id, String title, String technicalName, String category,
+                                    String summary, String content, int estimatedMinutes,
+                                    LearningStage stage, String format, List<String> competencyIds,
+                                    List<String> objectives, List<String> examples,
+                                    LibraryContentView material) {}
+
+    public record MissionAssessmentView(String id, String title, String purpose, String type,
+                                        String protocolVersion, String instructions, String conditions,
+                                        String allowedSupport, String inconclusiveRule,
+                                        int estimatedMinutes, int maximumAttempts, boolean active,
+                                        List<String> competencyIds, List<String> criterionKeys) {}
+
+    public record LearningEvidenceView(String id, String competencyId, String criterionKey,
+                                       String type, String state, String reliability, String result,
+                                       String sourceType, String sourceId, int challengeLevel,
+                                       String observation, String conditions, Instant occurredAt,
+                                       Instant validUntil) {}
+
+    public record MissionWorkspaceView(MissionSummaryView mission, List<MissionLessonView> lessons,
+                                       List<ExerciseView> exercises,
+                                       List<MissionAssessmentView> assessments,
+                                       List<ExerciseAttemptView> feedback,
+                                       List<LearningEvidenceView> evidence) {}
 
     public record HomeView(String greeting, String message, int expectedMinutes,
                            List<PlanActivityView> todayPlan, ContinueView continueFrom,

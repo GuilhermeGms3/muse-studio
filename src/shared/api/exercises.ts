@@ -4,6 +4,15 @@ import type { Exercise, ExerciseAttempt, InstrumentId } from "./contracts";
 export const useExercises = (instrument: InstrumentId) =>
   useApiQuery<Exercise[]>(["exercises", instrument], `/exercises?instrument=${instrument}`);
 
+export const useExercise = (id: string) =>
+  useApiQuery<Exercise>(["exercise", id], `/exercises/${encodeURIComponent(id)}`);
+
+export const useExerciseHistory = (id: string) =>
+  useApiQuery<ExerciseAttempt[]>(
+    ["exercise-attempts", id],
+    `/exercises/${encodeURIComponent(id)}/attempts`,
+  );
+
 export const recordExerciseAttempt = (
   id: string,
   attempt: {

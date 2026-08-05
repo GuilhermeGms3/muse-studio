@@ -206,6 +206,85 @@ export interface Exercise {
   readingUrl?: string | null;
   readingNote?: string | null;
   practiceSongQuery?: string | null;
+  observableObjective?: string | null;
+  practiceConditions?: string | null;
+  successCriteria?: string | null;
+  competencyIds: string[];
+}
+
+export interface MissionLesson {
+  id: string;
+  title: string;
+  technicalName: string;
+  category: string;
+  summary: string;
+  content: string;
+  estimatedMinutes: number;
+  stage: LearningStage;
+  format: "TEXT" | "VIDEO" | "AUDIO" | "INTERACTIVE" | "MIXED";
+  competencyIds: string[];
+  objectives: string[];
+  examples: string[];
+  material?: LibraryContent;
+}
+
+export interface MissionAssessment {
+  id: string;
+  title: string;
+  purpose: string;
+  type: string;
+  protocolVersion: string;
+  instructions: string;
+  conditions: string;
+  allowedSupport: string;
+  inconclusiveRule: string;
+  estimatedMinutes: number;
+  maximumAttempts: number;
+  active: boolean;
+  competencyIds: string[];
+  criterionKeys: string[];
+}
+
+export interface LearningEvidence {
+  id: string;
+  competencyId: string;
+  criterionKey: string;
+  type: string;
+  state: string;
+  reliability: string;
+  result: string;
+  sourceType: string;
+  sourceId: string;
+  challengeLevel: number;
+  observation: string;
+  conditions: string;
+  occurredAt: string;
+  validUntil?: string;
+}
+
+export interface MissionWorkspaceData {
+  mission: {
+    id: string;
+    curriculumId: string;
+    title: string;
+    observableObjective: string;
+    context: string;
+    motivation: string;
+    estimatedMinutes: number;
+    instrument?: InstrumentId;
+    stage: LearningStage;
+    status: string;
+    completionCriteria: string;
+    expectedEvidence: string;
+    musicalApplication?: string;
+    easierMissionId?: string;
+    competencyIds: string[];
+  };
+  lessons: MissionLesson[];
+  exercises: Exercise[];
+  assessments: MissionAssessment[];
+  feedback: ExerciseAttempt[];
+  evidence: LearningEvidence[];
 }
 
 export interface ExerciseAttempt {

@@ -4,6 +4,7 @@ import static com.musicos.api.ApiModels.*;
 
 import com.musicos.domain.InstrumentId;
 import com.musicos.service.LearningContentService;
+import com.musicos.service.LearningWorkspaceService;
 import com.musicos.service.SongRecommendationService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -17,14 +18,23 @@ public class LearningController {
     private final SongRecommendationService recommendations;
     private final com.musicos.service.DiagnosticService diagnostic;
     private final com.musicos.service.RepertoirePlanningService repertoirePlanning;
+    private final LearningWorkspaceService workspace;
 
     public LearningController(LearningContentService learning, SongRecommendationService recommendations,
                               com.musicos.service.DiagnosticService diagnostic,
-                              com.musicos.service.RepertoirePlanningService repertoirePlanning) {
+                              com.musicos.service.RepertoirePlanningService repertoirePlanning,
+                              LearningWorkspaceService workspace) {
         this.learning = learning;
         this.recommendations = recommendations;
         this.diagnostic = diagnostic;
         this.repertoirePlanning = repertoirePlanning;
+        this.workspace = workspace;
+    }
+
+    @GetMapping("/missions/{id}")
+    public MissionWorkspaceView mission(@PathVariable String id,
+                                        @RequestParam(defaultValue = "guitar") InstrumentId instrument) {
+        return workspace.mission(id, instrument);
     }
 
     @PutMapping("/library/{id}")

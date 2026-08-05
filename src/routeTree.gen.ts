@@ -25,6 +25,8 @@ import { Route as SessaoRouteImport } from './routes/sessao'
 import { Route as SkillsRouteImport } from './routes/skills'
 import { Route as TreinoMusicaRouteImport } from './routes/treino-musica'
 import { Route as BibliotecaNodeIdRouteImport } from './routes/biblioteca.$nodeId'
+import { Route as ExerciciosExerciseIdRouteImport } from './routes/exercicios.$exerciseId'
+import { Route as MissoesMissionIdRouteImport } from './routes/missoes.$missionId'
 import { Route as ProjetosProjectIdRouteImport } from './routes/projetos.$projectId'
 import { Route as RepertorioSongIdRouteImport } from './routes/repertorio.$songId'
 import { Route as TreinoMusicaSongIdInstrumentRouteImport } from './routes/treino-musica.$songId.$instrument'
@@ -109,6 +111,16 @@ const BibliotecaNodeIdRoute = BibliotecaNodeIdRouteImport.update({
   path: '/$nodeId',
   getParentRoute: () => BibliotecaRoute,
 } as any)
+const ExerciciosExerciseIdRoute = ExerciciosExerciseIdRouteImport.update({
+  id: '/$exerciseId',
+  path: '/$exerciseId',
+  getParentRoute: () => ExerciciosRoute,
+} as any)
+const MissoesMissionIdRoute = MissoesMissionIdRouteImport.update({
+  id: '/missoes/$missionId',
+  path: '/missoes/$missionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjetosProjectIdRoute = ProjetosProjectIdRouteImport.update({
   id: '/$projectId',
   path: '/$projectId',
@@ -132,7 +144,7 @@ export interface FileRoutesByFullPath {
   '/dados': typeof DadosRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/diario': typeof DiarioRoute
-  '/exercicios': typeof ExerciciosRoute
+  '/exercicios': typeof ExerciciosRouteWithChildren
   '/mapa': typeof MapaRoute
   '/metronomo': typeof MetronomoRoute
   '/ouvido': typeof OuvidoRoute
@@ -143,6 +155,8 @@ export interface FileRoutesByFullPath {
   '/skills': typeof SkillsRoute
   '/treino-musica': typeof TreinoMusicaRouteWithChildren
   '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
+  '/exercicios/$exerciseId': typeof ExerciciosExerciseIdRoute
+  '/missoes/$missionId': typeof MissoesMissionIdRoute
   '/projetos/$projectId': typeof ProjetosProjectIdRoute
   '/repertorio/$songId': typeof RepertorioSongIdRoute
   '/treino-musica/$songId/$instrument': typeof TreinoMusicaSongIdInstrumentRoute
@@ -153,7 +167,7 @@ export interface FileRoutesByTo {
   '/dados': typeof DadosRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/diario': typeof DiarioRoute
-  '/exercicios': typeof ExerciciosRoute
+  '/exercicios': typeof ExerciciosRouteWithChildren
   '/mapa': typeof MapaRoute
   '/metronomo': typeof MetronomoRoute
   '/ouvido': typeof OuvidoRoute
@@ -164,6 +178,8 @@ export interface FileRoutesByTo {
   '/skills': typeof SkillsRoute
   '/treino-musica': typeof TreinoMusicaRouteWithChildren
   '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
+  '/exercicios/$exerciseId': typeof ExerciciosExerciseIdRoute
+  '/missoes/$missionId': typeof MissoesMissionIdRoute
   '/projetos/$projectId': typeof ProjetosProjectIdRoute
   '/repertorio/$songId': typeof RepertorioSongIdRoute
   '/treino-musica/$songId/$instrument': typeof TreinoMusicaSongIdInstrumentRoute
@@ -175,7 +191,7 @@ export interface FileRoutesById {
   '/dados': typeof DadosRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/diario': typeof DiarioRoute
-  '/exercicios': typeof ExerciciosRoute
+  '/exercicios': typeof ExerciciosRouteWithChildren
   '/mapa': typeof MapaRoute
   '/metronomo': typeof MetronomoRoute
   '/ouvido': typeof OuvidoRoute
@@ -186,6 +202,8 @@ export interface FileRoutesById {
   '/skills': typeof SkillsRoute
   '/treino-musica': typeof TreinoMusicaRouteWithChildren
   '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
+  '/exercicios/$exerciseId': typeof ExerciciosExerciseIdRoute
+  '/missoes/$missionId': typeof MissoesMissionIdRoute
   '/projetos/$projectId': typeof ProjetosProjectIdRoute
   '/repertorio/$songId': typeof RepertorioSongIdRoute
   '/treino-musica/$songId/$instrument': typeof TreinoMusicaSongIdInstrumentRoute
@@ -209,6 +227,8 @@ export interface FileRouteTypes {
     | '/skills'
     | '/treino-musica'
     | '/biblioteca/$nodeId'
+    | '/exercicios/$exerciseId'
+    | '/missoes/$missionId'
     | '/projetos/$projectId'
     | '/repertorio/$songId'
     | '/treino-musica/$songId/$instrument'
@@ -230,6 +250,8 @@ export interface FileRouteTypes {
     | '/skills'
     | '/treino-musica'
     | '/biblioteca/$nodeId'
+    | '/exercicios/$exerciseId'
+    | '/missoes/$missionId'
     | '/projetos/$projectId'
     | '/repertorio/$songId'
     | '/treino-musica/$songId/$instrument'
@@ -251,6 +273,8 @@ export interface FileRouteTypes {
     | '/skills'
     | '/treino-musica'
     | '/biblioteca/$nodeId'
+    | '/exercicios/$exerciseId'
+    | '/missoes/$missionId'
     | '/projetos/$projectId'
     | '/repertorio/$songId'
     | '/treino-musica/$songId/$instrument'
@@ -262,7 +286,7 @@ export interface RootRouteChildren {
   DadosRoute: typeof DadosRoute
   DiagnosticoRoute: typeof DiagnosticoRoute
   DiarioRoute: typeof DiarioRoute
-  ExerciciosRoute: typeof ExerciciosRoute
+  ExerciciosRoute: typeof ExerciciosRouteWithChildren
   MapaRoute: typeof MapaRoute
   MetronomoRoute: typeof MetronomoRoute
   OuvidoRoute: typeof OuvidoRoute
@@ -272,6 +296,7 @@ export interface RootRouteChildren {
   SessaoRoute: typeof SessaoRoute
   SkillsRoute: typeof SkillsRoute
   TreinoMusicaRoute: typeof TreinoMusicaRouteWithChildren
+  MissoesMissionIdRoute: typeof MissoesMissionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -388,6 +413,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BibliotecaNodeIdRouteImport
       parentRoute: typeof BibliotecaRoute
     }
+    '/exercicios/$exerciseId': {
+      id: '/exercicios/$exerciseId'
+      path: '/$exerciseId'
+      fullPath: '/exercicios/$exerciseId'
+      preLoaderRoute: typeof ExerciciosExerciseIdRouteImport
+      parentRoute: typeof ExerciciosRoute
+    }
+    '/missoes/$missionId': {
+      id: '/missoes/$missionId'
+      path: '/missoes/$missionId'
+      fullPath: '/missoes/$missionId'
+      preLoaderRoute: typeof MissoesMissionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projetos/$projectId': {
       id: '/projetos/$projectId'
       path: '/$projectId'
@@ -422,6 +461,18 @@ const BibliotecaRouteChildren: BibliotecaRouteChildren = {
 
 const BibliotecaRouteWithChildren = BibliotecaRoute._addFileChildren(
   BibliotecaRouteChildren,
+)
+
+interface ExerciciosRouteChildren {
+  ExerciciosExerciseIdRoute: typeof ExerciciosExerciseIdRoute
+}
+
+const ExerciciosRouteChildren: ExerciciosRouteChildren = {
+  ExerciciosExerciseIdRoute: ExerciciosExerciseIdRoute,
+}
+
+const ExerciciosRouteWithChildren = ExerciciosRoute._addFileChildren(
+  ExerciciosRouteChildren,
 )
 
 interface ProjetosRouteChildren {
@@ -466,7 +517,7 @@ const rootRouteChildren: RootRouteChildren = {
   DadosRoute: DadosRoute,
   DiagnosticoRoute: DiagnosticoRoute,
   DiarioRoute: DiarioRoute,
-  ExerciciosRoute: ExerciciosRoute,
+  ExerciciosRoute: ExerciciosRouteWithChildren,
   MapaRoute: MapaRoute,
   MetronomoRoute: MetronomoRoute,
   OuvidoRoute: OuvidoRoute,
@@ -476,6 +527,7 @@ const rootRouteChildren: RootRouteChildren = {
   SessaoRoute: SessaoRoute,
   SkillsRoute: SkillsRoute,
   TreinoMusicaRoute: TreinoMusicaRouteWithChildren,
+  MissoesMissionIdRoute: MissoesMissionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

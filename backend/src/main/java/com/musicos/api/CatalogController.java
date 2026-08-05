@@ -89,6 +89,11 @@ public class CatalogController {
         return service.exercises(instrument, technique);
     }
 
+    @GetMapping("/exercises/{id}")
+    public ExerciseView exercise(@PathVariable String id) {
+        return service.exercise(id);
+    }
+
     @GetMapping("/projects")
     public List<ProjectView> projects() {
         return service.projects();

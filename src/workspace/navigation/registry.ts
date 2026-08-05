@@ -247,11 +247,13 @@ export function entryMatchesPath(entry: NavigationEntry, pathname: string) {
 export function contextForPath(pathname: string): MacroContextId {
   if (pathname === "/") return "home";
   if (pathname === "/diagnostico") return "home";
+  if (pathname.startsWith("/exercicios/")) return "practice";
   if (["/sessao", "/plano", "/exercicios", "/ouvido", "/metronomo"].includes(pathname)) {
     return "practice";
   }
   if (pathname === "/treino-musica" || pathname.startsWith("/treino-musica/")) return "practice";
   if (pathname === "/skills" || pathname === "/mapa") return "learning";
+  if (pathname.startsWith("/missoes/")) return "learning";
   if (pathname === "/biblioteca" || pathname.startsWith("/biblioteca/")) return "library";
   if (pathname === "/repertorio" || pathname.startsWith("/repertorio/")) return "practice";
   if (pathname === "/projetos" || pathname.startsWith("/projetos/")) return "compose";
@@ -280,6 +282,8 @@ export function titleForRegisteredPath(pathname: string): string {
   };
   if (titles[pathname]) return titles[pathname];
   if (pathname.startsWith("/biblioteca/")) return "Biblioteca";
+  if (pathname.startsWith("/missoes/")) return "Missão";
+  if (pathname.startsWith("/exercicios/")) return "Exercício";
   if (pathname.startsWith("/treino-musica/")) return "Treino musical";
   if (pathname.startsWith("/repertorio/")) return "Repertório";
   if (pathname.startsWith("/projetos/")) return "Projeto";

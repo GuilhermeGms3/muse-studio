@@ -6,6 +6,7 @@ export * from "@/shared/api/learning";
 export * from "@/shared/api/library";
 export * from "@/shared/api/repertoire";
 export * from "@/shared/api/exercises";
+export * from "@/shared/api/missions";
 export * from "@/shared/api/ear-training";
 export * from "@/shared/api/projects";
 export * from "@/shared/api/review";

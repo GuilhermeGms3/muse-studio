@@ -62,7 +62,8 @@ final class ViewMapper {
                         variation.getName(), variation.getInstructions(), variation.getBpmOffset(),
                         variation.getDurationMinutes())).toList(), value.getActivityType(), value.getStage(),
                 value.getVideoQuery(), value.getReadingTitle(), value.getReadingUrl(), value.getReadingNote(),
-                value.getPracticeSongQuery());
+                value.getPracticeSongQuery(), value.getObservableObjective(), value.getPracticeConditions(),
+                value.getSuccessCriteria(), value.getCompetencyIds());
     }
 
     static ExerciseAttemptView exerciseAttempt(ExerciseAttempt value) {

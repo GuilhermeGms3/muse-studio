@@ -1,33 +1,26 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Panel, Meter } from "@/shared/ui/workspace/Panel";
 import { QueryState } from "@/shared/ui/query/QueryState";
 import { Breadcrumb } from "@/workspace/navigation/Breadcrumb";
 import { useExercises } from "@/lib/music-api";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
 import { cn } from "@/shared/utils/cn";
-import { ExerciseRunner } from "@/features/exercises/ExerciseRunner";
 import { CatalogEditor } from "@/shared/catalog/CatalogEditor";
 
 export function ExercisesPage() {
   const { instrument } = useWorkspace();
   const exercisesQuery = useExercises(instrument);
   const [filter, setFilter] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   if (!exercisesQuery.data) return <QueryState error={exercisesQuery.error} />;
   const exercises = exercisesQuery.data;
   const techniques = Array.from(new Set(exercises.map((exercise) => exercise.technique)));
   const list = filter ? exercises.filter((exercise) => exercise.technique === filter) : exercises;
-  const selected = exercises.find((exercise) => exercise.id === selectedId);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
       <Breadcrumb trail={["Praticar", "Exercícios"]} />
-      <div
-        className={cn(
-          "grid min-h-0 flex-1 grid-cols-1 gap-px overflow-hidden bg-border",
-          selected ? "lg:grid-cols-[180px_1fr_330px]" : "lg:grid-cols-[200px_1fr]",
-        )}
-      >
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-px overflow-hidden bg-border lg:grid-cols-[200px_1fr]">
         <Panel title="Técnicas" bodyClassName="p-0">
           <button
             onClick={() => setFilter(null)}
@@ -72,15 +65,19 @@ export function ExercisesPage() {
               {list.map((exercise) => (
                 <tr
                   key={exercise.id}
-                  onClick={() => setSelectedId(exercise.id)}
-                  className={cn(
-                    "cursor-pointer border-b border-border/60 align-top hover:bg-surface/50",
-                    selectedId === exercise.id && "bg-surface",
-                  )}
+                  className="border-b border-border/60 align-top hover:bg-surface/50"
                 >
                   <td className="px-2 py-1">
-                    <div>{exercise.name}</div>
-                    <div className="text-2xs text-muted-foreground">{exercise.description}</div>
+                    <Link
+                      to="/exercicios/$exerciseId"
+                      params={{ exerciseId: exercise.id }}
+                      className="block outline-none hover:text-signal focus-visible:ring-1 focus-visible:ring-ring"
+                    >
+                      <span className="block">{exercise.name}</span>
+                      <span className="block text-2xs text-muted-foreground">
+                        {exercise.description}
+                      </span>
+                    </Link>
                   </td>
                   <td className="px-2 text-muted-foreground">{exercise.technique}</td>
                   <td className="num px-2">{exercise.minutes}</td>
@@ -97,7 +94,6 @@ export function ExercisesPage() {
             </tbody>
           </table>
         </Panel>
-        {selected && <ExerciseRunner exercise={selected} onClose={() => setSelectedId(null)} />}
       </div>
     </div>
   );

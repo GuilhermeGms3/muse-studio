@@ -130,6 +130,11 @@ public class CatalogService {
                 .map(ViewMapper::exercise).toList();
     }
 
+    public ExerciseView exercise(String id) {
+        return ViewMapper.exercise(exercises.findById(id)
+                .orElseThrow(() -> new NotFoundException("Exercício não encontrado")));
+    }
+
     public List<ProjectView> projects() {
         return projects.findAll().stream().map(ViewMapper::project).toList();
     }

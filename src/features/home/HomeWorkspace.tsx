@@ -302,13 +302,24 @@ function GroundedRecommendation({ recommendation }: { recommendation: CoachRecom
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <Link
-          to="/skills"
-          className="inline-flex h-10 items-center gap-2 border border-signal bg-signal px-4 text-xs font-semibold text-signal-foreground hover:brightness-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        >
-          Abrir caminho recomendado
-          <ArrowRight className="size-3.5" />
-        </Link>
+        {recommendation.missionId ? (
+          <Link
+            to="/missoes/$missionId"
+            params={{ missionId: recommendation.missionId }}
+            className="inline-flex h-10 items-center gap-2 border border-signal bg-signal px-4 text-xs font-semibold text-signal-foreground hover:brightness-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            Abrir missão recomendada
+            <ArrowRight className="size-3.5" />
+          </Link>
+        ) : (
+          <Link
+            to="/skills"
+            className="inline-flex h-10 items-center gap-2 border border-signal bg-signal px-4 text-xs font-semibold text-signal-foreground hover:brightness-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            Abrir caminho recomendado
+            <ArrowRight className="size-3.5" />
+          </Link>
+        )}
         <details className="group">
           <summary className="flex h-10 cursor-pointer list-none items-center border border-border bg-surface px-3 text-xs hover:border-border-strong">
             Ver justificativa completa
