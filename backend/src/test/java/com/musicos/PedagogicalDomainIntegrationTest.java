@@ -18,6 +18,7 @@ import com.musicos.repository.LibraryContentRepository;
 import com.musicos.repository.MasteryRepository;
 import com.musicos.repository.SkillRepository;
 import com.musicos.service.PedagogicalDomainMigration;
+import com.musicos.service.Coach;
 import com.musicos.service.CurriculumEngine;
 import com.musicos.service.EvidenceEngine;
 import java.time.Instant;
@@ -44,6 +45,7 @@ class PedagogicalDomainIntegrationTest {
     @Autowired PedagogicalDomainMigration migration;
     @Autowired CurriculumEngine curriculumEngine;
     @Autowired EvidenceEngine evidenceEngine;
+    @Autowired Coach coach;
     @Autowired JdbcTemplate jdbc;
 
     @Test
@@ -166,5 +168,16 @@ class PedagogicalDomainIntegrationTest {
                     assertThat(hypothesis.isMandatoryCriteriaCovered()).isFalse();
                     assertThat(hypothesis.getSupportingEvidenceIds()).containsExactly(result.evidenceId());
                 });
+    }
+
+    @Test
+    void coachDoesNotInventMissionForMigratedProfileWithoutEvidenceOrActiveMission() {
+        var profile = profiles.findByOwnerIdAndInstrument("default", InstrumentId.GUITAR).orElseThrow();
+
+        var answer = coach.whatShouldIDoToday(profile.getId());
+
+        assertThat(answer.status()).isEqualTo(Coach.AnswerStatus.NO_ELIGIBLE_MISSION);
+        assertThat(answer.recommendations()).isEmpty();
+        assertThat(answer.message()).contains("não criou uma alternativa fictícia");
     }
 }
