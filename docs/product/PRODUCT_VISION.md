@@ -1,5 +1,15 @@
 # Product Vision
 
+> [!IMPORTANT]
+> A direção pedagógica detalhada que complementa esta visão está registrada em
+> [Direção Pedagógica do Produto](./PEDAGOGICAL_PRODUCT_DIRECTION.md),
+> [Learning Missions](./LEARNING_MISSIONS.md),
+> [Coach e Experiência Diária](./COACH_AND_DAILY_EXPERIENCE.md) e
+> [Piloto Pedagógico — Violão, Primeiros 30 Dias](./FIRST_30_DAYS_PILOT.md).
+> Os requisitos de confiança e áudio estão em
+> [Motor de Domínio Baseado em Evidências](../architecture/EVIDENCE_MASTERY_ENGINE.md)
+> e [Evidência de Áudio e Integração com Reaper](../architecture/AUDIO_EVIDENCE_AND_REAPER.md).
+
 Muse Studio is a modular workspace for musicians: a personal Music OS where practice, learning, repertoire, progress, creation, recordings, and musical tools live in one connected environment.
 
 The product must feel closer to a DAW, IDE, editor, or personal studio than to a dashboard. Its purpose is not to make musical study smaller. Its purpose is to make a powerful study system easier to inhabit for long sessions.
