@@ -4,16 +4,15 @@ import { Home } from "@/features/home/HomeWorkspace";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Muse Studio - Inicio" },
+      { title: "Muse Studio - Centro de aprendizagem" },
       {
         name: "description",
-        content:
-          "Inicio simples para decidir o que praticar agora, por quanto tempo e qual e o proximo passo.",
+        content: "Centro de aprendizagem orientado pelo Coach para decidir o que fazer hoje.",
       },
-      { property: "og:title", content: "Muse Studio - Inicio" },
+      { property: "og:title", content: "Muse Studio - Centro de aprendizagem" },
       {
         property: "og:description",
-        content: "Sessao de hoje, continuidade, objetivo atual e sequencia de estudo.",
+        content: "Orientacao diaria explicavel, contexto musical e caminhos de pratica.",
       },
     ],
   }),

@@ -300,6 +300,58 @@ export interface HomeData {
     state: SkillState;
   };
   streakDays: number;
+  coach?: CoachHome;
+}
+
+export type CoachStatus = "GROUNDED" | "INSUFFICIENT_EVIDENCE" | "NO_ELIGIBLE_MISSION";
+
+export interface CoachGoal {
+  id: string;
+  title: string;
+  desiredOutcome: string;
+  musicalContext: string;
+  type: string;
+  priority: number;
+  targetDate?: string;
+}
+
+export interface CoachEvidence {
+  id: string;
+  competencyId: string;
+  criterionKey: string;
+  reliability: string;
+  result: string;
+  occurredAt: string;
+  observation: string;
+  conditions: string;
+}
+
+export interface CoachRecommendation {
+  missionId?: string;
+  title: string;
+  competencyId: string;
+  kind: string;
+  estimatedMinutes?: number;
+  observableObjective: string;
+  expectedEvidence: string;
+  goals: CoachGoal[];
+  evidence: CoachEvidence[];
+  explanation: string;
+}
+
+export interface CoachHome {
+  status: CoachStatus;
+  profile: {
+    instrumentProfileId: string;
+    instrument: InstrumentId;
+    stage: LearningStage;
+    curriculumId: string;
+  };
+  evaluatedAt: string;
+  availableMinutes?: number;
+  activeGoals: CoachGoal[];
+  recommendations: CoachRecommendation[];
+  message: string;
 }
 
 export interface PracticeSession {

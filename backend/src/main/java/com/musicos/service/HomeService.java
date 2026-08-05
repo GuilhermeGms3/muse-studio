@@ -5,6 +5,7 @@ import static com.musicos.service.ViewMapper.activity;
 
 import com.musicos.domain.InstrumentId;
 import com.musicos.repository.JournalEntryRepository;
+import com.musicos.repository.InstrumentProfileRepository;
 import com.musicos.repository.SkillRepository;
 import com.musicos.repository.SongRepository;
 import java.time.LocalDate;
@@ -20,14 +21,19 @@ public class HomeService {
     private final SkillRepository skills;
     private final JournalEntryRepository journal;
     private final ProgressEngine progress;
+    private final InstrumentProfileRepository profiles;
+    private final Coach coach;
 
     public HomeService(StudyPlanService plans, SongRepository songs, SkillRepository skills,
-                       JournalEntryRepository journal, ProgressEngine progress) {
+                       JournalEntryRepository journal, ProgressEngine progress,
+                       InstrumentProfileRepository profiles, Coach coach) {
         this.plans = plans;
         this.songs = songs;
         this.skills = skills;
         this.journal = journal;
         this.progress = progress;
+        this.profiles = profiles;
+        this.coach = coach;
     }
 
     public HomeView home(InstrumentId instrument) {
@@ -40,14 +46,53 @@ public class HomeService {
                 .orElseGet(() -> new ContinueView("library", "campo-harmonico",
                         "Como os acordes funcionam juntos", "Campo Harmônico"));
         var objectiveSkill = skills.findById("bends")
+                .filter(skill -> skill.getInstruments().contains(instrument))
                 .orElseGet(() -> skills.findDistinctByInstrumentsContainingOrderByDomainAscTechnicalNameAsc(instrument)
                         .stream().findFirst().orElseThrow(() -> new NotFoundException("Nenhum objetivo disponível")));
         var objectiveProgress = progress.evaluate(objectiveSkill);
         var objective = new ObjectiveView(objectiveSkill.getId(), objectiveSkill.getFriendlyTitle(),
                 objectiveSkill.getTechnicalName(), objectiveProgress.progress(), objectiveProgress.state());
 
+        var profile = profiles.findByOwnerIdAndInstrument("default", instrument)
+                .orElseThrow(() -> new NotFoundException(
+                        "Perfil instrumental nÃ£o encontrado para a Home: " + instrument.value()));
+        var coachAnswer = coach.whatShouldIDoToday(
+                profile.getId(), expectedMinutes > 0 ? expectedMinutes : null,
+                java.time.Instant.now(), 3);
+
         return new HomeView(greeting(), "Hoje vamos praticar.", expectedMinutes, today, continuation,
-                objective, calculateStreak());
+                objective, calculateStreak(), coachView(coachAnswer));
+    }
+
+    private CoachHomeView coachView(Coach.TodayAnswer answer) {
+        var profile = new CoachProfileView(
+                answer.profile().instrumentProfileId(), answer.profile().instrument(),
+                answer.profile().stage(), answer.profile().curriculumId());
+        return new CoachHomeView(answer.status().name(), profile, answer.evaluatedAt(),
+                answer.availableMinutes(), answer.activeGoals().stream().map(this::goalView).toList(),
+                answer.recommendations().stream().map(this::recommendationView).toList(),
+                answer.message());
+    }
+
+    private CoachGoalView goalView(Coach.GoalCitation goal) {
+        return new CoachGoalView(goal.goalId(), goal.title(), goal.desiredOutcome(),
+                goal.musicalContext(), goal.type().name(), goal.declaredPriority(), goal.targetDate());
+    }
+
+    private CoachEvidenceView evidenceView(Coach.EvidenceCitation evidence) {
+        return new CoachEvidenceView(evidence.evidenceId(), evidence.competencyId(),
+                evidence.criterionKey(), evidence.reliability().name(), evidence.result().name(),
+                evidence.occurredAt(), evidence.observation(), evidence.conditions());
+    }
+
+    private CoachRecommendationView recommendationView(Coach.Recommendation recommendation) {
+        return new CoachRecommendationView(recommendation.missionId(), recommendation.title(),
+                recommendation.competencyId(), recommendation.kind().name(),
+                recommendation.estimatedMinutes(), recommendation.observableObjective(),
+                recommendation.expectedEvidence(),
+                recommendation.goals().stream().map(this::goalView).toList(),
+                recommendation.evidence().stream().map(this::evidenceView).toList(),
+                recommendation.explanation());
     }
 
     private String greeting() {

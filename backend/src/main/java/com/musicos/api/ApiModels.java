@@ -83,9 +83,31 @@ public final class ApiModels {
 
     public record ObjectiveView(String id, String title, String technicalName, int progress, SkillState state) {}
 
+    public record CoachProfileView(String instrumentProfileId, InstrumentId instrument,
+                                   LearningStage stage, String curriculumId) {}
+
+    public record CoachGoalView(String id, String title, String desiredOutcome,
+                                String musicalContext, String type, int priority,
+                                LocalDate targetDate) {}
+
+    public record CoachEvidenceView(String id, String competencyId, String criterionKey,
+                                    String reliability, String result, Instant occurredAt,
+                                    String observation, String conditions) {}
+
+    public record CoachRecommendationView(String missionId, String title, String competencyId,
+                                          String kind, Integer estimatedMinutes,
+                                          String observableObjective, String expectedEvidence,
+                                          List<CoachGoalView> goals,
+                                          List<CoachEvidenceView> evidence,
+                                          String explanation) {}
+
+    public record CoachHomeView(String status, CoachProfileView profile, Instant evaluatedAt,
+                                Integer availableMinutes, List<CoachGoalView> activeGoals,
+                                List<CoachRecommendationView> recommendations, String message) {}
+
     public record HomeView(String greeting, String message, int expectedMinutes,
                            List<PlanActivityView> todayPlan, ContinueView continueFrom,
-                           ObjectiveView currentObjective, int streakDays) {}
+                           ObjectiveView currentObjective, int streakDays, CoachHomeView coach) {}
 
     public record StartSessionRequest(@NotNull InstrumentId instrument, Integer availableMinutes) {
         public StartSessionRequest(InstrumentId instrument) {
