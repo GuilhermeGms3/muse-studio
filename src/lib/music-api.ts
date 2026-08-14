@@ -14,3 +14,4 @@ export * from "@/shared/api/diagnostics";
 export * from "@/shared/api/recordings";
 export * from "@/shared/api/data";
 export * from "@/shared/api/catalog";
+export * from "@/shared/api/journey";

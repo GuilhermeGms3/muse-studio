@@ -133,6 +133,33 @@ public class Mission {
         this.updatedAt = Instant.now();
     }
 
+    public void synchronizeCatalogDefinition(String title, String observableObjective, String context,
+                                             String motivation, int estimatedMinutes, InstrumentId instrument,
+                                             LearningStage stage, String completionCriteria,
+                                             String expectedEvidence, String musicalApplication,
+                                             String easierMissionId, DifficultyDemand difficultyDemand,
+                                             List<String> competencyIds, List<String> lessonIds,
+                                             List<String> exerciseIds, List<String> assessmentIds) {
+        this.title = DomainRules.requiredText(title, "title");
+        this.observableObjective = DomainRules.requiredText(observableObjective, "observableObjective");
+        this.context = DomainRules.requiredText(context, "context");
+        this.motivation = DomainRules.requiredText(motivation, "motivation");
+        this.estimatedMinutes = DomainRules.between(estimatedMinutes, 1, 480, "estimatedMinutes");
+        this.instrument = instrument;
+        this.stage = DomainRules.required(stage, "stage");
+        this.completionCriteria = DomainRules.requiredText(completionCriteria, "completionCriteria");
+        this.expectedEvidence = DomainRules.requiredText(expectedEvidence, "expectedEvidence");
+        this.musicalApplication = musicalApplication;
+        this.easierMissionId = easierMissionId;
+        this.difficultyDemand = difficultyDemand == null ? DifficultyDemand.unspecified() : difficultyDemand;
+        this.competencyIds = new ArrayList<>(DomainRules.distinctIds(competencyIds));
+        this.lessonIds = new ArrayList<>(DomainRules.distinctIds(lessonIds));
+        this.exerciseIds = new ArrayList<>(DomainRules.distinctIds(exerciseIds));
+        this.assessmentIds = new ArrayList<>(DomainRules.distinctIds(assessmentIds));
+        if (this.competencyIds.isEmpty()) throw new IllegalArgumentException("missão precisa trabalhar uma competência");
+        this.updatedAt = Instant.now();
+    }
+
     public String getId() { return id; }
     public String getCurriculumId() { return curriculumId; }
     public String getTitle() { return title; }

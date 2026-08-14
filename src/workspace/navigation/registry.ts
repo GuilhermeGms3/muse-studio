@@ -14,6 +14,7 @@ import {
   Music2,
   PenTool,
   RotateCcw,
+  SearchCheck,
   Settings2,
   Target,
   Timer,
@@ -27,12 +28,12 @@ import type {
 } from "./types";
 
 export const macroContexts: MacroContextDefinition[] = [
-  { id: "home", label: "Home", icon: Home, description: "Estação de hoje" },
-  { id: "practice", label: "Praticar", icon: Target, description: "Sessões e repertório" },
-  { id: "learning", label: "Aprender", icon: BrainCircuit, description: "Habilidades e trilhas" },
-  { id: "library", label: "Biblioteca", icon: Library, description: "Conteúdos e coleções" },
-  { id: "compose", label: "Compor", icon: PenTool, description: "Projetos e ideias" },
-  { id: "review", label: "Revisar", icon: History, description: "Histórico e progresso" },
+  { id: "home", label: "Guiado", icon: Home, description: "Hoje e continuidade" },
+  { id: "practice", label: "Prática", icon: Target, description: "Tocar e treinar livremente" },
+  { id: "learning", label: "Aprender", icon: BrainCircuit, description: "Jornada e conhecimento" },
+  { id: "library", label: "Música", icon: Library, description: "Repertório e descoberta" },
+  { id: "compose", label: "Criar", icon: PenTool, description: "Projetos, riffs e ideias" },
+  { id: "review", label: "Evoluir", icon: History, description: "Histórico e evidências" },
   { id: "tools", label: "Ferramentas", icon: Wrench, description: "Utilitários e dados" },
 ];
 
@@ -40,12 +41,21 @@ export const navigationRegistry: NavigationEntry[] = [
   {
     id: "home.today",
     context: "home",
-    label: "Estação de hoje",
+    label: "Hoje",
     path: "/",
     icon: Activity,
     hint: "O que praticar agora",
     legacyGroup: "Estacao",
     legacyOrder: 0,
+  },
+  {
+    id: "home.journey",
+    context: "home",
+    label: "Jornada",
+    path: "/jornada",
+    matchPaths: ["/missoes/"],
+    icon: GitBranch,
+    hint: "Caminho guiado ativo",
   },
   {
     id: "home.plan",
@@ -72,6 +82,14 @@ export const navigationRegistry: NavigationEntry[] = [
     hint: "Modo foco",
     legacyGroup: "Estacao",
     legacyOrder: 1,
+  },
+  {
+    id: "practice.songs",
+    context: "practice",
+    label: "Músicas",
+    path: "/musicas",
+    icon: Music2,
+    hint: "Aplicar no repertório",
   },
   {
     id: "practice.plan",
@@ -143,6 +161,15 @@ export const navigationRegistry: NavigationEntry[] = [
     legacyOrder: 1,
   },
   {
+    id: "learning.journey",
+    context: "learning",
+    label: "Jornada",
+    path: "/jornada",
+    matchPaths: ["/missoes/"],
+    icon: GitBranch,
+    hint: "Progressão musical guiada",
+  },
+  {
     id: "learning.library",
     context: "learning",
     label: "Conceitos em progresso",
@@ -161,6 +188,22 @@ export const navigationRegistry: NavigationEntry[] = [
     hint: "Teoria e técnica",
     legacyGroup: "Aprender",
     legacyOrder: 0,
+  },
+  {
+    id: "library.songs",
+    context: "library",
+    label: "Músicas",
+    path: "/musicas",
+    icon: Music2,
+    hint: "Repertório em desenvolvimento",
+  },
+  {
+    id: "library.explore",
+    context: "library",
+    label: "Explorar",
+    path: "/explorar",
+    icon: SearchCheck,
+    hint: "Descoberta livre por contexto",
   },
   {
     id: "library.repertoire",
@@ -197,6 +240,14 @@ export const navigationRegistry: NavigationEntry[] = [
     path: "/diario",
     icon: History,
     hint: "Histórico de sessões",
+  },
+  {
+    id: "review.history",
+    context: "review",
+    label: "Histórico musical",
+    path: "/historico",
+    icon: History,
+    hint: "Sessões, tentativas e evidências",
   },
   {
     id: "review.skills",
@@ -246,6 +297,10 @@ export function entryMatchesPath(entry: NavigationEntry, pathname: string) {
 
 export function contextForPath(pathname: string): MacroContextId {
   if (pathname === "/") return "home";
+  if (pathname === "/jornada" || pathname.startsWith("/missoes/")) return "learning";
+  if (pathname === "/musicas") return "practice";
+  if (pathname === "/historico") return "review";
+  if (pathname === "/explorar") return "library";
   if (pathname === "/diagnostico") return "home";
   if (pathname.startsWith("/exercicios/")) return "practice";
   if (["/sessao", "/plano", "/exercicios", "/ouvido", "/metronomo"].includes(pathname)) {
@@ -253,7 +308,6 @@ export function contextForPath(pathname: string): MacroContextId {
   }
   if (pathname === "/treino-musica" || pathname.startsWith("/treino-musica/")) return "practice";
   if (pathname === "/skills" || pathname === "/mapa") return "learning";
-  if (pathname.startsWith("/missoes/")) return "learning";
   if (pathname === "/biblioteca" || pathname.startsWith("/biblioteca/")) return "library";
   if (pathname === "/repertorio" || pathname.startsWith("/repertorio/")) return "practice";
   if (pathname === "/projetos" || pathname.startsWith("/projetos/")) return "compose";
@@ -265,6 +319,10 @@ export function contextForPath(pathname: string): MacroContextId {
 export function titleForRegisteredPath(pathname: string): string {
   const titles: Record<string, string> = {
     "/": "Home",
+    "/jornada": "Jornada",
+    "/musicas": "Músicas",
+    "/historico": "Histórico",
+    "/explorar": "Explorar",
     "/diagnostico": "Diagnóstico",
     "/sessao": "Sessão",
     "/plano": "Plano de Hoje",

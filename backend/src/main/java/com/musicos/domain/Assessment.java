@@ -107,6 +107,30 @@ public class Assessment {
         this.updatedAt = Instant.now();
     }
 
+    public void synchronizeCatalogDefinition(String title, String purpose, Type type, String protocolVersion,
+                                             String instructions, String conditions, String allowedSupport,
+                                             String inconclusiveRule, int estimatedMinutes, int maximumAttempts,
+                                             DifficultyDemand difficultyDemand, List<String> competencyIds,
+                                             List<String> criterionKeys) {
+        this.title = DomainRules.requiredText(title, "title");
+        this.purpose = DomainRules.requiredText(purpose, "purpose");
+        this.type = DomainRules.required(type, "type");
+        this.protocolVersion = DomainRules.requiredText(protocolVersion, "protocolVersion");
+        this.instructions = DomainRules.requiredText(instructions, "instructions");
+        this.conditions = DomainRules.requiredText(conditions, "conditions");
+        this.allowedSupport = DomainRules.requiredText(allowedSupport, "allowedSupport");
+        this.inconclusiveRule = DomainRules.requiredText(inconclusiveRule, "inconclusiveRule");
+        this.estimatedMinutes = DomainRules.between(estimatedMinutes, 1, 480, "estimatedMinutes");
+        this.maximumAttempts = DomainRules.between(maximumAttempts, 1, 100, "maximumAttempts");
+        this.difficultyDemand = difficultyDemand == null ? DifficultyDemand.unspecified() : difficultyDemand;
+        this.competencyIds = new ArrayList<>(DomainRules.distinctIds(competencyIds));
+        this.criterionKeys = new ArrayList<>(DomainRules.distinctIds(criterionKeys));
+        if (this.competencyIds.isEmpty() || this.criterionKeys.isEmpty()) {
+            throw new IllegalArgumentException("assessment precisa de competências e critérios");
+        }
+        this.updatedAt = Instant.now();
+    }
+
     public String getId() { return id; }
     public String getTitle() { return title; }
     public String getPurpose() { return purpose; }

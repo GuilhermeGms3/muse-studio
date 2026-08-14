@@ -150,3 +150,33 @@ Concluir todas as etapas visuais não significa necessariamente dominar a skill.
 - Recompensas devem ser musicais: repertório, autonomia, novo contexto ou nova
   capacidade, não apenas XP.
 
+## Jornada editorial
+
+O catálogo mantém ao menos 25 Missions por instrumento suportado (guitarra,
+violão, teclado e bateria), distribuídas pelos sete estágios e pelas nove trilhas
+curriculares reais. Cada instrumento possui experiências próprias de percepção,
+técnica, ritmo, leitura, harmonia, repertório, improvisação, criação e
+performance; a cobertura não é obtida trocando apenas o nome do instrumento.
+
+As definições extensas ficam separadas por instrumento e são compostas pelo
+`TeachingContentCatalog`, sem criar outro motor pedagógico. Cada Mission
+editorial declara resultado observável, função no desenvolvimento, condição de
+prática, aplicação, critérios, variações e protocolo de Assessment. O catálogo
+não cria domínio: tentativas de exercício e autoavaliações geram apenas
+evidência provisória; observações admissíveis são interpretadas pelo Evidence
+Engine.
+
+As relações entre Mission, Lesson, Exercise, Assessment e repertório são
+persistidas em `learning_content_relations`. O workspace de uma Mission recebe
+o campo `repertoire` com as músicas editoriais vinculadas, para que a aplicação
+não dependa de busca textual ou de uma associação implícita.
+
+Competências editoriais usam janela de retenção de 30 dias. Quando evidências
+que sustentavam a hipótese vencem, Curriculum Engine e Coach priorizam a
+Mission de revisão correspondente, distinguindo `REVIEW` de `REVALIDATION`.
+
+`EditorialCatalogIntegrityIntegrationTest` valida IDs, referências, instrumento,
+pré-requisitos acíclicos, stages, tracks, repertório e conteúdo executável. Seu
+relatório lista também skills ainda sem Mission e skills cobertas sem aplicação
+de repertório; essas listas orientam expansão futura sem converter quantidade
+arbitrária em regra pedagógica.

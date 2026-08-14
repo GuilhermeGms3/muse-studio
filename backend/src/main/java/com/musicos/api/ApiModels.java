@@ -69,7 +69,7 @@ public final class ApiModels {
     public record ExerciseVariationView(String name, String instructions, int bpmOffset, int durationMinutes) {}
     public record ExerciseAttemptView(UUID id, String exerciseId, Instant practicedAt, int bpm, int accuracy,
                                       long durationSeconds, int repetitions, int perceivedDifficulty,
-                                      boolean passed) {}
+                                      boolean passed, UUID missionExperienceId) {}
 
     public record ProjectView(String id, String name, String musicalKey, int bpm, String status, String lyrics,
                               List<String> ideas, List<String> references, List<ProjectRiffView> riffs,
@@ -147,14 +147,64 @@ public final class ApiModels {
                                    String nextStatus, String nextMessage,
                                    List<CoachRecommendationView> nextRecommendations) {}
 
+    public record MissionExperienceView(UUID id, String missionId, String instrumentProfileId,
+                                        String status, String currentActivityKind, String currentActivityId,
+                                        UUID lastRecordingId, UUID assessmentAttemptId,
+                                        Instant startedAt, Instant updatedAt, Instant pausedAt,
+                                        Instant completedAt) {}
+
+    public record JourneyMissionView(String id, String title, int estimatedMinutes,
+                                     LearningStage stage, List<String> competencyIds) {}
+
+    public record JourneyCompetencyView(String competencyId, String title, int pathPosition,
+                                        LearningStage stage, String status, String masteryState, boolean unlocked,
+                                        String reason, List<JourneyMissionView> missions) {}
+
+    public record JourneyPositionView(int totalCompetencies, int establishedCompetencies,
+                                      int inProgressCompetencies, int availableCompetencies,
+                                      int blockedCompetencies, int reviewsDue,
+                                      String focusCompetencyId, String explanation) {}
+
+    public record JourneyReviewView(String competencyId, String title, String kind,
+                                    int pathPosition, String reason) {}
+
+    public record JourneyNextStepView(String competencyId, String title, String kind,
+                                      int pathPosition, String reason) {}
+
+    public record JourneyView(InstrumentId instrument, String curriculumId, Instant evaluatedAt,
+                              JourneyPositionView position, List<JourneyCompetencyView> competencies,
+                              List<JourneyReviewView> reviews, List<JourneyNextStepView> nextSteps) {}
+
+    public record LearningHistoryItemView(String id, String kind, String title, String detail,
+                                          Instant occurredAt, String missionId, String sourceId,
+                                          String status) {}
+
     public record MissionWorkspaceView(MissionSummaryView mission, List<MissionLessonView> lessons,
                                        List<ExerciseView> exercises,
+                                       List<SongView> repertoire,
                                        List<MissionAssessmentView> assessments,
                                        List<ExerciseAttemptView> feedback,
                                        List<LearningEvidenceView> evidence,
                                        List<MissionPrerequisiteView> prerequisites,
                                        List<MissionCompetencyView> competencies,
-                                       MissionCoachView coach) {}
+                                       MissionCoachView coach, MissionExperienceView experience) {}
+
+    public record StartMissionExperienceRequest(@NotNull InstrumentId instrument) {}
+
+    public record UpdateMissionExperienceRequest(
+            @NotNull InstrumentId instrument,
+            @NotNull com.musicos.domain.MissionExperience.ActivityKind activityKind,
+            @NotNull String activityId,
+            UUID recordingId,
+            boolean pause) {}
+
+    public record CompleteMissionExperienceRequest(
+            @NotNull InstrumentId instrument,
+            @NotNull com.musicos.domain.AssessmentAttempt.ObserverType observerType,
+            @Min(1) @jakarta.validation.constraints.Max(5) int challengeLevel,
+            UUID recordingId,
+            String note,
+            List<@jakarta.validation.Valid AssessmentCriterionObservationRequest> observations) {}
 
     public record AssessmentCriterionObservationRequest(
             @NotNull String criterionKey,
@@ -165,8 +215,16 @@ public final class ApiModels {
             @NotNull InstrumentId instrument,
             @NotNull com.musicos.domain.AssessmentAttempt.ObserverType observerType,
             @Min(1) @jakarta.validation.constraints.Max(5) int challengeLevel,
+            String artifactReference,
+            UUID missionExperienceId,
             String note,
-            List<@jakarta.validation.Valid AssessmentCriterionObservationRequest> observations) {}
+            List<@jakarta.validation.Valid AssessmentCriterionObservationRequest> observations) {
+        public AssessmentAttemptRequest(InstrumentId instrument,
+                com.musicos.domain.AssessmentAttempt.ObserverType observerType, int challengeLevel,
+                String note, List<AssessmentCriterionObservationRequest> observations) {
+            this(instrument, observerType, challengeLevel, null, null, note, observations);
+        }
+    }
 
     public record AssessmentCriterionResultView(
             String evidenceId, String competencyId, String criterionKey,
@@ -179,7 +237,8 @@ public final class ApiModels {
 
     public record HomeView(String greeting, String message, int expectedMinutes,
                            List<PlanActivityView> todayPlan, ContinueView continueFrom,
-                           ObjectiveView currentObjective, int streakDays, CoachHomeView coach) {}
+                           ObjectiveView currentObjective, int streakDays, CoachHomeView coach,
+                           MissionExperienceView learningExperience) {}
 
     public record StartSessionRequest(@NotNull InstrumentId instrument, Integer availableMinutes) {
         public StartSessionRequest(InstrumentId instrument) {
@@ -318,7 +377,12 @@ public final class ApiModels {
 
     public record ExerciseAttemptRequest(@Min(1) int bpm, @Min(0) int accuracy,
                                          @Min(0) long durationSeconds, @Min(1) int repetitions,
-                                         @Min(1) int perceivedDifficulty) {}
+                                         @Min(1) int perceivedDifficulty, UUID missionExperienceId) {
+        public ExerciseAttemptRequest(int bpm, int accuracy, long durationSeconds, int repetitions,
+                                      int perceivedDifficulty) {
+            this(bpm, accuracy, durationSeconds, repetitions, perceivedDifficulty, null);
+        }
+    }
 
     public record EarAttemptRequest(@NotNull String module, @NotNull String prompt, @NotNull String answer,
                                     boolean correct, @Min(0) int responseMillis, @Min(1) int difficulty) {}

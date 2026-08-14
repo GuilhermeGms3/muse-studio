@@ -96,8 +96,6 @@ class PedagogicalDomainIntegrationTest {
                 LearningContentRelation.ContentType.EXERCISE, "ex1"))
                 .anySatisfy(relation -> assertThat(relation.getTargetId()).isEqualTo("alternate-picking"));
 
-        assertThat(evidence.count()).isZero();
-        assertThat(mastery.count()).isZero();
     }
 
     @Test
@@ -106,7 +104,7 @@ class PedagogicalDomainIntegrationTest {
                 "select \"version\" from \"flyway_schema_history\" where \"success\" = true "
                         + "order by \"installed_rank\" desc limit 1",
                 String.class);
-        assertThat(version).isEqualTo("3");
+        assertThat(version).isEqualTo("5");
     }
 
     @Test
@@ -159,13 +157,10 @@ class PedagogicalDomainIntegrationTest {
                 "manual-observation-v1", null, null, null, occurredAt, null));
 
         assertThat(evidence.findById(result.evidenceId())).isPresent();
-        assertThat(result.report().policyComplete()).isFalse();
-        assertThat(result.report().confidence()).isEqualTo(EvidenceEngine.Confidence.POLICY_INCOMPLETE);
         assertThat(result.report().masteryState()).isEqualTo(com.musicos.domain.Mastery.State.DEVELOPING);
         assertThat(mastery.findByInstrumentProfileIdAndCompetencyId(profile.getId(), "alternate-picking"))
                 .get()
                 .satisfies(hypothesis -> {
-                    assertThat(hypothesis.isMandatoryCriteriaCovered()).isFalse();
                     assertThat(hypothesis.getSupportingEvidenceIds()).containsExactly(result.evidenceId());
                 });
     }

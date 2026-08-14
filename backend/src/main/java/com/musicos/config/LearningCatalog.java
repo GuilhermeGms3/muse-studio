@@ -42,7 +42,7 @@ final class LearningCatalog {
 
     static boolean isEditorial(String skillId) {
         return List.of("pulse", "subdivisions", "notes", "major-scale", "open-chords",
-                "alternate-picking", "harmonic-field").contains(skillId)
+                "alternate-picking", "harmonic-field", "five-finger-position").contains(skillId)
                 || skillId.startsWith("drum-");
     }
 
@@ -173,6 +173,27 @@ final class LearningCatalog {
                     "keyboard", "0,4,7", null,
                     List.of("Decorar a sequência sem ouvir funções.", "Confundir grau com cifra.",
                             "Estudar todos os tons antes de entender C maior."));
+            case "five-finger-position" -> editorial(skill, id,
+                    "A posição de cinco dedos é um ponto de partida para equilibrar a mão e formar frases; não é uma forma rígida para apertar cinco teclas.",
+                    List.of("Relacionar dedos 1–5 às notas C–G.", "Tocar com peso uniforme e punho livre.",
+                            "Criar pergunta e resposta com pausa audível."),
+                    List.of("C–D–E–F–G e volta", "C–D–E ... G–E–D–C"),
+                    List.of(
+                            new LessonStep("Prepare sem pressionar",
+                                    "Apoie os cinco dedos sobre C–D–E–F–G. O punho fica neutro e cada dedo conserva sua curva antes do primeiro som.",
+                                    "Dedos 1–2–3–4–5 sobre C–D–E–F–G.", "C D E F G", null,
+                                    "C4,D4,E4,F4,G4"),
+                            new LessonStep("Compare o peso",
+                                    "Toque uma nota por pulso e escute se polegar e dedo mínimo saltam de volume. Ajuste o peso, não a velocidade.",
+                                    "C–D–E–F–G | G–F–E–D–C", "♩ ♩ ♩ ♩ ♩", null,
+                                    "C4,D4,E4,F4,G4,G4,F4,E4,D4,C4"),
+                            new LessonStep("Dê forma às cinco notas",
+                                    "Toque uma pergunta de dois compassos, deixe um tempo vazio e responda terminando em C. Repita sem alterar o ritmo.",
+                                    "C–D–E–G ... G–E–D–C", "pergunta | pausa | resposta", null,
+                                    "C4,D4,E4,G4,G4,E4,D4,C4")),
+                    "keyboard", "0,2,4,5,7", null,
+                    List.of("Levantar dedos que ainda não vão tocar.", "Acentuar o polegar sem intenção.",
+                            "Subir e descer sem ouvir uma frase."));
             default -> null;
         };
     }

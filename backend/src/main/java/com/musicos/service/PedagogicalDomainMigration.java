@@ -111,7 +111,7 @@ public class PedagogicalDomainMigration {
             }
             competencies.findById(unit.competencyId()).ifPresent(competency -> {
                 competency.configureEvidencePolicy(
-                        "teaching-runner-v1:" + unit.competencyId(), unit.criterionKeys(), null);
+                        "teaching-runner-v1:" + unit.competencyId(), unit.criterionKeys(), 30);
                 competencies.save(competency);
             });
             if (!lessons.existsById(unit.lessonId())) {
@@ -123,15 +123,30 @@ public class PedagogicalDomainMigration {
             }
 
             var assessmentId = unit.id() + "-assessment";
-            if (!assessments.existsById(assessmentId)) {
-                var assessment = new Assessment(assessmentId, unit.assessmentTitle(), unit.assessmentPurpose(),
-                        Assessment.Type.PERFORMANCE, "teaching-runner-v1", unit.assessmentInstructions(),
+            assessments.findById(assessmentId).ifPresentOrElse(assessment -> {
+                assessment.synchronizeCatalogDefinition(unit.assessmentTitle(), unit.assessmentPurpose(),
+                        unit.assessmentType(), "teaching-runner-v1", unit.assessmentInstructions(),
                         unit.assessmentConditions(), unit.allowedSupport(), unit.inconclusiveRule(), 6, 3,
                         DifficultyDemand.unspecified(), List.of(unit.competencyId()), unit.criterionKeys());
                 assessment.activate();
                 assessments.save(assessment);
-            }
-            if (!missions.existsById(unit.id())) {
+            }, () -> {
+                var assessment = new Assessment(assessmentId, unit.assessmentTitle(), unit.assessmentPurpose(),
+                        unit.assessmentType(), "teaching-runner-v1", unit.assessmentInstructions(),
+                        unit.assessmentConditions(), unit.allowedSupport(), unit.inconclusiveRule(), 6, 3,
+                        DifficultyDemand.unspecified(), List.of(unit.competencyId()), unit.criterionKeys());
+                assessment.activate();
+                assessments.save(assessment);
+            });
+            missions.findById(unit.id()).ifPresentOrElse(mission -> {
+                mission.synchronizeCatalogDefinition(unit.title(), unit.objective(), unit.context(),
+                        unit.motivation(), unit.estimatedMinutes(), unit.instrument(), unit.stage(),
+                        unit.completionCriteria(), unit.expectedEvidence(), unit.musicalApplication(), null,
+                        DifficultyDemand.unspecified(), List.of(unit.competencyId()), List.of(unit.lessonId()),
+                        unit.exerciseIds(), List.of(assessmentId));
+                mission.activate();
+                missions.save(mission);
+            }, () -> {
                 var mission = new Mission(unit.id(), curriculumId, unit.title(), unit.objective(), unit.context(),
                         unit.motivation(), unit.estimatedMinutes(), unit.instrument(), unit.stage(),
                         unit.completionCriteria(), unit.expectedEvidence(), unit.musicalApplication(), null,
@@ -139,8 +154,39 @@ public class PedagogicalDomainMigration {
                         unit.exerciseIds(), List.of(assessmentId));
                 mission.activate();
                 missions.save(mission);
-            }
+            });
+            linkMissionContent(unit, assessmentId);
         });
+    }
+
+    private void linkMissionContent(TeachingContentCatalog.Unit unit, String assessmentId) {
+        addTeachingRelation(unit.id(), LearningContentRelation.RelationType.COMPOSES,
+                LearningContentRelation.ContentType.LESSON, unit.lessonId(),
+                "A aula apresenta a oportunidade de aprendizagem desta Mission.");
+        unit.exerciseIds().forEach(exerciseId -> addTeachingRelation(unit.id(),
+                LearningContentRelation.RelationType.COMPOSES,
+                LearningContentRelation.ContentType.EXERCISE, exerciseId,
+                "O exercício pratica uma função explícita dentro desta Mission."));
+        addTeachingRelation(unit.id(), LearningContentRelation.RelationType.EVIDENCES,
+                LearningContentRelation.ContentType.ASSESSMENT, assessmentId,
+                "O assessment observa os critérios declarados sem presumir domínio.");
+        unit.repertoireIds().forEach(songId -> {
+            if (!songs.existsById(songId)) {
+                throw new IllegalStateException("Repertório ausente para Mission editorial: " + songId);
+            }
+            addTeachingRelation(unit.id(), LearningContentRelation.RelationType.APPLIES,
+                    LearningContentRelation.ContentType.SONG, songId,
+                    "A Mission leva a competência a uma aplicação de repertório identificada.");
+        });
+    }
+
+    private void addTeachingRelation(String missionId, LearningContentRelation.RelationType type,
+                                     LearningContentRelation.ContentType targetType, String targetId,
+                                     String justification) {
+        var value = new LearningContentRelation(LearningContentRelation.ContentType.MISSION, missionId, type,
+                targetType, targetId, LearningContentRelation.Strength.STRONG, justification,
+                "Relação editorial da primeira jornada.", "teaching-content-catalog");
+        if (!contentRelations.existsById(value.getId())) contentRelations.save(value);
     }
 
     private void migrateCompetencies() {

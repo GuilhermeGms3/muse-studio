@@ -51,9 +51,9 @@ class AssessmentEvidenceIntegrationTest {
                 new AssessmentAttemptRequest(InstrumentId.GUITAR, AssessmentAttempt.ObserverType.EXTERNAL, 3,
                         "Observação feita durante a tomada completa.",
                         List.of(
-                                observation("controle"),
-                                observation("continuidade"),
-                                observation("aplicacao-musical"))));
+                                observation("direcao"),
+                                observation("pulso"),
+                                observation("tensao"))));
 
         assertThat(result.results()).hasSize(3).allSatisfy(item -> {
             assertThat(item.state()).isEqualTo(Evidence.State.VALID.name());
@@ -61,6 +61,22 @@ class AssessmentEvidenceIntegrationTest {
         });
         assertThat(result.results()).extracting(AssessmentCriterionResultView::evidenceId)
                 .allMatch(id -> evidence.existsById(id));
+    }
+
+    @Test
+    void earAttemptCreatesOnlyTraceableProvisionalPerceptionEvidence() {
+        learning.recordEarAttempt(new EarAttemptRequest("intervals", "3M", "3m", false, 1450, 2));
+
+        var profile = profiles.findByOwnerIdAndInstrument("default", InstrumentId.GUITAR).orElseThrow();
+        assertThat(evidence.findByInstrumentProfileIdAndCompetencyIdOrderByOccurredAtDesc(
+                profile.getId(), "ear-intervals")).anySatisfy(item -> {
+            assertThat(item.getType()).isEqualTo(Evidence.Type.PERCEPTION_RESPONSE);
+            assertThat(item.getState()).isEqualTo(Evidence.State.PROVISIONAL);
+            assertThat(item.getReliability()).isEqualTo(Evidence.Reliability.LOW);
+            assertThat(item.getResult()).isEqualTo(Evidence.Result.CHALLENGES);
+            assertThat(item.getSourceId()).startsWith("ear-attempt:");
+            assertThat(item.getObservation()).contains("3m", "3M");
+        });
     }
 
     private AssessmentCriterionObservationRequest observation(String criterion) {

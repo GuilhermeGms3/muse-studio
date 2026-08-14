@@ -21,6 +21,7 @@ export const recordExerciseAttempt = (
     durationSeconds: number;
     repetitions: number;
     perceivedDifficulty: number;
+    missionExperienceId?: string;
   },
 ) =>
   apiRequest<ExerciseAttempt>(`/exercises/${id}/attempts`, {

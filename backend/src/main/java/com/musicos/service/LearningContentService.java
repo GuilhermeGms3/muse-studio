@@ -26,6 +26,8 @@ public class LearningContentService {
     private final MusicProjectRepository projects;
     private final InstrumentProfileRepository instrumentProfiles;
     private final EvidenceEngine evidenceEngine;
+    private final MissionExperienceRepository missionExperiences;
+    private final MissionRepository missions;
 
     public LearningContentService(LibraryContentRepository library, ExerciseRepository exercises,
                                   ExerciseAttemptRepository exerciseAttempts,
@@ -33,7 +35,9 @@ public class LearningContentService {
                                   UserPreferencesRepository preferences, SkillRepository skills,
                                   SongRepository songs, MusicProjectRepository projects,
                                   InstrumentProfileRepository instrumentProfiles,
-                                  EvidenceEngine evidenceEngine) {
+                                  EvidenceEngine evidenceEngine,
+                                  MissionExperienceRepository missionExperiences,
+                                  MissionRepository missions) {
         this.library = library;
         this.exercises = exercises;
         this.exerciseAttempts = exerciseAttempts;
@@ -44,6 +48,8 @@ public class LearningContentService {
         this.projects = projects;
         this.instrumentProfiles = instrumentProfiles;
         this.evidenceEngine = evidenceEngine;
+        this.missionExperiences = missionExperiences;
+        this.missions = missions;
     }
 
     @Transactional
@@ -90,8 +96,21 @@ public class LearningContentService {
         var passed = request.accuracy() >= entity.getPassAccuracy()
                 && request.repetitions() >= entity.getPassRepetitions()
                 && request.bpm() >= entity.getCurrentBpm();
+        if (request.missionExperienceId() != null) {
+            var experience = missionExperiences.findById(request.missionExperienceId())
+                    .orElseThrow(() -> new NotFoundException("Experiência da missão não encontrada"));
+            if (experience.getStatus() == MissionExperience.Status.COMPLETED) {
+                throw new IllegalStateException("A experiência já foi concluída");
+            }
+            var mission = missions.findById(experience.getMissionId())
+                    .orElseThrow(() -> new NotFoundException("Missão da experiência não encontrada"));
+            if (!mission.getExerciseIds().contains(exerciseId)) {
+                throw new IllegalArgumentException("Exercício não pertence a esta missão");
+            }
+        }
         var attempt = exerciseAttempts.save(new ExerciseAttempt(exerciseId, request.bpm(), request.accuracy(),
-                request.durationSeconds(), request.repetitions(), request.perceivedDifficulty(), passed));
+                request.durationSeconds(), request.repetitions(), request.perceivedDifficulty(), passed,
+                request.missionExperienceId()));
         entity.recordResult(request.bpm(), passed);
         exercises.save(entity);
         if (entity.getSkillId() != null) {
@@ -136,14 +155,38 @@ public class LearningContentService {
 
     @Transactional
     public EarTrainingStatsView recordEarAttempt(EarAttemptRequest request) {
-        earAttempts.save(new EarTrainingAttempt(request.module(), request.prompt(), request.answer(),
+        var attempt = earAttempts.save(new EarTrainingAttempt(request.module(), request.prompt(), request.answer(),
                 request.correct(), request.responseMillis(), request.difficulty()));
-        skills.findById(skillForEarModule(request.module())).ifPresent(skill -> {
+        var competencyId = skillForEarModule(request.module());
+        skills.findById(competencyId).ifPresent(skill -> {
             skill.recordEvidence(0.03, request.correct() ? 100 : 40, null, false,
                     request.correct(), false, null, request.correct() ? 2 : 4);
             skills.save(skill);
         });
+        recordEarEvidence(attempt, competencyId, request);
         return earStats();
+    }
+
+    private void recordEarEvidence(EarTrainingAttempt attempt, String competencyId, EarAttemptRequest request) {
+        var primaryInstrument = preferences.findById("default")
+                .map(UserPreferences::getPrimaryInstrument).orElse(InstrumentId.GUITAR);
+        var profile = instrumentProfiles.findByOwnerIdAndInstrument("default", primaryInstrument).orElse(null);
+        if (profile == null || !skills.existsById(competencyId)) return;
+        var attemptId = attempt.getId().toString();
+        var observation = request.correct()
+                ? "Resposta perceptiva correta para o estímulo '" + request.prompt() + "'."
+                : "Resposta '" + request.answer() + "' diante do estímulo '" + request.prompt()
+                        + "'; a resposta esperada não foi reconhecida nesta tentativa.";
+        evidenceEngine.collect(new EvidenceEngine.Observation(
+                profile.getId(), competencyId, "resposta-perceptiva", Evidence.Type.PERCEPTION_RESPONSE,
+                Evidence.State.PROVISIONAL, Evidence.FunctionalWeight.CORROBORATING,
+                Evidence.Reliability.LOW,
+                request.correct() ? Evidence.Result.SUPPORTS : Evidence.Result.CHALLENGES,
+                Evidence.SourceType.EXERCISE, "ear-attempt:" + attemptId, attemptId,
+                Math.max(1, Math.min(5, request.difficulty())), observation,
+                "Módulo " + request.module() + ", dificuldade " + request.difficulty()
+                        + "/5, resposta em " + request.responseMillis() + " ms.",
+                "ear-training-v1", null, null, null, attempt.getPracticedAt(), null));
     }
 
     public EarTrainingStatsView earStats() {
@@ -240,9 +283,9 @@ public class LearningContentService {
     private String skillForEarModule(String module) {
         return switch (module) {
             case "chords" -> "ear-chords";
-            case "rhythms" -> "rhythmic-dictation";
+            case "rhythms" -> "ear-rhythm";
             case "progressions" -> "ear-progressions";
-            case "melodies" -> "melodic-dictation";
+            case "melodies" -> "ear-melody";
             default -> "ear-intervals";
         };
     }

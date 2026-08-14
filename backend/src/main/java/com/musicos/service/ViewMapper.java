@@ -69,7 +69,7 @@ final class ViewMapper {
     static ExerciseAttemptView exerciseAttempt(ExerciseAttempt value) {
         return new ExerciseAttemptView(value.getId(), value.getExerciseId(), value.getPracticedAt(),
                 value.getBpm(), value.getAccuracy(), value.getDurationSeconds(), value.getRepetitions(),
-                value.getPerceivedDifficulty(), value.isPassed());
+                value.getPerceivedDifficulty(), value.isPassed(), value.getMissionExperienceId());
     }
 
     static ProjectView project(MusicProject value) {

@@ -21,12 +21,18 @@ public class ExerciseAttempt {
     private Integer repetitions;
     private Integer perceivedDifficulty;
     private Boolean passed;
+    private UUID missionExperienceId;
 
     protected ExerciseAttempt() {
     }
 
     public ExerciseAttempt(String exerciseId, int bpm, int accuracy, long durationSeconds, int repetitions,
                            int perceivedDifficulty, boolean passed) {
+        this(exerciseId, bpm, accuracy, durationSeconds, repetitions, perceivedDifficulty, passed, null);
+    }
+
+    public ExerciseAttempt(String exerciseId, int bpm, int accuracy, long durationSeconds, int repetitions,
+                           int perceivedDifficulty, boolean passed, UUID missionExperienceId) {
         this.exerciseId = exerciseId;
         this.practicedAt = Instant.now();
         this.bpm = bpm;
@@ -35,6 +41,7 @@ public class ExerciseAttempt {
         this.repetitions = repetitions;
         this.perceivedDifficulty = perceivedDifficulty;
         this.passed = passed;
+        this.missionExperienceId = missionExperienceId;
     }
 
     public UUID getId() { return id; }
@@ -46,4 +53,5 @@ public class ExerciseAttempt {
     public int getRepetitions() { return repetitions == null ? 0 : repetitions; }
     public int getPerceivedDifficulty() { return perceivedDifficulty == null ? 3 : perceivedDifficulty; }
     public boolean isPassed() { return Boolean.TRUE.equals(passed); }
+    public UUID getMissionExperienceId() { return missionExperienceId; }
 }

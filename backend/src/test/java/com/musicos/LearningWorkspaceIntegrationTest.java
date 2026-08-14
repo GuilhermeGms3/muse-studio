@@ -14,6 +14,7 @@ import com.musicos.repository.ExerciseRepository;
 import com.musicos.repository.LessonRepository;
 import com.musicos.repository.MissionRepository;
 import com.musicos.service.LearningWorkspaceService;
+import com.musicos.service.LearningHistoryService;
 import com.musicos.service.NotFoundException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 class LearningWorkspaceIntegrationTest {
     @Autowired
     private LearningWorkspaceService workspace;
+
+    @Autowired
+    private LearningHistoryService history;
 
     @Autowired
     private MissionRepository missions;
@@ -92,6 +96,33 @@ class LearningWorkspaceIntegrationTest {
         assertThatThrownBy(() -> workspace.mission(mission.getId(), InstrumentId.KEYS))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("instrumento selecionado");
+    }
+
+    @Test
+    void exposesTheRealCurriculumNavigationWithLinkedMissionsForEachInstrument() {
+        var guitar = workspace.journey(InstrumentId.GUITAR);
+        var keys = workspace.journey(InstrumentId.KEYS);
+
+        assertThat(guitar.instrument()).isEqualTo(InstrumentId.GUITAR);
+        assertThat(guitar.competencies()).isNotEmpty();
+        assertThat(guitar.competencies()).extracting(item -> item.status())
+                .allMatch(status -> java.util.Set.of(
+                        "BLOCKED", "AVAILABLE", "IN_PROGRESS", "ESTABLISHED", "REVIEW_DUE")
+                        .contains(status));
+        assertThat(guitar.competencies()).flatExtracting(item -> item.missions())
+                .allSatisfy(mission -> assertThat(mission.competencyIds()).isNotEmpty());
+        assertThat(keys.instrument()).isEqualTo(InstrumentId.KEYS);
+        assertThat(keys.curriculumId()).isNotEqualTo(guitar.curriculumId());
+    }
+
+    @Test
+    void unifiesRealLearningRecordsInReverseChronologicalOrder() {
+        var items = history.history(InstrumentId.GUITAR);
+
+        assertThat(items).isNotEmpty();
+        assertThat(items).extracting(item -> item.kind()).contains("SESSION");
+        assertThat(items).extracting(item -> item.occurredAt()).isSortedAccordingTo(
+                java.util.Comparator.reverseOrder());
     }
 
     private com.musicos.domain.Curriculum guitarCurriculum() {

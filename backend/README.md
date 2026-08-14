@@ -47,7 +47,7 @@ npm run api:test
 | `PUT/DELETE` | `/api/v1/exercises/{id}` | Criar, editar ou remover um exercício |
 | `POST` | `/api/v1/exercises/{id}/attempts` | Avaliar e registrar uma tentativa |
 | `GET` | `/api/v1/ear-training/stats` | Consultar evolução auditiva |
-| `POST` | `/api/v1/ear-training/attempts` | Registrar uma resposta auditiva |
+| `POST` | `/api/v1/ear-training/attempts` | Registrar resposta auditiva e evidência perceptiva provisória rastreável |
 | `GET/PUT` | `/api/v1/preferences` | Preferências, nível e tempo disponível |
 | `GET` | `/api/v1/recommendations/songs` | Sugestões por gosto e habilidade |
 | `GET` | `/api/v1/library` | Biblioteca |
@@ -105,6 +105,10 @@ Novos contratos principais:
 | `GET` | `/api/v1/sessions/{id}/summary` | Gerar a revisao pos-sessao |
 | `POST` | `/api/v1/songs/{id}/practice-plan` | Transformar uma musica em plano de estudo |
 | `POST/GET` | `/api/v1/recordings` | Salvar e listar gravacoes analisadas |
+| `GET` | `/api/v1/missions/{id}?instrument=guitar` | Carregar experiência, atividades, evidências e repertório editorial vinculado |
+| `POST` | `/api/v1/missions/{id}/experience` | Iniciar ou retomar uma experiência de Mission |
+| `PATCH` | `/api/v1/missions/{id}/experience` | Persistir atividade semântica, pausa e gravação vinculada |
+| `POST` | `/api/v1/missions/{id}/experience/complete` | Concluir após práticas, gravação e reflexão; preservar Assessment e Evidence |
 | `GET` | `/api/v1/data/backup` | Exportar backup local em JSON |
 | `POST` | `/api/v1/data/restore` | Restaurar um backup local |
 | `GET` | `/api/v1/data/journal.csv` | Exportar o historico em CSV |

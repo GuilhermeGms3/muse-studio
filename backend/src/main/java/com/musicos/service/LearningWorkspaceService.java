@@ -11,7 +11,10 @@ import com.musicos.repository.ExerciseRepository;
 import com.musicos.repository.InstrumentProfileRepository;
 import com.musicos.repository.LessonRepository;
 import com.musicos.repository.LibraryContentRepository;
+import com.musicos.repository.LearningContentRelationRepository;
 import com.musicos.repository.MissionRepository;
+import com.musicos.repository.SongRepository;
+import com.musicos.domain.LearningContentRelation;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.time.Instant;
@@ -25,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class LearningWorkspaceService {
     private final MissionRepository missions;
+    private final LearningContentRelationRepository contentRelations;
+    private final SongRepository songs;
     private final LessonRepository lessons;
     private final LibraryContentRepository library;
     private final ExerciseRepository exercises;
@@ -36,14 +41,19 @@ public class LearningWorkspaceService {
     private final CurriculumEngine curriculumEngine;
     private final EvidenceEngine evidenceEngine;
     private final Coach coach;
+    private final com.musicos.repository.MissionExperienceRepository experiences;
 
-    public LearningWorkspaceService(MissionRepository missions, LessonRepository lessons,
+    public LearningWorkspaceService(MissionRepository missions, LearningContentRelationRepository contentRelations,
+                                    SongRepository songs, LessonRepository lessons,
                                     LibraryContentRepository library, ExerciseRepository exercises,
                                     AssessmentRepository assessments, ExerciseAttemptRepository attempts,
                                     EvidenceRepository evidence, InstrumentProfileRepository profiles,
                                     CompetencyRepository competencies, CurriculumEngine curriculumEngine,
-                                    EvidenceEngine evidenceEngine, Coach coach) {
+                                    EvidenceEngine evidenceEngine, Coach coach,
+                                    com.musicos.repository.MissionExperienceRepository experiences) {
         this.missions = missions;
+        this.contentRelations = contentRelations;
+        this.songs = songs;
         this.lessons = lessons;
         this.library = library;
         this.exercises = exercises;
@@ -55,6 +65,7 @@ public class LearningWorkspaceService {
         this.curriculumEngine = curriculumEngine;
         this.evidenceEngine = evidenceEngine;
         this.coach = coach;
+        this.experiences = experiences;
     }
 
     public MissionWorkspaceView mission(String id, InstrumentId instrument) {
@@ -79,6 +90,14 @@ public class LearningWorkspaceService {
         var exerciseEntities = mission.getExerciseIds().stream().map(exerciseId -> exercises.findById(exerciseId)
                 .orElseThrow(() -> new NotFoundException(
                         "Exercício vinculado não encontrado: " + exerciseId))).toList();
+        var repertoireViews = contentRelations.findBySourceTypeAndSourceId(
+                        LearningContentRelation.ContentType.MISSION, mission.getId()).stream()
+                .filter(relation -> relation.getTargetType() == LearningContentRelation.ContentType.SONG
+                        && relation.getRelationType() == LearningContentRelation.RelationType.APPLIES)
+                .map(LearningContentRelation::getTargetId).distinct()
+                .map(songId -> songs.findById(songId)
+                        .orElseThrow(() -> new NotFoundException("Repertório vinculado não encontrado: " + songId)))
+                .map(ViewMapper::song).toList();
         var assessmentViews = mission.getAssessmentIds().stream().map(assessmentId -> {
             var assessment = assessments.findById(assessmentId)
                     .orElseThrow(() -> new NotFoundException(
@@ -139,9 +158,43 @@ public class LearningWorkspaceService {
                         item.satisfied(), item.blocking(), item.reason()))
                 .toList();
         var coachView = coachView(mission, profile, evaluatedAt);
+        var experience = experiences.findByMissionIdAndInstrumentProfileId(mission.getId(), profile.getId())
+                .map(MissionExperienceService::view).orElse(null);
         return new MissionWorkspaceView(summary, lessonViews,
-                exerciseEntities.stream().map(ViewMapper::exercise).toList(), assessmentViews,
-                feedback, evidenceViews, prerequisiteViews, competencyViews, coachView);
+                exerciseEntities.stream().map(ViewMapper::exercise).toList(), repertoireViews, assessmentViews,
+                feedback, evidenceViews, prerequisiteViews, competencyViews, coachView, experience);
+    }
+
+    public JourneyView journey(InstrumentId instrument) {
+        var profile = profiles.findByOwnerIdAndInstrument("default", instrument)
+                .orElseThrow(() -> new NotFoundException("Perfil instrumental não encontrado"));
+        var navigation = curriculumEngine.navigate(profile.getId(), Instant.now(), 8);
+        var activeMissions = missions.findByCurriculumIdAndStatus(
+                navigation.curriculumId(), com.musicos.domain.Mission.Status.ACTIVE);
+        var missionViews = activeMissions.stream().map(mission -> new JourneyMissionView(
+                mission.getId(), mission.getTitle(), mission.getEstimatedMinutes(), mission.getStage(),
+                mission.getCompetencyIds())).toList();
+        var position = navigation.position();
+        var journeyCompetencies = competencies.findAllById(
+                navigation.competencies().stream().map(item -> item.competencyId()).toList()).stream()
+                .collect(Collectors.toMap(com.musicos.domain.Competency::getId, Function.identity()));
+        return new JourneyView(instrument, navigation.curriculumId(), navigation.evaluatedAt(),
+                new JourneyPositionView(position.totalCompetencies(), position.establishedCompetencies(),
+                        position.inProgressCompetencies(), position.availableCompetencies(),
+                        position.blockedCompetencies(), position.reviewsDue(),
+                        position.focusCompetencyId(), position.explanation()),
+                navigation.competencies().stream().map(item -> new JourneyCompetencyView(
+                        item.competencyId(), item.title(), item.pathPosition(),
+                        journeyCompetencies.get(item.competencyId()).getStage(), item.status().name(),
+                        item.masteryState().name(), item.unlocked(), item.reason(),
+                        missionViews.stream().filter(mission ->
+                                mission.competencyIds().contains(item.competencyId())).toList())).toList(),
+                navigation.reviews().stream().map(item -> new JourneyReviewView(
+                        item.competencyId(), item.title(), item.kind().name(), item.pathPosition(),
+                        item.reason())).toList(),
+                navigation.nextSteps().stream().map(item -> new JourneyNextStepView(
+                        item.competencyId(), item.title(), item.kind().name(), item.pathPosition(),
+                        item.reason())).toList());
     }
 
     private MissionCoachView coachView(com.musicos.domain.Mission mission,

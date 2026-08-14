@@ -17,7 +17,7 @@ public class Evidence {
     public enum FunctionalWeight { REQUIRED, PRIMARY, CORROBORATING, CONTEXTUAL, NOT_ADMISSIBLE }
     public enum Reliability { LOW, MODERATE, HIGH }
     public enum Result { SUPPORTS, CHALLENGES, INCONCLUSIVE }
-    public enum SourceType { MISSION, LESSON, EXERCISE, ASSESSMENT, REPERTOIRE, SESSION, MANUAL, IMPORT }
+    public enum SourceType { MISSION, LESSON, EXERCISE, ASSESSMENT, DIAGNOSTIC, REPERTOIRE, SESSION, MANUAL, IMPORT }
 
     @Id
     private String id;

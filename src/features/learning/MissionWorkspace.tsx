@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useParams } from "@tanstack/react-router";
-import { TeachingRunner } from "@/features/learning/TeachingRunner";
+import { DeepLearningExperience } from "@/features/learning/DeepLearningExperience";
 import { useMission } from "@/shared/api/missions";
 import { QueryState } from "@/shared/ui/query/QueryState";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
@@ -24,5 +24,5 @@ export function MissionWorkspace() {
 
   if (!data) return <QueryState error={missionQuery.error} />;
 
-  return <TeachingRunner data={data} instrument={instrument} />;
+  return <DeepLearningExperience data={data} instrument={instrument} />;
 }

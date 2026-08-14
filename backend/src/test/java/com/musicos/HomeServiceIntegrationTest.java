@@ -24,8 +24,8 @@ class HomeServiceIntegrationTest {
 
         assertThat(home.todayPlan()).hasSize(4);
         assertThat(home.expectedMinutes()).isEqualTo(60);
-        assertThat(home.currentObjective().id()).isEqualTo("bends");
-        assertThat(home.continueFrom().type()).isEqualTo("song");
+        assertThat(home.currentObjective()).isNull();
+        assertThat(home.continueFrom()).isNull();
         assertThat(home.coach()).isNotNull();
         assertThat(home.coach().profile().instrument()).isEqualTo(InstrumentId.GUITAR);
         assertThat(home.coach().recommendations()).allSatisfy(recommendation ->
@@ -33,10 +33,11 @@ class HomeServiceIntegrationTest {
     }
 
     @Test
-    void homeKeepsObjectiveAndCoachInsideTheSelectedInstrumentProfile() {
+    void homeKeepsCoachInsideTheSelectedInstrumentProfileWithoutInventingContinuation() {
         var home = homeService.home(InstrumentId.ACOUSTIC);
 
-        assertThat(home.currentObjective().id()).isNotEqualTo("bends");
+        assertThat(home.currentObjective()).isNull();
+        assertThat(home.continueFrom()).isNull();
         assertThat(home.coach().profile().instrument()).isEqualTo(InstrumentId.ACOUSTIC);
     }
 

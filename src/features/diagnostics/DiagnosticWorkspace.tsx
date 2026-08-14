@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Check, Headphones, Music2, Timer } from "lucide-react";
 import { useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { completeDiagnostic, type InstrumentId } from "@/lib/music-api";
 import { cn } from "@/shared/utils/cn";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
@@ -44,6 +45,7 @@ function playPair(direction: "up" | "down" | "same") {
 
 export function DiagnosticPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { instrument: currentInstrument, setInstrument } = useWorkspace();
   const [step, setStep] = useState(0);
   const [instrument, chooseInstrument] = useState<InstrumentId>(currentInstrument);
@@ -123,6 +125,7 @@ export function DiagnosticPage() {
         techniqueScore: technique * 20,
       });
       setInstrument(instrument);
+      await queryClient.invalidateQueries();
       navigate({ to: "/" });
     } catch (reason) {
       setError((reason as Error).message);

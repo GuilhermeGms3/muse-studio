@@ -1,7 +1,12 @@
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock3, Mic, Save, Square, Trash2 } from "lucide-react";
-import { getRecordings, recordingAudioUrl, uploadRecording } from "@/lib/music-api";
+import {
+  getRecordings,
+  recordingAudioUrl,
+  uploadRecording,
+  type PracticeRecording,
+} from "@/lib/music-api";
 
 function pitchFromBuffer(buffer: Float32Array, sampleRate: number) {
   let rms = 0;
@@ -48,11 +53,13 @@ export function PracticeRecorder({
   contextId = "general",
   targetBpm,
   targetNote,
+  onSaved,
 }: {
   contextType?: string;
   contextId?: string;
   targetBpm?: number;
   targetNote?: string;
+  onSaved?: (recording: PracticeRecording) => void;
 }) {
   const queryClient = useQueryClient();
   const history = useQuery({
@@ -89,7 +96,7 @@ export function PracticeRecorder({
     setSaving(true);
     try {
       const metrics = metricsRef.current;
-      await uploadRecording(blob, {
+      const recording = await uploadRecording(blob, {
         contextType,
         contextId,
         durationMillis: Math.round(performance.now() - startedAtRef.current),
@@ -101,6 +108,7 @@ export function PracticeRecorder({
         pitchOffsetCents: metrics.pitch || undefined,
         bendStability: metrics.bend || undefined,
       });
+      onSaved?.(recording);
       setSaved(true);
       queryClient.invalidateQueries({ queryKey: ["recordings", contextType, contextId] });
     } catch (reason) {

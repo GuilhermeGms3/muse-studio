@@ -20,24 +20,50 @@ public class LearningController {
     private final com.musicos.service.RepertoirePlanningService repertoirePlanning;
     private final LearningWorkspaceService workspace;
     private final com.musicos.service.AssessmentService assessments;
+    private final com.musicos.service.MissionExperienceService experiences;
 
     public LearningController(LearningContentService learning, SongRecommendationService recommendations,
                               com.musicos.service.DiagnosticService diagnostic,
                               com.musicos.service.RepertoirePlanningService repertoirePlanning,
                               LearningWorkspaceService workspace,
-                              com.musicos.service.AssessmentService assessments) {
+                              com.musicos.service.AssessmentService assessments,
+                              com.musicos.service.MissionExperienceService experiences) {
         this.learning = learning;
         this.recommendations = recommendations;
         this.diagnostic = diagnostic;
         this.repertoirePlanning = repertoirePlanning;
         this.workspace = workspace;
         this.assessments = assessments;
+        this.experiences = experiences;
+    }
+
+    @PostMapping("/missions/{id}/experience")
+    public MissionExperienceView startMission(@PathVariable String id,
+                                               @Valid @RequestBody StartMissionExperienceRequest request) {
+        return experiences.start(id, request);
+    }
+
+    @PatchMapping("/missions/{id}/experience")
+    public MissionExperienceView updateMission(@PathVariable String id,
+                                                @Valid @RequestBody UpdateMissionExperienceRequest request) {
+        return experiences.update(id, request);
+    }
+
+    @PostMapping("/missions/{id}/experience/complete")
+    public MissionExperienceView completeMission(@PathVariable String id,
+                                                  @Valid @RequestBody CompleteMissionExperienceRequest request) {
+        return experiences.complete(id, request);
     }
 
     @GetMapping("/missions/{id}")
     public MissionWorkspaceView mission(@PathVariable String id,
                                         @RequestParam(defaultValue = "guitar") InstrumentId instrument) {
         return workspace.mission(id, instrument);
+    }
+
+    @GetMapping("/journey")
+    public JourneyView journey(@RequestParam(defaultValue = "guitar") InstrumentId instrument) {
+        return workspace.journey(instrument);
     }
 
     @PutMapping("/library/{id}")

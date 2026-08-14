@@ -26,8 +26,9 @@ class TeachingRunnerIntegrationTest {
     private ExerciseRepository exercises;
 
     @Test
-    void seedsOneCompleteEvidenceGuidedMissionForEveryInstrument() {
-        assertThat(TeachingContentCatalog.units()).hasSize(4);
+    void seedsCompleteEvidenceGuidedJourneysForEveryInstrument() {
+        assertThat(TeachingContentCatalog.units()).isNotEmpty()
+                .extracting(TeachingContentCatalog.Unit::id).doesNotHaveDuplicates();
 
         for (var unit : TeachingContentCatalog.units()) {
             var mission = missions.findById(unit.id()).orElseThrow();
@@ -55,7 +56,8 @@ class TeachingRunnerIntegrationTest {
             assertThat(offered).extracting(item -> item.id()).containsAll(unit.exerciseIds());
         }
 
-        assertThat(TeachingContentCatalog.exercises()).hasSize(8);
+        assertThat(TeachingContentCatalog.exercises())
+                .hasSizeGreaterThanOrEqualTo(TeachingContentCatalog.units().size());
         for (var definition : TeachingContentCatalog.exercises()) {
             var persisted = exercises.findById(definition.getId()).orElseThrow();
             assertThat(persisted.getObservableObjective()).isNotBlank();

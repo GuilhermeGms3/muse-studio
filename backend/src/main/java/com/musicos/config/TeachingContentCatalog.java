@@ -1,11 +1,13 @@
 package com.musicos.config;
 
 import com.musicos.domain.DifficultyDemand;
+import com.musicos.domain.Assessment;
 import com.musicos.domain.Exercise;
 import com.musicos.domain.ExerciseVariation;
 import com.musicos.domain.InstrumentId;
 import com.musicos.domain.LearningStage;
 import java.util.List;
+import java.util.stream.Stream;
 
 /** Conteúdo editorial usado por Missions; não contém progresso nem evidência simulada. */
 public final class TeachingContentCatalog {
@@ -30,14 +32,16 @@ public final class TeachingContentCatalog {
             String assessmentConditions,
             String allowedSupport,
             String inconclusiveRule,
-            List<String> criterionKeys) {
+            List<String> criterionKeys,
+            Assessment.Type assessmentType,
+            List<String> repertoireIds) {
     }
 
     private TeachingContentCatalog() {
     }
 
     public static List<Exercise> exercises() {
-        return List.of(
+        var core = List.of(
                 exercise("deep-guitar-picking-cycle", "Ciclo de palheta em duas cordas",
                         "Alternate Picking", InstrumentId.GUITAR, "alternate-picking", 72, 112, 8,
                         "Fixe a sequência ↓↑ ao cruzar da segunda para a primeira corda sem aumentar o movimento.",
@@ -134,10 +138,13 @@ public final class TeachingContentCatalog {
                         List.of(new ExerciseVariation("Âncora", "Mantenha apenas chimbal se perder outra camada.", -8, 4),
                                 new ExerciseVariation("Continuidade", "Retire um bumbo no compasso 4 sem parar.", 0, 5),
                                 new ExerciseVariation("Forma", "Faça duas séries de oito compassos.", 4, 6))));
+        return Stream.concat(
+                Stream.concat(core.stream(), FirstJourneyCatalog.exercises().stream()),
+                expandedDefinitions().map(EditorialMissionDefinition::exercise)).toList();
     }
 
     public static List<Unit> units() {
-        return List.of(
+        var core = List.of(
                 unit("mission-guitar-alternate-picking", InstrumentId.GUITAR, LearningStage.BEGINNER,
                         "Cruzar cordas sem perder a palhetada", "alternate-picking", "lesson-alternate-picking",
                         List.of("deep-guitar-picking-cycle", "deep-guitar-picking-riff"), 34,
@@ -178,6 +185,18 @@ public final class TeachingContentCatalog {
                         "Gravação contínua e assessment de pulso, backbeat e recuperação.",
                         "Acompanhar uma seção de música sem inserir viradas ainda.",
                         "Rock beat contínuo", "Confirmar pulso, backbeat e recuperação durante oito compassos."));
+        return Stream.concat(
+                Stream.concat(core.stream(), FirstJourneyCatalog.units().stream()),
+                expandedDefinitions().map(EditorialMissionDefinition::unit)).toList();
+    }
+
+    private static Stream<EditorialMissionDefinition> expandedDefinitions() {
+        return Stream.of(
+                        GuitarEditorialCatalog.definitions(),
+                        AcousticEditorialCatalog.definitions(),
+                        KeysEditorialCatalog.definitions(),
+                        DrumsEditorialCatalog.definitions())
+                .flatMap(List::stream);
     }
 
     private static Unit unit(String id, InstrumentId instrument, LearningStage stage, String title,
@@ -190,7 +209,34 @@ public final class TeachingContentCatalog {
                 "Use o BPM e as condições indicadas na missão; grave áudio quando disponível.",
                 "Contagem inicial, metrônomo e uma tentativa de preparação.",
                 "Se a gravação ou a observação não permitir concluir, registrar como inconclusivo e coletar nova tentativa.",
-                List.of("controle", "continuidade", "aplicacao-musical"));
+                coreCriteria(competencyId), coreAssessmentType(competencyId),
+                repertoireFor(instrument, competencyId));
+    }
+
+    private static List<String> coreCriteria(String competencyId) {
+        return switch (competencyId) {
+            case "alternate-picking" -> List.of("direcao", "pulso", "tensao");
+            case "open-chords" -> List.of("clareza", "chegada-no-tempo", "pulso");
+            case "five-finger-position" -> List.of("equilibrio", "forma", "continuidade");
+            case "drum-rock-groove" -> List.of("pulso", "backbeat", "recuperacao");
+            default -> List.of("controle", "continuidade", "aplicacao-musical");
+        };
+    }
+
+    private static Assessment.Type coreAssessmentType(String competencyId) {
+        return switch (competencyId) {
+            case "alternate-picking", "open-chords", "five-finger-position" -> Assessment.Type.APPLICATION;
+            default -> Assessment.Type.PERFORMANCE;
+        };
+    }
+
+    private static List<String> repertoireFor(InstrumentId instrument, String competencyId) {
+        return switch (instrument) {
+            case GUITAR -> List.of("seven-nation-army-guitar", "come-as-you-are-guitar");
+            case ACOUSTIC -> List.of("horse-no-name-acoustic", "knockin-heavens-door-acoustic");
+            case KEYS -> List.of("ode-to-joy-keys", "seven-nation-army-keys");
+            case DRUMS -> List.of("seven-nation-army-drums", "billie-jean-drums");
+        };
     }
 
     private static Exercise exercise(String id, String name, String technique, InstrumentId instrument,

@@ -47,7 +47,7 @@ public class AssessmentService {
         var profile = profiles.findByOwnerIdAndInstrument("default", request.instrument())
                 .orElseThrow(() -> new NotFoundException("Perfil instrumental não encontrado"));
         var observations = observationsByCriterion(assessment, request.observations());
-        var artifactReference = latestMissionRecording(assessmentId);
+        var artifactReference = artifactReference(assessmentId, request);
         var attempt = attempts.saveAndFlush(new AssessmentAttempt(
                 assessmentId, profile.getId(), request.observerType(), request.challengeLevel(),
                 artifactReference, request.note()));
@@ -110,6 +110,26 @@ public class AssessmentService {
         if (missionId == null) return null;
         return recordings.findTop10ByContextTypeAndContextIdOrderByCreatedAtDesc("mission", missionId).stream()
                 .findFirst().map(item -> item.getId().toString()).orElse(null);
+    }
+
+    private String artifactReference(String assessmentId, AssessmentAttemptRequest request) {
+        if (request.artifactReference() == null || request.artifactReference().isBlank()) {
+            return latestMissionRecording(assessmentId);
+        }
+        final java.util.UUID recordingId;
+        try {
+            recordingId = java.util.UUID.fromString(request.artifactReference());
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalArgumentException("Referência de gravação inválida");
+        }
+        var recording = recordings.findById(recordingId)
+                .orElseThrow(() -> new NotFoundException("Gravação vinculada não encontrada"));
+        if (request.missionExperienceId() != null
+                && (!"mission-experience".equals(recording.getContextType())
+                || !request.missionExperienceId().toString().equals(recording.getContextId()))) {
+            throw new IllegalArgumentException("Gravação não pertence à experiência informada");
+        }
+        return recordingId.toString();
     }
 
     private Evidence.Type evidenceType(Assessment.Type type) {

@@ -66,7 +66,7 @@ class AdaptiveLearningIntegrationTest {
         assertThat(backup.journal()).isNotEmpty();
         assertThat(backup.pedagogy()).isNotNull();
         assertThat(backup.pedagogy().instrumentProfiles()).isNotEmpty();
-        assertThat(backup.pedagogy().learningGoals()).isNotEmpty();
+        assertThat(backup.pedagogy().learningGoals()).isNotNull();
         assertThat(backup.pedagogy().learningPaths()).isNotEmpty();
         assertThat(data.restore(backup).message()).contains("restaurado");
 

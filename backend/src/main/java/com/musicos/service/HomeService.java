@@ -6,8 +6,6 @@ import static com.musicos.service.ViewMapper.activity;
 import com.musicos.domain.InstrumentId;
 import com.musicos.repository.JournalEntryRepository;
 import com.musicos.repository.InstrumentProfileRepository;
-import com.musicos.repository.SkillRepository;
-import com.musicos.repository.SongRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import org.springframework.stereotype.Service;
@@ -17,51 +15,36 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class HomeService {
     private final StudyPlanService plans;
-    private final SongRepository songs;
-    private final SkillRepository skills;
     private final JournalEntryRepository journal;
-    private final ProgressEngine progress;
     private final InstrumentProfileRepository profiles;
     private final Coach coach;
+    private final com.musicos.repository.MissionExperienceRepository experiences;
 
-    public HomeService(StudyPlanService plans, SongRepository songs, SkillRepository skills,
-                       JournalEntryRepository journal, ProgressEngine progress,
-                       InstrumentProfileRepository profiles, Coach coach) {
+    public HomeService(StudyPlanService plans, JournalEntryRepository journal,
+                       InstrumentProfileRepository profiles, Coach coach,
+                       com.musicos.repository.MissionExperienceRepository experiences) {
         this.plans = plans;
-        this.songs = songs;
-        this.skills = skills;
         this.journal = journal;
-        this.progress = progress;
         this.profiles = profiles;
         this.coach = coach;
+        this.experiences = experiences;
     }
 
     public HomeView home(InstrumentId instrument) {
         var today = plans.today(instrument)
                 .stream().limit(4).map(ViewMapper::activity).toList();
         var expectedMinutes = today.stream().mapToInt(PlanActivityView::minutes).sum();
-        var currentSong = songs.findFirstByInstrumentAndStatusOrderByTitleAsc(instrument, "learning");
-        var continuation = currentSong
-                .<ContinueView>map(song -> new ContinueView("song", song.getId(), song.getTitle(), song.getArtist()))
-                .orElseGet(() -> new ContinueView("library", "campo-harmonico",
-                        "Como os acordes funcionam juntos", "Campo Harmônico"));
-        var objectiveSkill = skills.findById("bends")
-                .filter(skill -> skill.getInstruments().contains(instrument))
-                .orElseGet(() -> skills.findDistinctByInstrumentsContainingOrderByDomainAscTechnicalNameAsc(instrument)
-                        .stream().findFirst().orElseThrow(() -> new NotFoundException("Nenhum objetivo disponível")));
-        var objectiveProgress = progress.evaluate(objectiveSkill);
-        var objective = new ObjectiveView(objectiveSkill.getId(), objectiveSkill.getFriendlyTitle(),
-                objectiveSkill.getTechnicalName(), objectiveProgress.progress(), objectiveProgress.state());
-
         var profile = profiles.findByOwnerIdAndInstrument("default", instrument)
                 .orElseThrow(() -> new NotFoundException(
                         "Perfil instrumental nÃ£o encontrado para a Home: " + instrument.value()));
         var coachAnswer = coach.whatShouldIDoToday(
                 profile.getId(), expectedMinutes > 0 ? expectedMinutes : null,
                 java.time.Instant.now(), 3);
+        var learningExperience = experiences.findByInstrumentProfileIdOrderByUpdatedAtDesc(profile.getId())
+                .stream().findFirst().map(MissionExperienceService::view).orElse(null);
 
-        return new HomeView(greeting(), "Hoje vamos praticar.", expectedMinutes, today, continuation,
-                objective, calculateStreak(), coachView(coachAnswer));
+        return new HomeView(greeting(), "Hoje vamos praticar.", expectedMinutes, today, null,
+                null, calculateStreak(), coachView(coachAnswer), learningExperience);
     }
 
     private CoachHomeView coachView(Coach.TodayAnswer answer) {

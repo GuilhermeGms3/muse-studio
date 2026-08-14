@@ -180,7 +180,7 @@ public class Coach {
             throw new IllegalArgumentException("availableMinutes deve ser positivo");
         }
         if (limit < 1) throw new IllegalArgumentException("limit deve ser positivo");
-        var context = load(instrumentProfileId, evaluatedAt, Math.max(limit * 3, 5));
+        var context = load(instrumentProfileId, evaluatedAt, Math.max(limit * 10, 50));
         var recommendations = new ArrayList<Recommendation>();
 
         for (var step : context.navigation().nextSteps()) {
@@ -188,7 +188,7 @@ public class Coach {
             var report = evidenceEngine.inspect(context.profile().getId(), step.competencyId(), evaluatedAt);
             var citations = citationsForStep(context, step, report, evaluatedAt);
             if (citations.isEmpty()) continue;
-            var mission = bestMission(context, step.competencyId(), availableMinutes);
+            var mission = bestMission(context, step, availableMinutes);
             if (mission != null) {
                 var matchingGoals = goalCitations(matchingGoals(
                         context.goals(), Set.copyOf(mission.getCompetencyIds())));
@@ -232,7 +232,7 @@ public class Coach {
             if (citations.isEmpty()) continue;
             var step = new CurriculumEngine.NextStep(review.competencyId(), review.title(), review.kind(),
                     review.pathPosition(), review.reason(), List.of());
-            var mission = bestMission(context, review.competencyId(), null);
+            var mission = bestMission(context, step, null);
             var matchingGoals = goalCitations(matchingGoals(context.goals(), mission == null
                     ? Set.of(review.competencyId()) : Set.copyOf(mission.getCompetencyIds())));
             recommendations.add(mission == null
@@ -343,13 +343,16 @@ public class Coach {
         return new Context(profile, navigation, activeGoals, activeMissions);
     }
 
-    private Mission bestMission(Context context, String competencyId, Integer availableMinutes) {
+    private Mission bestMission(Context context, CurriculumEngine.NextStep step, Integer availableMinutes) {
+        var reviewNeeded = step.kind() == CurriculumEngine.SuggestionKind.REVIEW
+                || step.kind() == CurriculumEngine.SuggestionKind.REVALIDATION;
         return context.missions().stream()
-                .filter(mission -> mission.getCompetencyIds().contains(competencyId))
+                .filter(mission -> mission.getCompetencyIds().contains(step.competencyId()))
                 .filter(mission -> missionCompetenciesAreAvailable(context, mission))
                 .filter(mission -> availableMinutes == null || mission.getEstimatedMinutes() <= availableMinutes)
                 .sorted(Comparator
-                        .comparing((Mission mission) -> matchingGoals(
+                        .comparing((Mission mission) -> mission.getId().contains("-review") != reviewNeeded)
+                        .thenComparing((Mission mission) -> matchingGoals(
                                 context.goals(), Set.copyOf(mission.getCompetencyIds())).isEmpty())
                         .thenComparingInt(Mission::getEstimatedMinutes)
                         .thenComparing(Mission::getId))
@@ -368,7 +371,7 @@ public class Coach {
 
     private boolean hasEligibleMissionForAnyStep(Context context, Integer availableMinutes) {
         return context.navigation().nextSteps().stream()
-                .anyMatch(step -> bestMission(context, step.competencyId(), availableMinutes) != null);
+                .anyMatch(step -> bestMission(context, step, availableMinutes) != null);
     }
 
     private List<EvidenceCitation> citationsForStep(
@@ -376,6 +379,11 @@ public class Coach {
             Instant evaluatedAt) {
         var direct = citations(report, context.profile().getId(), step.competencyId());
         if (!direct.isEmpty() || step.kind() != CurriculumEngine.SuggestionKind.INTRODUCTION) return direct;
+        var diagnostic = evidence.findByInstrumentProfileIdAndCompetencyIdOrderByOccurredAtDesc(
+                        context.profile().getId(), step.competencyId()).stream()
+                .filter(item -> item.getSourceType() == Evidence.SourceType.DIAGNOSTIC)
+                .limit(1).map(item -> evidenceCitation(item, null)).toList();
+        if (!diagnostic.isEmpty()) return diagnostic;
         return prerequisiteCitations(context.profile().getId(), step.competencyId(), evaluatedAt);
     }
 

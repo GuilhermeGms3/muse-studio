@@ -59,6 +59,9 @@ function empty(kind: Kind, instrument: InstrumentId): Entity {
       passAccuracy: 85,
       passRepetitions: 3,
       instructions: [],
+      activityType: "execute",
+      stage: "beginner",
+      competencyIds: [],
       variations: [],
     };
   if (kind === "song")

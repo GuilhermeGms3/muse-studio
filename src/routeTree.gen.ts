@@ -15,8 +15,12 @@ import { Route as DadosRouteImport } from './routes/dados'
 import { Route as DiagnosticoRouteImport } from './routes/diagnostico'
 import { Route as DiarioRouteImport } from './routes/diario'
 import { Route as ExerciciosRouteImport } from './routes/exercicios'
+import { Route as ExplorarRouteImport } from './routes/explorar'
+import { Route as HistoricoRouteImport } from './routes/historico'
+import { Route as JornadaRouteImport } from './routes/jornada'
 import { Route as MapaRouteImport } from './routes/mapa'
 import { Route as MetronomoRouteImport } from './routes/metronomo'
+import { Route as MusicasRouteImport } from './routes/musicas'
 import { Route as OuvidoRouteImport } from './routes/ouvido'
 import { Route as PlanoRouteImport } from './routes/plano'
 import { Route as ProjetosRouteImport } from './routes/projetos'
@@ -61,6 +65,21 @@ const ExerciciosRoute = ExerciciosRouteImport.update({
   path: '/exercicios',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExplorarRoute = ExplorarRouteImport.update({
+  id: '/explorar',
+  path: '/explorar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoricoRoute = HistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JornadaRoute = JornadaRouteImport.update({
+  id: '/jornada',
+  path: '/jornada',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MapaRoute = MapaRouteImport.update({
   id: '/mapa',
   path: '/mapa',
@@ -69,6 +88,11 @@ const MapaRoute = MapaRouteImport.update({
 const MetronomoRoute = MetronomoRouteImport.update({
   id: '/metronomo',
   path: '/metronomo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MusicasRoute = MusicasRouteImport.update({
+  id: '/musicas',
+  path: '/musicas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OuvidoRoute = OuvidoRouteImport.update({
@@ -145,8 +169,12 @@ export interface FileRoutesByFullPath {
   '/diagnostico': typeof DiagnosticoRoute
   '/diario': typeof DiarioRoute
   '/exercicios': typeof ExerciciosRouteWithChildren
+  '/explorar': typeof ExplorarRoute
+  '/historico': typeof HistoricoRoute
+  '/jornada': typeof JornadaRoute
   '/mapa': typeof MapaRoute
   '/metronomo': typeof MetronomoRoute
+  '/musicas': typeof MusicasRoute
   '/ouvido': typeof OuvidoRoute
   '/plano': typeof PlanoRoute
   '/projetos': typeof ProjetosRouteWithChildren
@@ -168,8 +196,12 @@ export interface FileRoutesByTo {
   '/diagnostico': typeof DiagnosticoRoute
   '/diario': typeof DiarioRoute
   '/exercicios': typeof ExerciciosRouteWithChildren
+  '/explorar': typeof ExplorarRoute
+  '/historico': typeof HistoricoRoute
+  '/jornada': typeof JornadaRoute
   '/mapa': typeof MapaRoute
   '/metronomo': typeof MetronomoRoute
+  '/musicas': typeof MusicasRoute
   '/ouvido': typeof OuvidoRoute
   '/plano': typeof PlanoRoute
   '/projetos': typeof ProjetosRouteWithChildren
@@ -192,8 +224,12 @@ export interface FileRoutesById {
   '/diagnostico': typeof DiagnosticoRoute
   '/diario': typeof DiarioRoute
   '/exercicios': typeof ExerciciosRouteWithChildren
+  '/explorar': typeof ExplorarRoute
+  '/historico': typeof HistoricoRoute
+  '/jornada': typeof JornadaRoute
   '/mapa': typeof MapaRoute
   '/metronomo': typeof MetronomoRoute
+  '/musicas': typeof MusicasRoute
   '/ouvido': typeof OuvidoRoute
   '/plano': typeof PlanoRoute
   '/projetos': typeof ProjetosRouteWithChildren
@@ -217,8 +253,12 @@ export interface FileRouteTypes {
     | '/diagnostico'
     | '/diario'
     | '/exercicios'
+    | '/explorar'
+    | '/historico'
+    | '/jornada'
     | '/mapa'
     | '/metronomo'
+    | '/musicas'
     | '/ouvido'
     | '/plano'
     | '/projetos'
@@ -240,8 +280,12 @@ export interface FileRouteTypes {
     | '/diagnostico'
     | '/diario'
     | '/exercicios'
+    | '/explorar'
+    | '/historico'
+    | '/jornada'
     | '/mapa'
     | '/metronomo'
+    | '/musicas'
     | '/ouvido'
     | '/plano'
     | '/projetos'
@@ -263,8 +307,12 @@ export interface FileRouteTypes {
     | '/diagnostico'
     | '/diario'
     | '/exercicios'
+    | '/explorar'
+    | '/historico'
+    | '/jornada'
     | '/mapa'
     | '/metronomo'
+    | '/musicas'
     | '/ouvido'
     | '/plano'
     | '/projetos'
@@ -287,8 +335,12 @@ export interface RootRouteChildren {
   DiagnosticoRoute: typeof DiagnosticoRoute
   DiarioRoute: typeof DiarioRoute
   ExerciciosRoute: typeof ExerciciosRouteWithChildren
+  ExplorarRoute: typeof ExplorarRoute
+  HistoricoRoute: typeof HistoricoRoute
+  JornadaRoute: typeof JornadaRoute
   MapaRoute: typeof MapaRoute
   MetronomoRoute: typeof MetronomoRoute
+  MusicasRoute: typeof MusicasRoute
   OuvidoRoute: typeof OuvidoRoute
   PlanoRoute: typeof PlanoRoute
   ProjetosRoute: typeof ProjetosRouteWithChildren
@@ -343,6 +395,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExerciciosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/explorar': {
+      id: '/explorar'
+      path: '/explorar'
+      fullPath: '/explorar'
+      preLoaderRoute: typeof ExplorarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/historico': {
+      id: '/historico'
+      path: '/historico'
+      fullPath: '/historico'
+      preLoaderRoute: typeof HistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jornada': {
+      id: '/jornada'
+      path: '/jornada'
+      fullPath: '/jornada'
+      preLoaderRoute: typeof JornadaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mapa': {
       id: '/mapa'
       path: '/mapa'
@@ -355,6 +428,13 @@ declare module '@tanstack/react-router' {
       path: '/metronomo'
       fullPath: '/metronomo'
       preLoaderRoute: typeof MetronomoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/musicas': {
+      id: '/musicas'
+      path: '/musicas'
+      fullPath: '/musicas'
+      preLoaderRoute: typeof MusicasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ouvido': {
@@ -518,8 +598,12 @@ const rootRouteChildren: RootRouteChildren = {
   DiagnosticoRoute: DiagnosticoRoute,
   DiarioRoute: DiarioRoute,
   ExerciciosRoute: ExerciciosRouteWithChildren,
+  ExplorarRoute: ExplorarRoute,
+  HistoricoRoute: HistoricoRoute,
+  JornadaRoute: JornadaRoute,
   MapaRoute: MapaRoute,
   MetronomoRoute: MetronomoRoute,
+  MusicasRoute: MusicasRoute,
   OuvidoRoute: OuvidoRoute,
   PlanoRoute: PlanoRoute,
   ProjetosRoute: ProjetosRouteWithChildren,

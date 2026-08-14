@@ -199,6 +199,8 @@ export interface Exercise {
     | "recall"
     | "record"
     | "transfer"
+    | "listen"
+    | "compare"
     | "execute";
   stage: LearningStage;
   videoQuery?: string | null;
@@ -339,12 +341,32 @@ export interface MissionWorkspaceData {
   };
   lessons: MissionLesson[];
   exercises: Exercise[];
+  repertoire: Song[];
   assessments: MissionAssessment[];
   feedback: ExerciseAttempt[];
   evidence: LearningEvidence[];
   prerequisites: MissionPrerequisite[];
   competencies: MissionCompetency[];
   coach: MissionCoach;
+  experience?: MissionExperience;
+}
+
+export type MissionActivityKind =
+  "ORIENTATION" | "LESSON" | "EXERCISE" | "APPLICATION" | "REFLECTION";
+
+export interface MissionExperience {
+  id: string;
+  missionId: string;
+  instrumentProfileId: string;
+  status: "IN_PROGRESS" | "PAUSED" | "COMPLETED";
+  currentActivityKind: MissionActivityKind;
+  currentActivityId: string;
+  lastRecordingId?: string;
+  assessmentAttemptId?: string;
+  startedAt: string;
+  updatedAt: string;
+  pausedAt?: string;
+  completedAt?: string;
 }
 
 export interface ExerciseAttempt {
@@ -357,6 +379,7 @@ export interface ExerciseAttempt {
   repetitions: number;
   perceivedDifficulty: number;
   passed: boolean;
+  missionExperienceId?: string;
 }
 
 export interface EarTrainingStats {
@@ -430,8 +453,8 @@ export interface HomeData {
   message: string;
   expectedMinutes: number;
   todayPlan: PlanActivity[];
-  continueFrom: { type: "song" | "library"; id: string; title: string; subtitle: string };
-  currentObjective: {
+  continueFrom?: { type: "song" | "library"; id: string; title: string; subtitle: string };
+  currentObjective?: {
     id: string;
     title: string;
     technicalName: string;
@@ -440,6 +463,69 @@ export interface HomeData {
   };
   streakDays: number;
   coach?: CoachHome;
+  learningExperience?: MissionExperience;
+}
+
+export interface JourneyMission {
+  id: string;
+  title: string;
+  estimatedMinutes: number;
+  stage: LearningStage;
+  competencyIds: string[];
+}
+
+export interface JourneyCompetency {
+  competencyId: string;
+  title: string;
+  pathPosition: number;
+  stage: LearningStage;
+  status: "BLOCKED" | "AVAILABLE" | "IN_PROGRESS" | "ESTABLISHED" | "REVIEW_DUE";
+  masteryState: string;
+  unlocked: boolean;
+  reason: string;
+  missions: JourneyMission[];
+}
+
+export interface JourneyData {
+  instrument: InstrumentId;
+  curriculumId: string;
+  evaluatedAt: string;
+  position: {
+    totalCompetencies: number;
+    establishedCompetencies: number;
+    inProgressCompetencies: number;
+    availableCompetencies: number;
+    blockedCompetencies: number;
+    reviewsDue: number;
+    focusCompetencyId?: string;
+    explanation: string;
+  };
+  competencies: JourneyCompetency[];
+  reviews: Array<{
+    competencyId: string;
+    title: string;
+    kind: string;
+    pathPosition: number;
+    reason: string;
+  }>;
+  nextSteps: Array<{
+    competencyId: string;
+    title: string;
+    kind: string;
+    pathPosition: number;
+    reason: string;
+  }>;
+}
+
+export interface LearningHistoryItem {
+  id: string;
+  kind: "MISSION" | "ATTEMPT" | "RECORDING" | "EVIDENCE" | "SESSION";
+  title: string;
+  detail: string;
+  occurredAt: string;
+  missionId?: string;
+  sourceId: string;
+  status: string;
 }
 
 export type CoachStatus = "GROUNDED" | "INSUFFICIENT_EVIDENCE" | "NO_ELIGIBLE_MISSION";

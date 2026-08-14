@@ -126,6 +126,7 @@ export function DataPage() {
       );
       inputs.forEach((input) => {
         input.onmidimessage = (event) => {
+          if (!event.data) return;
           const [statusByte, data1, data2] = event.data;
           const command = statusByte & 0xf0;
           if (command === 0x90 && data2 > 0) {
