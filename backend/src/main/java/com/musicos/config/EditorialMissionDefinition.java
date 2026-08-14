@@ -51,26 +51,30 @@ record EditorialMissionDefinition(
         var exercise = new Exercise(exerciseId(), title, title, instrument, target, current, minutes,
                 purpose, competencyId, difficulty, metronomic ? Math.max(36, current - 12) : 40, 4,
                 Math.min(92, 78 + stage.order() * 2), 3, instructions, variations)
-                .withLearningResources(activityType, stage,
-                        title + " demonstração " + instrument.value(), "Aula da competência", null,
-                        "Observe a referência e identifique o critério antes da tentativa.",
-                        repertoireIds.isEmpty() ? null : title + " play along");
+                .withLearningResources(activityType, stage, null, "Material original da Lesson", null,
+                        "Use a demonstração, notação ou estímulo auditivo ligado a esta competência.",
+                        repertoireIds.isEmpty() ? null : "Adaptação editorial descrita na Mission");
         exercise.configurePedagogicalDefinition(objective, conditions, successCriteria,
                 demand(stage), List.of(competencyId));
         return exercise;
     }
 
     TeachingContentCatalog.Unit unit() {
+        var protocol = AssessmentEditorialPolicy.forMission(title, objective, conditions, activityType,
+                assessmentType, stage, criterionKeys);
+        var structuredApplication = isApplicationActivity(activityType) ? application : null;
         return new TeachingContentCatalog.Unit(id, instrument, stage, title, competencyId,
                 lessonId(competencyId), List.of(exerciseId()), minutes + 12, objective, conditions, purpose,
                 successCriteria,
-                "Uma tentativa completa, a auto-observação do critério e o registro da condição usada.",
-                application, "Observação: " + title,
-                "Verificar " + objective.toLowerCase() + " em condição conhecida.",
-                "Faça uma tomada completa sem reiniciar; depois localize um acerto e um ajuste.",
-                conditions, "Referência da aula, contagem e metrônomo quando previstos.",
-                "Se áudio, tempo ou observação não permitirem julgar um critério, registre como inconclusivo.",
-                criterionKeys, assessmentType, repertoireIds);
+                "Tentativa registrada com condições e observações declaradas; sem inferência automática de acerto.",
+                structuredApplication, protocol.title(), protocol.purpose(), protocol.instructions(),
+                protocol.conditions(), protocol.allowedSupport(), protocol.inconclusiveRule(),
+                criterionKeys, assessmentType, repertoireIds, protocol.formal(), protocol.rubricLevels());
+    }
+
+    private static boolean isApplicationActivity(String type) {
+        return List.of("context", "song", "play_along", "record", "transfer", "create", "review")
+                .contains(type);
     }
 
     private String exerciseId() {

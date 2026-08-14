@@ -37,7 +37,7 @@ class TeachingRunnerIntegrationTest {
             assertThat(mission.getStatus()).isEqualTo(com.musicos.domain.Mission.Status.ACTIVE);
             assertThat(result.lessons()).extracting(item -> item.id()).containsExactly(unit.lessonId());
             assertThat(result.exercises()).extracting(item -> item.id()).containsExactlyElementsOf(unit.exerciseIds());
-            assertThat(result.assessments()).hasSize(1);
+            assertThat(result.assessments()).hasSize(unit.formalAssessment() ? 1 : 0);
             assertThat(result.competencies()).extracting(item -> item.competencyId())
                     .containsExactly(unit.competencyId());
             assertThat(result.coach()).isNotNull();

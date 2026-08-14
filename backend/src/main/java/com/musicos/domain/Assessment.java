@@ -65,6 +65,11 @@ public class Assessment {
     @Column(name = "criterion_key")
     private List<String> criterionKeys = new ArrayList<>();
 
+    @ElementCollection
+    @CollectionTable(name = "assessment_rubric_levels", joinColumns = @JoinColumn(name = "assessment_id"))
+    @OrderColumn(name = "position")
+    private List<AssessmentRubricLevel> rubricLevels = new ArrayList<>();
+
     @Version
     private long version;
 
@@ -75,6 +80,16 @@ public class Assessment {
                       String instructions, String conditions, String allowedSupport, String inconclusiveRule,
                       int estimatedMinutes, int maximumAttempts, DifficultyDemand difficultyDemand,
                       List<String> competencyIds, List<String> criterionKeys) {
+        this(id, title, purpose, type, protocolVersion, instructions, conditions, allowedSupport,
+                inconclusiveRule, estimatedMinutes, maximumAttempts, difficultyDemand, competencyIds,
+                criterionKeys, List.of());
+    }
+
+    public Assessment(String id, String title, String purpose, Type type, String protocolVersion,
+                      String instructions, String conditions, String allowedSupport, String inconclusiveRule,
+                      int estimatedMinutes, int maximumAttempts, DifficultyDemand difficultyDemand,
+                      List<String> competencyIds, List<String> criterionKeys,
+                      List<AssessmentRubricLevel> rubricLevels) {
         this.id = DomainRules.requiredText(id, "id");
         this.title = DomainRules.requiredText(title, "title");
         this.purpose = DomainRules.requiredText(purpose, "purpose");
@@ -89,6 +104,7 @@ public class Assessment {
         this.difficultyDemand = difficultyDemand == null ? DifficultyDemand.unspecified() : difficultyDemand;
         this.competencyIds = new ArrayList<>(DomainRules.distinctIds(competencyIds));
         this.criterionKeys = new ArrayList<>(DomainRules.distinctIds(criterionKeys));
+        this.rubricLevels = new ArrayList<>(rubricLevels == null ? List.of() : rubricLevels);
         if (this.competencyIds.isEmpty() || this.criterionKeys.isEmpty()) {
             throw new IllegalArgumentException("assessment precisa de competências e critérios");
         }
@@ -112,6 +128,16 @@ public class Assessment {
                                              String inconclusiveRule, int estimatedMinutes, int maximumAttempts,
                                              DifficultyDemand difficultyDemand, List<String> competencyIds,
                                              List<String> criterionKeys) {
+        synchronizeCatalogDefinition(title, purpose, type, protocolVersion, instructions, conditions,
+                allowedSupport, inconclusiveRule, estimatedMinutes, maximumAttempts, difficultyDemand,
+                competencyIds, criterionKeys, List.of());
+    }
+
+    public void synchronizeCatalogDefinition(String title, String purpose, Type type, String protocolVersion,
+                                             String instructions, String conditions, String allowedSupport,
+                                             String inconclusiveRule, int estimatedMinutes, int maximumAttempts,
+                                             DifficultyDemand difficultyDemand, List<String> competencyIds,
+                                             List<String> criterionKeys, List<AssessmentRubricLevel> rubricLevels) {
         this.title = DomainRules.requiredText(title, "title");
         this.purpose = DomainRules.requiredText(purpose, "purpose");
         this.type = DomainRules.required(type, "type");
@@ -125,6 +151,7 @@ public class Assessment {
         this.difficultyDemand = difficultyDemand == null ? DifficultyDemand.unspecified() : difficultyDemand;
         this.competencyIds = new ArrayList<>(DomainRules.distinctIds(competencyIds));
         this.criterionKeys = new ArrayList<>(DomainRules.distinctIds(criterionKeys));
+        this.rubricLevels = new ArrayList<>(rubricLevels == null ? List.of() : rubricLevels);
         if (this.competencyIds.isEmpty() || this.criterionKeys.isEmpty()) {
             throw new IllegalArgumentException("assessment precisa de competências e critérios");
         }
@@ -148,4 +175,5 @@ public class Assessment {
     public Instant getUpdatedAt() { return updatedAt; }
     public List<String> getCompetencyIds() { return List.copyOf(competencyIds); }
     public List<String> getCriterionKeys() { return List.copyOf(criterionKeys); }
+    public List<AssessmentRubricLevel> getRubricLevels() { return List.copyOf(rubricLevels); }
 }

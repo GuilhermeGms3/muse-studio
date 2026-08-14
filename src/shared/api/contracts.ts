@@ -245,6 +245,11 @@ export interface MissionAssessment {
   active: boolean;
   competencyIds: string[];
   criterionKeys: string[];
+  rubricLevels: Array<{
+    criterionKey: string;
+    band: string;
+    description: string;
+  }>;
 }
 
 export type AssessmentObserverType = "SELF" | "EXTERNAL";

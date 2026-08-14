@@ -120,11 +120,14 @@ public final class ApiModels {
                                     List<String> objectives, List<String> examples,
                                     LibraryContentView material) {}
 
+    public record AssessmentRubricLevelView(String criterionKey, String band, String description) {}
+
     public record MissionAssessmentView(String id, String title, String purpose, String type,
                                         String protocolVersion, String instructions, String conditions,
                                         String allowedSupport, String inconclusiveRule,
                                         int estimatedMinutes, int maximumAttempts, boolean active,
-                                        List<String> competencyIds, List<String> criterionKeys) {}
+                                        List<String> competencyIds, List<String> criterionKeys,
+                                        List<AssessmentRubricLevelView> rubricLevels) {}
 
     public record LearningEvidenceView(String id, String competencyId, String criterionKey,
                                        String type, String state, String reliability, String result,

@@ -43,6 +43,16 @@ export function DeepLearningExperience({
   const [challengeLevel, setChallengeLevel] = useState<number | "">("");
   const completed = experience?.status === "COMPLETED";
   const assessment = data.assessments[0];
+  const priorReviewEvidence =
+    data.mission.id.includes("-review") || ["REVIEW", "RETENTION"].includes(assessment?.type ?? "")
+      ? data.evidence[0]
+      : undefined;
+  const practiceExercises = data.exercises.filter(
+    (exercise) => !isApplicationActivity(exercise.activityType),
+  );
+  const applicationExercises = data.exercises.filter((exercise) =>
+    isApplicationActivity(exercise.activityType),
+  );
   const requiresRecording = missionRequiresRecording(
     data.exercises.map((exercise) => exercise.activityType),
     data.mission.expectedEvidence,
@@ -186,6 +196,16 @@ export function DeepLearningExperience({
           <p className="mt-4 border-l-2 border-signal pl-3 text-xs leading-relaxed">
             {data.mission.observableObjective}
           </p>
+          {priorReviewEvidence && (
+            <div className="mt-4 border border-border bg-surface-card p-3 text-xs">
+              <span className="label-tech">Registro anterior disponível</span>
+              <p className="mt-2 text-muted-foreground">{priorReviewEvidence.observation}</p>
+              <p className="mt-1 text-2xs text-text-muted">
+                Condição registrada: {priorReviewEvidence.conditions} · confiança{" "}
+                {priorReviewEvidence.reliability.toLowerCase()}
+              </p>
+            </div>
+          )}
         </section>
 
         <div id="entendimento" className="scroll-mt-16">
@@ -243,7 +263,7 @@ export function DeepLearningExperience({
             Use o pulso dentro de cada prática. Seu resultado fica associado a esta experiência.
           </p>
           <div className="mt-5 divide-y divide-border border-y border-border">
-            {data.exercises.map((exercise) => (
+            {practiceExercises.map((exercise) => (
               <ExercisePractice
                 key={exercise.id}
                 exercise={exercise}
@@ -255,9 +275,7 @@ export function DeepLearningExperience({
                   await save(() =>
                     updateMissionExperience(data.mission.id, {
                       instrument,
-                      activityKind: isApplicationActivity(exercise.activityType)
-                        ? "APPLICATION"
-                        : "EXERCISE",
+                      activityKind: "EXERCISE",
                       activityId: exercise.id,
                     }),
                   );
@@ -265,12 +283,47 @@ export function DeepLearningExperience({
               />
             ))}
           </div>
+          {practiceExercises.length === 0 && (
+            <p className="mt-4 text-xs text-text-muted">
+              A tarefa observável desta Mission já acontece em contexto musical e aparece na seção
+              seguinte.
+            </p>
+          )}
         </section>
 
         <section id="aplicacao" className="scroll-mt-16 border-b border-border py-7">
           <span className="label-tech">Aplicação musical</span>
-          <h2 className="mt-2 text-lg font-semibold">Leve a ideia para um contexto musical</h2>
-          <p className="mt-2 text-xs text-muted-foreground">{data.mission.musicalApplication}</p>
+          <h2 className="mt-2 text-lg font-semibold">
+            {applicationExercises.length > 0
+              ? "Use a habilidade em um contexto musical"
+              : "A prática já contém o contexto necessário"}
+          </h2>
+          {data.mission.musicalApplication && (
+            <p className="mt-2 text-xs text-muted-foreground">{data.mission.musicalApplication}</p>
+          )}
+          {applicationExercises.length > 0 && (
+            <div className="mt-5 divide-y divide-border border-y border-border">
+              {applicationExercises.map((exercise) => (
+                <ExercisePractice
+                  key={exercise.id}
+                  exercise={exercise}
+                  experience={experience}
+                  instrument={instrument}
+                  done={localAttempts.has(exercise.id)}
+                  onDone={async () => {
+                    setLocalAttempts((current) => new Set([...current, exercise.id]));
+                    await save(() =>
+                      updateMissionExperience(data.mission.id, {
+                        instrument,
+                        activityKind: "APPLICATION",
+                        activityId: exercise.id,
+                      }),
+                    );
+                  }}
+                />
+              ))}
+            </div>
+          )}
           {data.repertoire.length > 0 && (
             <div className="mt-4 grid gap-px border border-border bg-border sm:grid-cols-2">
               {data.repertoire.map((song) => (
@@ -316,8 +369,22 @@ export function DeepLearningExperience({
           <span className="label-tech">Fechamento</span>
           <h2 className="mt-2 text-lg font-semibold">O que você realmente observou?</h2>
           <p className="mt-2 text-xs text-muted-foreground">
-            Isto é uma autoavaliação: ajuda o Coach, mas não prova domínio sozinha.
+            {assessment
+              ? "Isto é uma autoavaliação: ajuda o Coach, mas não prova domínio sozinha."
+              : "Esta Mission termina com registro de conclusão e desafio percebido; não produz Assessment formal."}
           </p>
+          {assessment && (
+            <div className="mt-4 grid gap-3 border border-border bg-surface-card p-4 text-xs sm:grid-cols-2">
+              <div>
+                <span className="label-tech">Protocolo</span>
+                <p className="mt-1 text-muted-foreground">{assessment.instructions}</p>
+              </div>
+              <div>
+                <span className="label-tech">Suporte permitido</span>
+                <p className="mt-1 text-muted-foreground">{assessment.allowedSupport}</p>
+              </div>
+            </div>
+          )}
           <div className="mt-5 divide-y divide-border border-y border-border">
             {(assessment?.criterionKeys ?? []).map((key) => (
               <label
@@ -354,11 +421,23 @@ export function DeepLearningExperience({
                   placeholder="Descreva um momento concreto da aplicação"
                   className="min-h-20 w-full border border-border bg-surface p-2"
                 />
+                {assessment?.rubricLevels.some((level) => level.criterionKey === key) && (
+                  <div className="lg:col-start-2 lg:col-span-2 grid gap-2 sm:grid-cols-3">
+                    {assessment.rubricLevels
+                      .filter((level) => level.criterionKey === key)
+                      .map((level) => (
+                        <div key={level.band} className="border border-border p-2">
+                          <strong className="text-2xs">{level.band.replaceAll("_", " ")}</strong>
+                          <p className="mt-1 text-2xs text-muted-foreground">{level.description}</p>
+                        </div>
+                      ))}
+                  </div>
+                )}
               </label>
             ))}
           </div>
           <label className="mt-4 block max-w-sm text-xs text-text-muted">
-            Nível de desafio desta aplicação
+            Desafio percebido nesta experiência
             <select
               value={challengeLevel}
               onChange={(event) =>
@@ -411,7 +490,8 @@ export function DeepLearningExperience({
               }
               className="mt-5 inline-flex h-10 items-center gap-2 bg-signal px-5 text-xs font-semibold text-signal-foreground disabled:opacity-40"
             >
-              <Check className="size-4" /> Concluir e preservar evidências
+              <Check className="size-4" />{" "}
+              {assessment ? "Concluir e preservar evidências" : "Concluir experiência"}
             </button>
           )}
         </section>
@@ -436,6 +516,8 @@ function ExercisePractice({
   const [playing, setPlaying] = useState(false);
   const [accuracy, setAccuracy] = useState<number | "">("");
   const [difficulty, setDifficulty] = useState<number | "">("");
+  const [repetitions, setRepetitions] = useState<number | "">("");
+  const [practicedMinutes, setPracticedMinutes] = useState<number | "">("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
   useMetronomeEngine({ bpm, playing, beats: 4, subdivision: 1 });
@@ -469,7 +551,7 @@ function ExercisePractice({
           {playing ? <Pause className="size-3" /> : <Play className="size-3" />} Pulso
         </button>
         <label className="text-2xs text-muted-foreground">
-          BPM{" "}
+          BPM configurado{" "}
           <input
             type="number"
             min={exercise.minBpm}
@@ -480,7 +562,7 @@ function ExercisePractice({
           />
         </label>
         <label className="text-2xs text-muted-foreground">
-          Precisão observada{" "}
+          Precisão informada por você{" "}
           <input
             type="number"
             min="0"
@@ -494,7 +576,7 @@ function ExercisePractice({
           />
         </label>
         <label className="text-2xs text-muted-foreground">
-          Esforço{" "}
+          Esforço percebido{" "}
           <select
             value={difficulty}
             onChange={(event) =>
@@ -510,7 +592,34 @@ function ExercisePractice({
             ))}
           </select>
         </label>
+        <label className="text-2xs text-muted-foreground">
+          Repetições informadas{" "}
+          <input
+            type="number"
+            min="1"
+            value={repetitions}
+            onChange={(event) =>
+              setRepetitions(event.target.value === "" ? "" : Number(event.target.value))
+            }
+            className="ml-1 h-8 w-16 border border-border bg-surface px-2"
+          />
+        </label>
+        <label className="text-2xs text-muted-foreground">
+          Minutos informados{" "}
+          <input
+            type="number"
+            min="1"
+            value={practicedMinutes}
+            onChange={(event) =>
+              setPracticedMinutes(event.target.value === "" ? "" : Number(event.target.value))
+            }
+            className="ml-1 h-8 w-16 border border-border bg-surface px-2"
+          />
+        </label>
       </div>
+      <p className="mt-2 text-2xs text-text-muted">
+        Estes valores são configurados ou autorrelatados; o Muse não mediu sua execução.
+      </p>
       {exercise.practiceConditions && (
         <p className="mt-3 text-2xs text-muted-foreground">
           <Target className="mr-1 inline size-3" />
@@ -519,7 +628,14 @@ function ExercisePractice({
       )}
       {error && <p className="mt-2 text-2xs text-destructive">{error}</p>}
       <button
-        disabled={saving || done || accuracy === "" || difficulty === ""}
+        disabled={
+          saving ||
+          done ||
+          accuracy === "" ||
+          difficulty === "" ||
+          repetitions === "" ||
+          practicedMinutes === ""
+        }
         onClick={async () => {
           setSaving(true);
           setError(undefined);
@@ -527,8 +643,8 @@ function ExercisePractice({
             await recordExerciseAttempt(exercise.id, {
               bpm,
               accuracy: Number(accuracy),
-              durationSeconds: exercise.minutes * 60,
-              repetitions: exercise.passRepetitions,
+              durationSeconds: Number(practicedMinutes) * 60,
+              repetitions: Number(repetitions),
               perceivedDifficulty: Number(difficulty),
               missionExperienceId: experience.id,
             });

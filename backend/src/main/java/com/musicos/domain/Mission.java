@@ -123,7 +123,6 @@ public class Mission {
     }
 
     public void activate() {
-        if (assessmentIds.isEmpty()) throw new IllegalStateException("missão sem assessment não pode ser ativada");
         this.status = Status.ACTIVE;
         this.updatedAt = Instant.now();
     }

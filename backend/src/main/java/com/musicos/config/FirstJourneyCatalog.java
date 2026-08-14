@@ -495,9 +495,9 @@ final class FirstJourneyCatalog {
         var exercise = new Exercise(id, name, technique, instrument, target, current, minutes, objective,
                 competencyId, 2, metronomic ? Math.max(40, current - 12) : 40, 4, 80, 3,
                 instructions, variations).withLearningResources(activityType, LearningStage.BEGINNER,
-                technique + " " + instrument.value() + " demonstração lenta",
+                null,
                 "Aula da missão", null, "Observe a referência da aula antes de registrar a tentativa.",
-                practiceSongQuery);
+                null);
         exercise.configurePedagogicalDefinition(objective, conditions, criteria,
                 new DifficultyDemand(2, 2, 2, 1, 1, 2, 1, 0, 2, 1, 1, 2, 1), List.of(competencyId));
         return exercise;
@@ -512,14 +512,14 @@ final class FirstJourneyCatalog {
             int minutes, Assessment.Type type, String objective, String context, String motivation,
             String completion, String evidence, String application, List<String> criteria,
             List<String> repertoireIds) {
+        var protocol = AssessmentEditorialPolicy.forMission(title, objective, completion, "application", type,
+                LearningStage.BEGINNER, criteria);
         return new TeachingContentCatalog.Unit(id, instrument, LearningStage.BEGINNER, title, competencyId,
                 lessonId(competencyId), List.of(exerciseId), minutes, objective, context, motivation,
-                completion, evidence, application, "Observação: " + title,
+                completion, evidence, null, "Observação: " + title,
                 "Observar o resultado musical declarado sem converter autoavaliação em prova de domínio.",
-                "Faça a atividade completa uma vez; escute ou reveja e descreva um momento concreto.",
-                completion, "Contagem, metrônomo e referência da aula quando previstos.",
-                "Se som, tempo ou observação não permitirem julgar um critério, marque inconclusivo e repita em outra sessão.",
-                criteria, type, repertoireIds);
+                protocol.instructions(), protocol.conditions(), protocol.allowedSupport(),
+                protocol.inconclusiveRule(), criteria, type, repertoireIds, true, protocol.rubricLevels());
     }
 
     private static String lessonId(String competencyId) {

@@ -63,12 +63,15 @@ public class MissionExperienceService {
             }
         }
         if (request.recordingId() != null) validateRecording(experience, request.recordingId());
-        if (mission.getAssessmentIds().isEmpty()) throw new IllegalStateException("Missão sem avaliação vinculada");
-        var attempt = assessments.record(mission.getAssessmentIds().getFirst(), new AssessmentAttemptRequest(
-                request.instrument(), request.observerType(), request.challengeLevel(),
-                request.recordingId() == null ? null : request.recordingId().toString(),
-                experience.getId(), request.note(), request.observations()));
-        experience.complete(attempt.id(), request.recordingId());
+        java.util.UUID assessmentAttemptId = null;
+        if (!mission.getAssessmentIds().isEmpty()) {
+            var attempt = assessments.record(mission.getAssessmentIds().getFirst(), new AssessmentAttemptRequest(
+                    request.instrument(), request.observerType(), request.challengeLevel(),
+                    request.recordingId() == null ? null : request.recordingId().toString(),
+                    experience.getId(), request.note(), request.observations()));
+            assessmentAttemptId = attempt.id();
+        }
+        experience.complete(assessmentAttemptId, request.recordingId());
         return view(experiences.save(experience));
     }
 

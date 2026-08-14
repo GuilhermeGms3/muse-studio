@@ -85,7 +85,6 @@ class CurriculumStructureIntegrationTest {
             assertThat(units).allSatisfy(unit -> {
                 assertThat(unit.objective()).isNotBlank();
                 assertThat(unit.motivation()).isNotBlank();
-                assertThat(unit.musicalApplication()).isNotBlank();
                 assertThat(unit.completionCriteria()).isNotBlank();
             });
 
@@ -97,12 +96,15 @@ class CurriculumStructureIntegrationTest {
                 });
                 assertThat(library.findById(unit.lessonId())).get()
                         .satisfies(content -> assertThat(content.getSteps()).hasSizeGreaterThanOrEqualTo(3));
-                assertThat(assessments.findById(unit.id() + "-assessment")).get()
-                        .satisfies(assessment -> {
+                if (unit.formalAssessment()) {
+                    assertThat(assessments.findById(unit.id() + "-assessment")).get().satisfies(assessment -> {
                             assertThat(assessment.getType()).isEqualTo(unit.assessmentType());
                             assertThat(assessment.getCriterionKeys()).containsExactlyElementsOf(unit.criterionKeys());
                             assertThat(assessment.getInconclusiveRule()).isNotBlank();
-                        });
+                    });
+                } else {
+                    assertThat(assessments.existsById(unit.id() + "-assessment")).isFalse();
+                }
                 unit.exerciseIds().forEach(id -> assertThat(exercises.findById(id)).get()
                         .satisfies(exercise -> {
                             assertThat(exercise.getInstructions()).hasSizeGreaterThanOrEqualTo(3);
@@ -117,10 +119,16 @@ class CurriculumStructureIntegrationTest {
                 assertThat(missionRelations).anySatisfy(relation -> {
                     assertThat(relation.getRelationType()).isEqualTo(LearningContentRelation.RelationType.COMPOSES);
                     assertThat(relation.getTargetType()).isEqualTo(LearningContentRelation.ContentType.LESSON);
-                }).anySatisfy(relation -> {
-                    assertThat(relation.getRelationType()).isEqualTo(LearningContentRelation.RelationType.EVIDENCES);
-                    assertThat(relation.getTargetType()).isEqualTo(LearningContentRelation.ContentType.ASSESSMENT);
                 });
+                if (unit.formalAssessment()) {
+                    assertThat(missionRelations).anySatisfy(relation -> {
+                        assertThat(relation.getRelationType()).isEqualTo(LearningContentRelation.RelationType.EVIDENCES);
+                        assertThat(relation.getTargetType()).isEqualTo(LearningContentRelation.ContentType.ASSESSMENT);
+                    });
+                } else {
+                    assertThat(missionRelations).noneMatch(relation ->
+                            relation.getTargetType() == LearningContentRelation.ContentType.ASSESSMENT);
+                }
                 if (!unit.repertoireIds().isEmpty()) {
                     assertThat(missionRelations).anySatisfy(relation -> {
                         assertThat(relation.getRelationType()).isEqualTo(LearningContentRelation.RelationType.APPLIES);

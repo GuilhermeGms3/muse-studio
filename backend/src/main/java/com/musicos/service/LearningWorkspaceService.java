@@ -106,7 +106,9 @@ public class LearningWorkspaceService {
                     assessment.getType().name(), assessment.getProtocolVersion(), assessment.getInstructions(),
                     assessment.getConditions(), assessment.getAllowedSupport(), assessment.getInconclusiveRule(),
                     assessment.getEstimatedMinutes(), assessment.getMaximumAttempts(), assessment.isActive(),
-                    assessment.getCompetencyIds(), assessment.getCriterionKeys());
+                    assessment.getCompetencyIds(), assessment.getCriterionKeys(),
+                    assessment.getRubricLevels().stream().map(level -> new AssessmentRubricLevelView(
+                            level.getCriterionKey(), level.getBand(), level.getDescription())).toList());
         }).toList();
         var feedback = exerciseEntities.stream()
                 .flatMap(exercise -> attempts.findTop20ByExerciseIdOrderByPracticedAtDesc(exercise.getId()).stream())

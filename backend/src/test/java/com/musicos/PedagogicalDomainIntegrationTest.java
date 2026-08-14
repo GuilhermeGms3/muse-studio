@@ -104,7 +104,7 @@ class PedagogicalDomainIntegrationTest {
                 "select \"version\" from \"flyway_schema_history\" where \"success\" = true "
                         + "order by \"installed_rank\" desc limit 1",
                 String.class);
-        assertThat(version).isEqualTo("5");
+        assertThat(version).isEqualTo("6");
     }
 
     @Test

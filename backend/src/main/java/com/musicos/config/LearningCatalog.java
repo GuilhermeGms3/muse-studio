@@ -8,6 +8,8 @@ final class LearningCatalog {
     }
 
     static LibraryContent lesson(Skill skill, String id) {
+        var missionLesson = MissionLessonCatalog.lesson(skill, id);
+        if (missionLesson != null) return missionLesson;
         var editorial = editorialLesson(skill, id);
         if (editorial != null) return editorial;
         var category = skill.getDomain();
@@ -41,7 +43,7 @@ final class LearningCatalog {
     }
 
     static boolean isEditorial(String skillId) {
-        return List.of("pulse", "subdivisions", "notes", "major-scale", "open-chords",
+        return MissionLessonCatalog.teaches(skillId) || List.of("pulse", "subdivisions", "notes", "major-scale", "open-chords",
                 "alternate-picking", "harmonic-field", "five-finger-position").contains(skillId)
                 || skillId.startsWith("drum-");
     }

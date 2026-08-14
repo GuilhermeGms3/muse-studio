@@ -58,7 +58,7 @@ class PedagogicalDomainTest {
     }
 
     @Test
-    void curriculumAndMissionCannotBeActivatedIncomplete() {
+    void curriculumStillRequiresStructureAndMissionMayBeFormativeWithoutAssessment() {
         var curriculum = new Curriculum(
                 "curriculum-1", "Fundamentos", "v1", "Construir base musical.", "Iniciantes.",
                 InstrumentId.GUITAR, LearningStage.FIRST_STEPS, LearningStage.BEGINNER,
@@ -71,7 +71,8 @@ class PedagogicalDomainTest {
                 LearningStage.BEGINNER, "Dois minutos estáveis.", "Execução gravada.",
                 "Aplicar em uma música.", null, DifficultyDemand.unspecified(),
                 List.of("pulse"), List.of("lesson-1"), List.of("exercise-1"), List.of());
-        assertThatThrownBy(mission::activate).isInstanceOf(IllegalStateException.class);
+        mission.activate();
+        assertThat(mission.getStatus()).isEqualTo(Mission.Status.ACTIVE);
     }
 
     @Test

@@ -49,7 +49,7 @@ final class InstrumentCurriculumCatalog {
                 LearningTrack.IMPROVISATION, ids("position-shifts", "phrasing"), ids("lead-guitar-language"), 110));
         result.add(node("lead-guitar-language", "Conduzir um solo sobre a forma", "Linguagem de Lead Guitar",
                 "Improvisação", InstrumentId.GUITAR, LearningStage.UPPER_INTERMEDIATE, SkillKind.ABILITY,
-                LearningTrack.IMPROVISATION, ids("articulation-combinations", "arpeggio-improv"),
+                LearningTrack.IMPROVISATION, ids("articulation-combinations", "phrasing"),
                 ids("guitar-style-adaptation"), 120));
         result.add(node("guitar-style-adaptation", "Adaptar técnica a diferentes estilos", "Fluência Estilística",
                 "Performance", InstrumentId.GUITAR, LearningStage.ADVANCED, SkillKind.ABILITY,
@@ -73,7 +73,7 @@ final class InstrumentCurriculumCatalog {
                 ids("two-chord-song", "triads"), ids("quarter-strumming"), null));
         result.add(node("quarter-strumming", "Manter uma levada em semínimas", "Levada em Semínimas", "Ritmo",
                 InstrumentId.ACOUSTIC, LearningStage.BEGINNER, SkillKind.ABILITY, LearningTrack.RHYTHM,
-                ids("common-progressions", "pulse"), ids("eighth-strumming"), 80));
+                ids("two-chord-song", "pulse"), ids("eighth-strumming"), 80));
         result.add(node("eighth-strumming", "Tocar levadas em colcheias", "Levada em Colcheias", "Ritmo",
                 InstrumentId.ACOUSTIC, LearningStage.BEGINNER_ADVANCED, SkillKind.ABILITY, LearningTrack.RHYTHM,
                 ids("quarter-strumming", "subdivisions"), ids("syncopated-strumming"), 90));
@@ -100,7 +100,7 @@ final class InstrumentCurriculumCatalog {
                 ids("solo-acoustic-arrangement"), null));
         result.add(node("solo-acoustic-arrangement", "Criar um arranjo completo para violão solo",
                 "Arranjo para Violão Solo", "Arranjo", InstrumentId.ACOUSTIC, LearningStage.ADVANCED,
-                SkillKind.ABILITY, LearningTrack.CREATION, ids("transposed-accompaniment", "chord-melody"),
+                SkillKind.ABILITY, LearningTrack.CREATION, ids("transposed-accompaniment", "fingerstyle-independence"),
                 ids(), null));
 
         // Teclado: mapa, leitura, coordenação, acompanhamento e voicings.
@@ -143,7 +143,7 @@ final class InstrumentCurriculumCatalog {
                 ids("keys-sight-reading-fluency", "voice-leading"), ids("keys-reharmonization"), null));
         result.add(node("keys-reharmonization", "Rearmonizar uma melodia no teclado", "Rearmonização no Teclado",
                 "Criação", InstrumentId.KEYS, LearningStage.ADVANCED, SkillKind.ABILITY, LearningTrack.CREATION,
-                ids("pop-voicings", "reharmonization"), ids(), null));
+                ids("pop-voicings", "harmonic-field"), ids(), null));
 
         // Bateria: leitura e grooves básicos até linguagem avançada.
         result.add(node("drum-quarter-note", "Marcar semínimas no kit", "Semínimas na Bateria", "Primeiros passos",
@@ -170,7 +170,7 @@ final class InstrumentCurriculumCatalog {
         result.add(node("drum-harmonic-landmarks", "Ouvir mudanças harmônicas na forma",
                 "Marcos Harmônicos para Bateristas", "Harmonia", InstrumentId.DRUMS,
                 LearningStage.EARLY_INTERMEDIATE, SkillKind.KNOWLEDGE, LearningTrack.HARMONY,
-                ids("drum-song-form", "ear-rhythm"), ids("drum-fill-improvisation"), null));
+                ids("drum-two-grooves", "ear-rhythm"), ids("drum-fill-improvisation"), null));
         result.add(node("drum-fill-improvisation", "Improvisar viradas que respeitam a música",
                 "Improvisação de Viradas", "Improvisação", InstrumentId.DRUMS,
                 LearningStage.INTERMEDIATE, SkillKind.ABILITY, LearningTrack.IMPROVISATION,
@@ -178,7 +178,7 @@ final class InstrumentCurriculumCatalog {
         result.add(node("drum-groove-composition", "Criar um groove para uma forma completa",
                 "Composição de Grooves", "Composição", InstrumentId.DRUMS,
                 LearningStage.UPPER_INTERMEDIATE, SkillKind.ABILITY, LearningTrack.CREATION,
-                ids("drum-fill-improvisation", "drum-dynamics"), ids("drum-style-adaptation"), 105));
+                ids("drum-fill-improvisation", "drum-harmonic-landmarks"), ids("drum-style-adaptation"), 105));
         result.add(node("drum-linear-displacement", "Deslocar células lineares", "Deslocamento Linear", "Coordenação",
                 InstrumentId.DRUMS, LearningStage.UPPER_INTERMEDIATE, SkillKind.ABILITY, LearningTrack.TECHNIQUE,
                 ids("drum-jazz-ride", "drum-linear-groove"), ids("drum-odd-meter"), 105));

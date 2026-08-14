@@ -2,6 +2,7 @@ package com.musicos.config;
 
 import com.musicos.domain.DifficultyDemand;
 import com.musicos.domain.Assessment;
+import com.musicos.domain.AssessmentRubricLevel;
 import com.musicos.domain.Exercise;
 import com.musicos.domain.ExerciseVariation;
 import com.musicos.domain.InstrumentId;
@@ -34,7 +35,9 @@ public final class TeachingContentCatalog {
             String inconclusiveRule,
             List<String> criterionKeys,
             Assessment.Type assessmentType,
-            List<String> repertoireIds) {
+            List<String> repertoireIds,
+            boolean formalAssessment,
+            List<AssessmentRubricLevel> rubricLevels) {
     }
 
     private TeachingContentCatalog() {
@@ -203,14 +206,15 @@ public final class TeachingContentCatalog {
                              String competencyId, String lessonId, List<String> exerciseIds, int minutes,
                              String objective, String context, String motivation, String completion,
                              String evidence, String application, String assessmentTitle, String assessmentPurpose) {
+        var criteria = coreCriteria(competencyId);
+        var type = coreAssessmentType(competencyId);
+        var protocol = AssessmentEditorialPolicy.forMission(assessmentTitle, objective, completion, "guided",
+                type, LearningStage.BEGINNER, criteria);
         return new Unit(id, instrument, stage, title, competencyId, lessonId, exerciseIds, minutes,
-                objective, context, motivation, completion, evidence, application, assessmentTitle,
-                assessmentPurpose, "Faça uma tomada completa sem reiniciar e depois descreva um ajuste.",
-                "Use o BPM e as condições indicadas na missão; grave áudio quando disponível.",
-                "Contagem inicial, metrônomo e uma tentativa de preparação.",
-                "Se a gravação ou a observação não permitir concluir, registrar como inconclusivo e coletar nova tentativa.",
-                coreCriteria(competencyId), coreAssessmentType(competencyId),
-                repertoireFor(instrument, competencyId));
+                objective, context, motivation, completion, evidence, null, assessmentTitle,
+                assessmentPurpose, protocol.instructions(), protocol.conditions(), protocol.allowedSupport(),
+                protocol.inconclusiveRule(), criteria, type,
+                repertoireFor(instrument, competencyId), true, protocol.rubricLevels());
     }
 
     private static List<String> coreCriteria(String competencyId) {
@@ -246,10 +250,10 @@ public final class TeachingContentCatalog {
         var exercise = new Exercise(id, name, technique, instrument, targetBpm, currentBpm, minutes,
                 description, competencyId, 2, Math.max(40, currentBpm - 12), 4, 85, 3,
                 instructions, variations).withLearningResources("guided", LearningStage.BEGINNER,
-                technique + " " + instrument.value() + " demonstração aula",
+                null,
                 "Material pedagógico da Mission", null,
                 "Use primeiro a explicação e a demonstração da Mission.",
-                technique + " " + instrument.value() + " backing track lento");
+                null);
         exercise.configurePedagogicalDefinition(objective, conditions, criteria,
                 new DifficultyDemand(2, 2, 2, 1, 1, 2, 1, 0, 2, 1, 1, 2, 1),
                 List.of(competencyId));

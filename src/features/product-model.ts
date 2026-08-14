@@ -33,7 +33,9 @@ export const journeyStatusCopy = {
 } as const;
 
 export function isApplicationActivity(activityType: string) {
-  return ["context", "song", "record", "transfer"].includes(activityType);
+  return ["context", "song", "play_along", "record", "transfer", "create", "review"].includes(
+    activityType,
+  );
 }
 
 export function learningActivityLabel(activityType: string) {
@@ -48,6 +50,9 @@ export function learningActivityLabel(activityType: string) {
       recall: "Recordar sem apoio",
       record: "Gravar e comparar",
       transfer: "Transferir e criar",
+      create: "Criar com restrições",
+      play_along: "Aplicar com acompanhamento",
+      review: "Recuperar em novo contexto",
       compare: "Comparar tentativas",
       execute: "Praticar",
       guided: "Prática guiada",

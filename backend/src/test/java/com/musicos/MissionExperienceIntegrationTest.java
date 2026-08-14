@@ -121,6 +121,25 @@ class MissionExperienceIntegrationTest {
         });
     }
 
+    @Test
+    void exploratoryMissionCompletesWithoutCreatingFormalAssessmentEvidence() {
+        var missionId = "mission-guitar-tuning-reference";
+        var mission = experiences.start(missionId, new StartMissionExperienceRequest(InstrumentId.GUITAR));
+        learning.recordExerciseAttempt(missionId + "-exercise",
+                new ExerciseAttemptRequest(60, 80, 360, 2, 3, mission.id()));
+
+        var completed = experiences.complete(missionId, new CompleteMissionExperienceRequest(
+                InstrumentId.GUITAR, AssessmentAttempt.ObserverType.SELF, 3, null,
+                "Exploração concluída sem afirmar afinação medida.", List.of()));
+
+        assertThat(completed.status()).isEqualTo("COMPLETED");
+        assertThat(completed.assessmentAttemptId()).isNull();
+        assertThat(assessments.existsById(missionId + "-assessment")).isFalse();
+        assertThat(evidence.findByInstrumentProfileIdOrderByOccurredAtDesc(completed.instrumentProfileId()))
+                .noneMatch(item -> item.getSourceType() == Evidence.SourceType.ASSESSMENT
+                        && missionId.equals(item.getSourceId()));
+    }
+
     private CompleteMissionExperienceRequest completionRequest(PracticeRecording recording) {
         var assessment = assessments.findById(MISSION_ID + "-assessment").orElseThrow();
         var observations = assessment.getCriterionKeys().stream()

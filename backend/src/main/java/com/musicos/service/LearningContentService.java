@@ -130,10 +130,11 @@ public class LearningContentService {
                 .orElse(null);
         if (profile == null || exercise.getCompetencyIds().isEmpty()) return;
         var attemptKey = attempt.getId().toString();
-        var observation = "Auto-observação de prática: " + request.repetitions()
-                + " repetição(ões), " + request.bpm() + " BPM e dificuldade percebida "
+        var observation = "Dados informados pelo aluno: " + request.repetitions()
+                + " repetição(ões), metrônomo configurado em " + request.bpm() + " BPM e dificuldade percebida "
                 + request.perceivedDifficulty() + "/5. O critério local foi "
-                + (passed ? "relatado como atingido." : "relatado como ainda não atingido.");
+                + (passed ? "relatado como atingido." : "relatado como ainda não atingido.")
+                + " Nenhum desses valores foi medido ou inferido da gravação.";
         var conditions = exercise.getPracticeConditions() == null || exercise.getPracticeConditions().isBlank()
                 ? exercise.getDescription() : exercise.getPracticeConditions();
         for (var competencyId : exercise.getCompetencyIds()) {

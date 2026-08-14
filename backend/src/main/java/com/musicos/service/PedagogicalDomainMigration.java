@@ -122,28 +122,39 @@ public class PedagogicalDomainMigration {
                 throw new IllegalStateException("Exercises ausentes para Mission editorial: " + missingExercises);
             }
 
-            var assessmentId = unit.id() + "-assessment";
-            assessments.findById(assessmentId).ifPresentOrElse(assessment -> {
-                assessment.synchronizeCatalogDefinition(unit.assessmentTitle(), unit.assessmentPurpose(),
-                        unit.assessmentType(), "teaching-runner-v1", unit.assessmentInstructions(),
-                        unit.assessmentConditions(), unit.allowedSupport(), unit.inconclusiveRule(), 6, 3,
-                        DifficultyDemand.unspecified(), List.of(unit.competencyId()), unit.criterionKeys());
-                assessment.activate();
-                assessments.save(assessment);
-            }, () -> {
-                var assessment = new Assessment(assessmentId, unit.assessmentTitle(), unit.assessmentPurpose(),
-                        unit.assessmentType(), "teaching-runner-v1", unit.assessmentInstructions(),
-                        unit.assessmentConditions(), unit.allowedSupport(), unit.inconclusiveRule(), 6, 3,
-                        DifficultyDemand.unspecified(), List.of(unit.competencyId()), unit.criterionKeys());
-                assessment.activate();
-                assessments.save(assessment);
-            });
+            var assessmentIds = new ArrayList<String>();
+            if (unit.formalAssessment()) {
+                var assessmentId = unit.id() + "-assessment";
+                assessmentIds.add(assessmentId);
+                assessments.findById(assessmentId).ifPresentOrElse(assessment -> {
+                    assessment.synchronizeCatalogDefinition(unit.assessmentTitle(), unit.assessmentPurpose(),
+                            unit.assessmentType(), "teaching-runner-v2", unit.assessmentInstructions(),
+                            unit.assessmentConditions(), unit.allowedSupport(), unit.inconclusiveRule(), 6, 3,
+                            DifficultyDemand.unspecified(), List.of(unit.competencyId()), unit.criterionKeys(),
+                            unit.rubricLevels());
+                    assessment.activate();
+                    assessments.save(assessment);
+                }, () -> {
+                    var assessment = new Assessment(assessmentId, unit.assessmentTitle(), unit.assessmentPurpose(),
+                            unit.assessmentType(), "teaching-runner-v2", unit.assessmentInstructions(),
+                            unit.assessmentConditions(), unit.allowedSupport(), unit.inconclusiveRule(), 6, 3,
+                            DifficultyDemand.unspecified(), List.of(unit.competencyId()), unit.criterionKeys(),
+                            unit.rubricLevels());
+                    assessment.activate();
+                    assessments.save(assessment);
+                });
+            } else {
+                assessments.findById(unit.id() + "-assessment").ifPresent(previous -> {
+                    previous.deactivate();
+                    assessments.save(previous);
+                });
+            }
             missions.findById(unit.id()).ifPresentOrElse(mission -> {
                 mission.synchronizeCatalogDefinition(unit.title(), unit.objective(), unit.context(),
                         unit.motivation(), unit.estimatedMinutes(), unit.instrument(), unit.stage(),
                         unit.completionCriteria(), unit.expectedEvidence(), unit.musicalApplication(), null,
                         DifficultyDemand.unspecified(), List.of(unit.competencyId()), List.of(unit.lessonId()),
-                        unit.exerciseIds(), List.of(assessmentId));
+                        unit.exerciseIds(), assessmentIds);
                 mission.activate();
                 missions.save(mission);
             }, () -> {
@@ -151,15 +162,15 @@ public class PedagogicalDomainMigration {
                         unit.motivation(), unit.estimatedMinutes(), unit.instrument(), unit.stage(),
                         unit.completionCriteria(), unit.expectedEvidence(), unit.musicalApplication(), null,
                         DifficultyDemand.unspecified(), List.of(unit.competencyId()), List.of(unit.lessonId()),
-                        unit.exerciseIds(), List.of(assessmentId));
+                        unit.exerciseIds(), assessmentIds);
                 mission.activate();
                 missions.save(mission);
             });
-            linkMissionContent(unit, assessmentId);
+            linkMissionContent(unit, assessmentIds);
         });
     }
 
-    private void linkMissionContent(TeachingContentCatalog.Unit unit, String assessmentId) {
+    private void linkMissionContent(TeachingContentCatalog.Unit unit, List<String> assessmentIds) {
         addTeachingRelation(unit.id(), LearningContentRelation.RelationType.COMPOSES,
                 LearningContentRelation.ContentType.LESSON, unit.lessonId(),
                 "A aula apresenta a oportunidade de aprendizagem desta Mission.");
@@ -167,9 +178,10 @@ public class PedagogicalDomainMigration {
                 LearningContentRelation.RelationType.COMPOSES,
                 LearningContentRelation.ContentType.EXERCISE, exerciseId,
                 "O exercício pratica uma função explícita dentro desta Mission."));
-        addTeachingRelation(unit.id(), LearningContentRelation.RelationType.EVIDENCES,
+        assessmentIds.forEach(assessmentId -> addTeachingRelation(unit.id(),
+                LearningContentRelation.RelationType.EVIDENCES,
                 LearningContentRelation.ContentType.ASSESSMENT, assessmentId,
-                "O assessment observa os critérios declarados sem presumir domínio.");
+                "O assessment observa os critérios declarados sem presumir domínio."));
         unit.repertoireIds().forEach(songId -> {
             if (!songs.existsById(songId)) {
                 throw new IllegalStateException("Repertório ausente para Mission editorial: " + songId);

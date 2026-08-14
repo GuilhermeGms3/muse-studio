@@ -120,8 +120,8 @@ final class DrumsEditorialCatalog {
                         List.of("Ouça a progressão e aponte onde a tensão pede retorno.", "Toque chimbal fechado no repouso e ride na preparação sem mudar BPM.", "Crie uma virada de um tempo apenas antes do retorno ao I."),
                         "Três ciclos colocam textura e virada nos marcos harmônicos corretos.",
                         List.of(v("Só dinâmica", "Marque as funções variando volume sem trocar peças.", -8, 6), v("Forma surpresa", "Identifique o retorno sem contagem visual.", 0, 8)),
-                        "listen", 68, 92, 14, "Acompanhar mudanças harmônicas sem depender de uma guia de bateria.", Assessment.Type.APPLICATION,
-                        List.of("funcao-ouvida", "textura", "retorno"), List.of("so-far-away-drums")),
+                        "context", 68, 92, 14, "Acompanhar o loop original I–IV–V–I sem depender de uma guia de bateria.", Assessment.Type.APPLICATION,
+                        List.of("funcao-ouvida", "textura", "retorno"), List.of()),
 
                 d("mission-drums-funk-pocket", LearningStage.INTERMEDIATE, "drum-funk-groove", "Construir pocket com espaços e ghost notes",
                         "Sustentar groove sincopado mantendo backbeat forte e notas fantasmas realmente leves.",

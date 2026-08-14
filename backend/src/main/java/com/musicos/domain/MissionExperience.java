@@ -69,7 +69,7 @@ public class MissionExperience {
     }
 
     public void complete(UUID attemptId, UUID recordingId) {
-        assessmentAttemptId = DomainRules.required(attemptId, "assessmentAttemptId");
+        assessmentAttemptId = attemptId;
         if (recordingId != null) lastRecordingId = recordingId;
         status = Status.COMPLETED;
         currentActivityKind = ActivityKind.REFLECTION;
