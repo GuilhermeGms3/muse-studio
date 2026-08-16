@@ -4,6 +4,7 @@ import { QueryState } from "@/shared/ui/query/QueryState";
 import { useProjects } from "@/lib/music-api";
 import { CatalogEditor } from "@/shared/catalog/CatalogEditor";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
+import { OpenStudioButton } from "@/features/studio/OpenStudioButton";
 
 export function ProjectPage() {
   const { instrument } = useWorkspace();
@@ -18,7 +19,16 @@ export function ProjectPage() {
       <div className="mb-2 flex justify-end">
         <CatalogEditor kind="project" instrument={instrument} initial={project} />
       </div>
-      <h1 className="text-lg font-semibold">{project.name}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-lg font-semibold">{project.name}</h1>
+        <OpenStudioButton
+          instrument={instrument}
+          sourceKind="CREATION"
+          sourceId={project.id}
+          musicProjectId={project.id}
+          bpm={project.bpm}
+        />
+      </div>
       <div className="mt-2 grid grid-cols-2 gap-x-6 md:grid-cols-4">
         <Row label="Tom" value={project.musicalKey} />
         <Row label="BPM" value={project.bpm} />

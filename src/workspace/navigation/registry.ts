@@ -18,6 +18,7 @@ import {
   Settings2,
   Target,
   Timer,
+  AudioLines,
   Wrench,
 } from "lucide-react";
 import type {
@@ -82,6 +83,15 @@ export const navigationRegistry: NavigationEntry[] = [
     hint: "Modo foco",
     legacyGroup: "Estacao",
     legacyOrder: 1,
+  },
+  {
+    id: "practice.studio",
+    context: "practice",
+    label: "Studio",
+    path: "/studio",
+    matchPaths: ["/studio/"],
+    icon: AudioLines,
+    hint: "Loop, backing e takes",
   },
   {
     id: "practice.songs",
@@ -307,6 +317,7 @@ export function contextForPath(pathname: string): MacroContextId {
     return "practice";
   }
   if (pathname === "/treino-musica" || pathname.startsWith("/treino-musica/")) return "practice";
+  if (pathname === "/studio" || pathname.startsWith("/studio/")) return "practice";
   if (pathname === "/skills" || pathname === "/mapa") return "learning";
   if (pathname === "/biblioteca" || pathname.startsWith("/biblioteca/")) return "library";
   if (pathname === "/repertorio" || pathname.startsWith("/repertorio/")) return "practice";
@@ -325,6 +336,7 @@ export function titleForRegisteredPath(pathname: string): string {
     "/explorar": "Explorar",
     "/diagnostico": "Diagnóstico",
     "/sessao": "Sessão",
+    "/studio": "Studio",
     "/plano": "Plano de Hoje",
     "/diario": "Diário",
     "/biblioteca": "Biblioteca",

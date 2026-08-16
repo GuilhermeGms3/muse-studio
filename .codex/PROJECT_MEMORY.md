@@ -27,9 +27,9 @@
 - Lovable-connected history must not be rewritten.
 
 ## Active scope
-- Requested outcome: substantial, instrument-specific pedagogical content across every real track and stage.
-- In scope: modular editorial Missions/Exercises/Assessments, valid repertoire links, structural coverage and Coach progression tests.
-- Out of scope: redesign, gamification, CMS, new pedagogical engine, new endpoints or schema changes.
+- Requested outcome: persistent Studio layer joining guided learning, repertoire, practice and creation, with an optional real REAPER bridge.
+- In scope: Studio domain/API, Web Studio transport/timeline/recordings, contextual entry points and explicit local REAPER project export/open.
+- Out of scope: full browser DAW, automatic audio analysis, silent REAPER control, cloud synchronization or changes to Evidence/Mastery rules.
 
 ## Decisions
 - 2026-08-13 — Keep `TeachingContentCatalog` as public composition root and split definitions by instrument — avoids a monolithic file without introducing a parallel content system.
@@ -39,18 +39,25 @@
 - 2026-08-14 — Application is an Exercise activity with transfer semantics, not a mandatory Mission string — only 32 Missions expose a structured application and duplicate textual applications were removed.
 - 2026-08-14 — Assessment cardinality is optional and qualitative criteria carry persisted rubric bands — 9 exploratory Missions have no formal Assessment; 98 remain linked and 46 use rubrics.
 - 2026-08-14 — User-entered BPM, accuracy, repetitions and duration are explicitly labeled configured/reported — they remain low-confidence provisional process Evidence.
+- 2026-08-15 — `StudioProject` is a separate persistent aggregate linked by optional context IDs — Missions, repertoire, practice and creation remain the sources of pedagogical truth.
+- 2026-08-15 — Studio recordings and takes are artifacts, never automatic Evidence or Mastery — promotion remains an explicit future assessment decision.
+- 2026-08-15 — The Web Studio uses the existing recorder/metronome plus a small `@waveform-playlist/core` peak adapter — no parallel recording stack or browser DAW was introduced.
+- 2026-08-15 — REAPER integration is user-configured and action-driven — it validates local paths, renders a managed `.RPP`, opens only on explicit command and distinguishes not configured, disconnected, available and connected states.
 
 ## Current state
 - Completed: 107 Missions, 77 linked mission-specific Lessons and 111 Exercises; the generic fallback remains only for skills outside the current Mission catalog.
 - Completed: 32 structured Applications; 75 duplicate/text-only applications removed; 98 linked Assessments and 9 exploratory Missions without formal Assessment.
-- Completed: 46 Assessments use 168 persisted rubric levels across three qualitative bands; Flyway schema is at V6.
+- Completed: 46 Assessments use 168 persisted rubric levels across three qualitative bands.
 - Completed: original Muse stimuli cover the audited tuning, muting, lead form, acoustic accompaniment/fingerstyle/arrangement, triads/syncopation/reharmonization and drum groove/harmony/composition Missions; AudioCue supports pitched, rest and percussion tokens.
 - Completed: known prerequisite shortcuts were removed from the four advanced journeys and decorative repertoire links were removed from the affected Missions.
 - Completed: integrity gates include fallback/material checks, optional Assessment, structured Application, rubric persistence, template diversity, four journeys and a 24-Mission autonomy sample.
-- In progress: none for the current editorial expansion.
-- Known issues: full frontend ESLint remains red with 4,768 pre-existing CRLF/Prettier errors and 12 warnings; no files were mass-formatted.
-- Verification performed: backend 76/76; frontend 7/7; scoped ESLint; production build; integrity/coverage report; `git diff --check`.
+- Completed: Studio persistence, contextual resume, tracks/clips/regions/markers/takes, autosave, Web transport, managed backing audio and reusable recorder with count-in; Flyway schema is at V7.
+- Completed: contextual Studio entry points exist in eligible Mission applications, repertoire, practice sessions, creation projects and execution/recording exercises.
+- Completed: optional REAPER bridge exports tempo, tracks, managed audio clips, markers, regions, loop/time selection and record-arm state to a local `.RPP`.
+- In progress: none for the current Studio layer.
+- Known issues: full frontend ESLint remains red with 4,768 pre-existing CRLF/Prettier errors and 12 warnings; no files were mass-formatted. `npm audit` reports four high-severity transitive advisories outside `@waveform-playlist/core`.
+- Verification performed: backend 79/79 plus focused V7/Studio rerun; frontend 10/10; scoped ESLint/Prettier; production build; browser QA on desktop and 390 px; real REAPER process opened the generated test project.
 
 ## Next safe actions
-- Use coverage report lists to choose future deep competencies; do not auto-generate shallow Missions for every uncovered skill.
-- Reduce the remaining skill-without-Mission list in later editorial batches, prioritizing motor and perceptual prerequisites over catalog volume.
+- Add richer Studio editing only when a pedagogical workflow requires it; keep full production in REAPER.
+- If Studio recordings later feed assessment, require an explicit evidence policy and never infer correctness from upload or completion alone.

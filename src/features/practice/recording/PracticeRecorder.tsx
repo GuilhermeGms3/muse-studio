@@ -53,12 +53,16 @@ export function PracticeRecorder({
   contextId = "general",
   targetBpm,
   targetNote,
+  countInSeconds = 0,
+  onCountInStart,
   onSaved,
 }: {
   contextType?: string;
   contextId?: string;
   targetBpm?: number;
   targetNote?: string;
+  countInSeconds?: number;
+  onCountInStart?: () => void;
   onSaved?: (recording: PracticeRecording) => void;
 }) {
   const queryClient = useQueryClient();
@@ -76,6 +80,7 @@ export function PracticeRecorder({
   const metricsRef = useRef({ bpm: 0, stability: 0, timing: 0, pitch: 0, bend: 0 });
   const startedAtRef = useRef(0);
   const [recording, setRecording] = useState(false);
+  const [countingIn, setCountingIn] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [pitch, setPitch] = useState("—");
   const [rhythm, setRhythm] = useState("Aguardando pulsos");
@@ -122,6 +127,12 @@ export function PracticeRecorder({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
+      if (countInSeconds > 0) {
+        setCountingIn(true);
+        onCountInStart?.();
+        await new Promise((resolve) => window.setTimeout(resolve, countInSeconds * 1000));
+        setCountingIn(false);
+      }
       const chunks: Blob[] = [];
       const recorder = new MediaRecorder(stream);
       mediaRef.current = recorder;
@@ -208,6 +219,8 @@ export function PracticeRecorder({
       setRecording(true);
       analyse();
     } catch {
+      setCountingIn(false);
+      streamRef.current?.getTracks().forEach((track) => track.stop());
       setError("Permita o acesso ao microfone para gravar e analisar sua execução.");
     }
   };
@@ -230,6 +243,7 @@ export function PracticeRecorder({
         <button
           type="button"
           onClick={recording ? stop : start}
+          disabled={countingIn}
           className="inline-flex h-8 items-center gap-2 border border-border bg-surface px-3 text-xs hover:border-signal"
         >
           {recording ? (
@@ -237,7 +251,7 @@ export function PracticeRecorder({
           ) : (
             <Mic className="size-3 text-signal" />
           )}
-          {recording ? "Parar" : "Gravar"}
+          {countingIn ? "Contagem..." : recording ? "Parar" : "Gravar"}
         </button>
       </div>
       {audioUrl && (

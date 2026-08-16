@@ -20,6 +20,7 @@ export type WorkspaceTabType =
   | "projects"
   | "project"
   | "diagnostic"
+  | "studio"
   | "data";
 
 export interface WorkspaceTab {
@@ -60,6 +61,7 @@ export function tabTypeForPath(path: string): WorkspaceTabType {
   if (path.startsWith("/projetos/")) return "project";
   if (path === "/projetos") return "projects";
   if (path === "/diagnostico") return "diagnostic";
+  if (path === "/studio" || path.startsWith("/studio/")) return "studio";
   return "data";
 }
 

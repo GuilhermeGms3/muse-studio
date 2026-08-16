@@ -27,12 +27,15 @@ import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as RepertorioRouteImport } from './routes/repertorio'
 import { Route as SessaoRouteImport } from './routes/sessao'
 import { Route as SkillsRouteImport } from './routes/skills'
+import { Route as StudioRouteImport } from './routes/studio'
 import { Route as TreinoMusicaRouteImport } from './routes/treino-musica'
 import { Route as BibliotecaNodeIdRouteImport } from './routes/biblioteca.$nodeId'
 import { Route as ExerciciosExerciseIdRouteImport } from './routes/exercicios.$exerciseId'
 import { Route as MissoesMissionIdRouteImport } from './routes/missoes.$missionId'
 import { Route as ProjetosProjectIdRouteImport } from './routes/projetos.$projectId'
 import { Route as RepertorioSongIdRouteImport } from './routes/repertorio.$songId'
+import { Route as StudioIndexRouteImport } from './routes/studio.index'
+import { Route as StudioStudioProjectIdRouteImport } from './routes/studio.$studioProjectId'
 import { Route as TreinoMusicaSongIdInstrumentRouteImport } from './routes/treino-musica.$songId.$instrument'
 
 const IndexRoute = IndexRouteImport.update({
@@ -125,6 +128,11 @@ const SkillsRoute = SkillsRouteImport.update({
   path: '/skills',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudioRoute = StudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TreinoMusicaRoute = TreinoMusicaRouteImport.update({
   id: '/treino-musica',
   path: '/treino-musica',
@@ -155,6 +163,16 @@ const RepertorioSongIdRoute = RepertorioSongIdRouteImport.update({
   path: '/$songId',
   getParentRoute: () => RepertorioRoute,
 } as any)
+const StudioIndexRoute = StudioIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudioRoute,
+} as any)
+const StudioStudioProjectIdRoute = StudioStudioProjectIdRouteImport.update({
+  id: '/$studioProjectId',
+  path: '/$studioProjectId',
+  getParentRoute: () => StudioRoute,
+} as any)
 const TreinoMusicaSongIdInstrumentRoute =
   TreinoMusicaSongIdInstrumentRouteImport.update({
     id: '/$songId/$instrument',
@@ -181,12 +199,15 @@ export interface FileRoutesByFullPath {
   '/repertorio': typeof RepertorioRouteWithChildren
   '/sessao': typeof SessaoRoute
   '/skills': typeof SkillsRoute
+  '/studio': typeof StudioRouteWithChildren
   '/treino-musica': typeof TreinoMusicaRouteWithChildren
   '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
   '/exercicios/$exerciseId': typeof ExerciciosExerciseIdRoute
   '/missoes/$missionId': typeof MissoesMissionIdRoute
   '/projetos/$projectId': typeof ProjetosProjectIdRoute
   '/repertorio/$songId': typeof RepertorioSongIdRoute
+  '/studio/$studioProjectId': typeof StudioStudioProjectIdRoute
+  '/studio/': typeof StudioIndexRoute
   '/treino-musica/$songId/$instrument': typeof TreinoMusicaSongIdInstrumentRoute
 }
 export interface FileRoutesByTo {
@@ -214,6 +235,8 @@ export interface FileRoutesByTo {
   '/missoes/$missionId': typeof MissoesMissionIdRoute
   '/projetos/$projectId': typeof ProjetosProjectIdRoute
   '/repertorio/$songId': typeof RepertorioSongIdRoute
+  '/studio/$studioProjectId': typeof StudioStudioProjectIdRoute
+  '/studio': typeof StudioIndexRoute
   '/treino-musica/$songId/$instrument': typeof TreinoMusicaSongIdInstrumentRoute
 }
 export interface FileRoutesById {
@@ -236,12 +259,15 @@ export interface FileRoutesById {
   '/repertorio': typeof RepertorioRouteWithChildren
   '/sessao': typeof SessaoRoute
   '/skills': typeof SkillsRoute
+  '/studio': typeof StudioRouteWithChildren
   '/treino-musica': typeof TreinoMusicaRouteWithChildren
   '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
   '/exercicios/$exerciseId': typeof ExerciciosExerciseIdRoute
   '/missoes/$missionId': typeof MissoesMissionIdRoute
   '/projetos/$projectId': typeof ProjetosProjectIdRoute
   '/repertorio/$songId': typeof RepertorioSongIdRoute
+  '/studio/$studioProjectId': typeof StudioStudioProjectIdRoute
+  '/studio/': typeof StudioIndexRoute
   '/treino-musica/$songId/$instrument': typeof TreinoMusicaSongIdInstrumentRoute
 }
 export interface FileRouteTypes {
@@ -265,12 +291,15 @@ export interface FileRouteTypes {
     | '/repertorio'
     | '/sessao'
     | '/skills'
+    | '/studio'
     | '/treino-musica'
     | '/biblioteca/$nodeId'
     | '/exercicios/$exerciseId'
     | '/missoes/$missionId'
     | '/projetos/$projectId'
     | '/repertorio/$songId'
+    | '/studio/$studioProjectId'
+    | '/studio/'
     | '/treino-musica/$songId/$instrument'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -298,6 +327,8 @@ export interface FileRouteTypes {
     | '/missoes/$missionId'
     | '/projetos/$projectId'
     | '/repertorio/$songId'
+    | '/studio/$studioProjectId'
+    | '/studio'
     | '/treino-musica/$songId/$instrument'
   id:
     | '__root__'
@@ -319,12 +350,15 @@ export interface FileRouteTypes {
     | '/repertorio'
     | '/sessao'
     | '/skills'
+    | '/studio'
     | '/treino-musica'
     | '/biblioteca/$nodeId'
     | '/exercicios/$exerciseId'
     | '/missoes/$missionId'
     | '/projetos/$projectId'
     | '/repertorio/$songId'
+    | '/studio/$studioProjectId'
+    | '/studio/'
     | '/treino-musica/$songId/$instrument'
   fileRoutesById: FileRoutesById
 }
@@ -347,6 +381,7 @@ export interface RootRouteChildren {
   RepertorioRoute: typeof RepertorioRouteWithChildren
   SessaoRoute: typeof SessaoRoute
   SkillsRoute: typeof SkillsRoute
+  StudioRoute: typeof StudioRouteWithChildren
   TreinoMusicaRoute: typeof TreinoMusicaRouteWithChildren
   MissoesMissionIdRoute: typeof MissoesMissionIdRoute
 }
@@ -479,6 +514,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SkillsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/studio': {
+      id: '/studio'
+      path: '/studio'
+      fullPath: '/studio'
+      preLoaderRoute: typeof StudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/treino-musica': {
       id: '/treino-musica'
       path: '/treino-musica'
@@ -520,6 +562,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/repertorio/$songId'
       preLoaderRoute: typeof RepertorioSongIdRouteImport
       parentRoute: typeof RepertorioRoute
+    }
+    '/studio/': {
+      id: '/studio/'
+      path: '/'
+      fullPath: '/studio/'
+      preLoaderRoute: typeof StudioIndexRouteImport
+      parentRoute: typeof StudioRoute
+    }
+    '/studio/$studioProjectId': {
+      id: '/studio/$studioProjectId'
+      path: '/$studioProjectId'
+      fullPath: '/studio/$studioProjectId'
+      preLoaderRoute: typeof StudioStudioProjectIdRouteImport
+      parentRoute: typeof StudioRoute
     }
     '/treino-musica/$songId/$instrument': {
       id: '/treino-musica/$songId/$instrument'
@@ -579,6 +635,19 @@ const RepertorioRouteWithChildren = RepertorioRoute._addFileChildren(
   RepertorioRouteChildren,
 )
 
+interface StudioRouteChildren {
+  StudioStudioProjectIdRoute: typeof StudioStudioProjectIdRoute
+  StudioIndexRoute: typeof StudioIndexRoute
+}
+
+const StudioRouteChildren: StudioRouteChildren = {
+  StudioStudioProjectIdRoute: StudioStudioProjectIdRoute,
+  StudioIndexRoute: StudioIndexRoute,
+}
+
+const StudioRouteWithChildren =
+  StudioRoute._addFileChildren(StudioRouteChildren)
+
 interface TreinoMusicaRouteChildren {
   TreinoMusicaSongIdInstrumentRoute: typeof TreinoMusicaSongIdInstrumentRoute
 }
@@ -610,6 +679,7 @@ const rootRouteChildren: RootRouteChildren = {
   RepertorioRoute: RepertorioRouteWithChildren,
   SessaoRoute: SessaoRoute,
   SkillsRoute: SkillsRoute,
+  StudioRoute: StudioRouteWithChildren,
   TreinoMusicaRoute: TreinoMusicaRouteWithChildren,
   MissoesMissionIdRoute: MissoesMissionIdRoute,
 }

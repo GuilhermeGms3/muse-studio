@@ -22,6 +22,10 @@ spring:
         format_sql: true
   jackson:
     default-property-inclusion: non_null
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 101MB
 
 server:
   address: 127.0.0.1

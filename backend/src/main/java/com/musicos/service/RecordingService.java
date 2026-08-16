@@ -32,7 +32,17 @@ public class RecordingService {
                               Integer targetBpm, Integer measuredBpm, Integer timingOffsetMillis,
                               Integer rhythmStability, String targetNote, Integer pitchOffsetCents,
                               Integer bendStability) {
-        if (file.isEmpty()) throw new IllegalArgumentException("A gravacao esta vazia");
+        if (file.isEmpty()) throw new IllegalArgumentException("A gravação está vazia");
+        if (file.getSize() > 100L * 1024 * 1024) throw new IllegalArgumentException("A gravação excede 100 MB");
+        if (contextType == null || contextType.isBlank() || contextType.length() > 80
+                || contextId == null || contextId.isBlank() || contextId.length() > 255) {
+            throw new IllegalArgumentException("Contexto da gravação é inválido");
+        }
+        var mimeType = file.getContentType() == null ? "" : file.getContentType().toLowerCase();
+        if (!mimeType.startsWith("audio/") && !mimeType.equals("video/webm")
+                && !mimeType.equals("application/octet-stream")) {
+            throw new IllegalArgumentException("Envie um arquivo de áudio compatível");
+        }
         try {
             Files.createDirectories(root);
             var extension = extension(file.getOriginalFilename(), file.getContentType());
@@ -74,6 +84,22 @@ public class RecordingService {
         return recordings.findById(id).map(PracticeRecording::getMimeType).orElse("audio/webm");
     }
 
+    @Transactional(readOnly = true)
+    public boolean exists(UUID id) {
+        return recordings.existsById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public Path managedPath(UUID id) {
+        var recording = recordings.findById(id)
+                .orElseThrow(() -> new NotFoundException("Gravação não encontrada"));
+        var path = root.resolve(recording.getFileName()).toAbsolutePath().normalize();
+        if (!path.startsWith(root) || !Files.isRegularFile(path)) {
+            throw new NotFoundException("Arquivo de áudio não encontrado");
+        }
+        return path;
+    }
+
     private RecordingView view(PracticeRecording value) {
         return new RecordingView(value.getId(), value.getCreatedAt(), value.getContextType(),
                 value.getContextId(), value.getOriginalName(), value.getMimeType(), value.getDurationMillis(),
@@ -85,7 +111,7 @@ public class RecordingService {
     private String extension(String name, String mimeType) {
         if (name != null && name.lastIndexOf('.') >= 0) {
             var value = name.substring(name.lastIndexOf('.')).replaceAll("[^a-zA-Z0-9.]", "");
-            if (value.length() <= 8) return value;
+            if (value.toLowerCase().matches("\\.(webm|ogg|wav|mp3|m4a|flac)") ) return value;
         }
         return mimeType != null && mimeType.contains("ogg") ? ".ogg" : ".webm";
     }

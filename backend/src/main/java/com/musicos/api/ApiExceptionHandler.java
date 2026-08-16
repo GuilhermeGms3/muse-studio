@@ -36,6 +36,11 @@ public class ApiExceptionHandler {
         return error(HttpStatus.BAD_REQUEST, "Requisição inválida", request, List.of());
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiError> conflict(IllegalStateException exception, HttpServletRequest request) {
+        return error(HttpStatus.CONFLICT, exception.getMessage(), request, List.of());
+    }
+
     private ResponseEntity<ApiError> error(HttpStatus status, String message,
                                            HttpServletRequest request, List<String> details) {
         return ResponseEntity.status(status).body(new ApiError(Instant.now(), status.value(),

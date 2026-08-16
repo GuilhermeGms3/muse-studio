@@ -52,7 +52,10 @@ class PedagogicalSchemaMigrationTest {
                          "select \"version\" from \"flyway_schema_history\" where \"success\" = true "
                                  + "order by \"installed_rank\" desc limit 1")) {
                 assertThat(rows.next()).isTrue();
-                assertThat(rows.getString(1)).isEqualTo("6");
+                assertThat(rows.getString(1)).isEqualTo("7");
+            }
+            try (var tables = metadata.getTables(null, "PUBLIC", "STUDIO_PROJECTS", null)) {
+                assertThat(tables.next()).isTrue();
             }
         }
     }

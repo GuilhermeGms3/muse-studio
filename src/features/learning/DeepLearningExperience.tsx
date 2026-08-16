@@ -17,6 +17,7 @@ import type {
   MissionWorkspaceData,
 } from "@/shared/api/contracts";
 import { AudioCuePlayer } from "@/shared/music/AudioCuePlayer";
+import { OpenStudioButton } from "@/features/studio/OpenStudioButton";
 import { InteractiveScore } from "@/shared/music/InteractiveScore";
 import { InteractiveTab } from "@/shared/music/InteractiveTab";
 import { completionMessage } from "./experience-model";
@@ -292,7 +293,23 @@ export function DeepLearningExperience({
         </section>
 
         <section id="aplicacao" className="scroll-mt-16 border-b border-border py-7">
-          <span className="label-tech">Aplicação musical</span>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="label-tech">Aplicação musical</span>
+            {(applicationExercises.length > 0 ||
+              requiresRecording ||
+              data.repertoire.length > 0) && (
+              <OpenStudioButton
+                instrument={instrument}
+                sourceKind="MISSION"
+                sourceId={data.mission.id}
+                missionId={data.mission.id}
+                missionExperienceId={experience?.id}
+                exerciseId={applicationExercises.at(-1)?.id ?? practiceExercises.at(-1)?.id}
+                bpm={data.exercises.at(-1)?.currentBpm}
+                songId={data.repertoire.at(0)?.id}
+              />
+            )}
+          </div>
           <h2 className="mt-2 text-lg font-semibold">
             {applicationExercises.length > 0
               ? "Use a habilidade em um contexto musical"

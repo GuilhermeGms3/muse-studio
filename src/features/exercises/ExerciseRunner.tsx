@@ -8,6 +8,7 @@ import { PracticeRecorder } from "@/features/practice/recording/PracticeRecorder
 import { CatalogEditor } from "@/shared/catalog/CatalogEditor";
 import { getExerciseRecommendations } from "@/shared/api/learning";
 import { PracticeMediaPanel } from "@/features/practice-song/PracticeMediaPanel";
+import { OpenStudioButton } from "@/features/studio/OpenStudioButton";
 
 export function ExerciseRunner({ exercise }: { exercise: Exercise }) {
   const { setMetronome } = useWorkspace();
@@ -61,6 +62,15 @@ export function ExerciseRunner({ exercise }: { exercise: Exercise }) {
             {exercise.activityType}
           </span>
         </div>
+        {["record", "transfer", "context", "song", "execute"].includes(exercise.activityType) && (
+          <OpenStudioButton
+            instrument={exercise.instrument}
+            sourceKind="PRACTICE"
+            sourceId={`exercise:${exercise.id}`}
+            exerciseId={exercise.id}
+            bpm={bpm}
+          />
+        )}
         {media.data && <PracticeMediaPanel title="Vídeo de referência" items={media.data} />}
         {exercise.readingUrl && (
           <a

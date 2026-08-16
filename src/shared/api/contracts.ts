@@ -656,3 +656,96 @@ export interface ImportedFile {
   importedAt: string;
   storedPath: string;
 }
+
+export type StudioSourceKind = "FREE" | "MISSION" | "REPERTOIRE" | "PRACTICE" | "CREATION";
+export type StudioTrackRole = "BACKING" | "REFERENCE" | "RECORDING" | "CLICK" | "CREATIVE";
+export type StudioRegionOrigin = "MISSION" | "EXERCISE" | "REPERTOIRE" | "USER";
+
+export interface StudioTrack {
+  id: string;
+  name: string;
+  role: StudioTrackRole;
+  muted: boolean;
+  solo: boolean;
+  volume: number;
+  pan: number;
+  externalTrackId?: string;
+}
+
+export interface StudioClip {
+  id: string;
+  trackId: string;
+  title: string;
+  sourceKind: "RECORDING" | "MANAGED_AUDIO" | "EXTERNAL_REFERENCE";
+  recordingId?: string;
+  sourceReference?: string;
+  audioUrl?: string;
+  startSeconds: number;
+  offsetSeconds: number;
+  durationSeconds: number;
+}
+
+export interface StudioRegion {
+  id: string;
+  name: string;
+  startSeconds: number;
+  endSeconds: number;
+  origin: StudioRegionOrigin;
+}
+
+export interface StudioMarker {
+  id: string;
+  name: string;
+  positionSeconds: number;
+  origin: StudioRegionOrigin;
+}
+
+export interface StudioTake {
+  id: string;
+  trackId: string;
+  recordingId: string;
+  title: string;
+  preferred: boolean;
+  createdAt: string;
+  externalTakeId?: string;
+  audioUrl: string;
+}
+
+export interface StudioProject {
+  id: string;
+  title: string;
+  instrument: InstrumentId;
+  sourceKind: StudioSourceKind;
+  sourceId?: string;
+  missionId?: string;
+  missionExperienceId?: string;
+  exerciseId?: string;
+  practiceSessionId?: string;
+  songId?: string;
+  musicProjectId?: string;
+  bpm: number;
+  timeSignatureNumerator: number;
+  timeSignatureDenominator: number;
+  countInBars: number;
+  loopEnabled: boolean;
+  selectedRegionId?: string;
+  engineMode: "WEB" | "REAPER";
+  externalProjectId?: string;
+  externalProjectPath?: string;
+  createdAt: string;
+  updatedAt: string;
+  tracks: StudioTrack[];
+  clips: StudioClip[];
+  regions: StudioRegion[];
+  markers: StudioMarker[];
+  takes: StudioTake[];
+}
+
+export interface ReaperStatus {
+  status: "NOT_CONFIGURED" | "AVAILABLE" | "CONNECTED" | "DISCONNECTED" | "ERROR";
+  configured: boolean;
+  executablePath?: string;
+  workspacePath?: string;
+  message: string;
+  checkedAt: string;
+}

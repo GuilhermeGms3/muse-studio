@@ -8,6 +8,7 @@ import { QueryState } from "@/shared/ui/query/QueryState";
 import { Meter, Row } from "@/shared/ui/workspace/Panel";
 import { createSongPracticePlan, usePreferences, useSongs } from "@/lib/music-api";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
+import { OpenStudioButton } from "@/features/studio/OpenStudioButton";
 
 export function SongPage() {
   const { setMetronome } = useWorkspace();
@@ -52,6 +53,13 @@ export function SongPage() {
           <ListMusic className="size-3" />
           {plan.isPending ? "Montando..." : "Praticar esta música"}
         </button>
+        <OpenStudioButton
+          instrument={song.instrument}
+          sourceKind="REPERTOIRE"
+          sourceId={song.id}
+          songId={song.id}
+          bpm={song.bpm}
+        />
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-x-6 md:grid-cols-4">

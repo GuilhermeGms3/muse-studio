@@ -13,6 +13,7 @@ import {
   type SessionSummary,
 } from "@/lib/music-api";
 import { useWorkspace, formatClock } from "@/workspace/store/WorkspaceProvider";
+import { OpenStudioButton } from "@/features/studio/OpenStudioButton";
 
 function targetBpm(target?: string) {
   return Number(target?.match(/\d{2,3}/)?.[0] ?? 60);
@@ -194,6 +195,15 @@ export function SessionPage() {
               <span className="label-tech">Cronômetro</span>
               <p className="num mt-1 text-5xl leading-none">{formatClock(session.seconds)}</p>
             </div>
+          </div>
+          <div className="mt-3 flex justify-end">
+            <OpenStudioButton
+              instrument={instrument}
+              sourceKind="PRACTICE"
+              sourceId={remote.id}
+              practiceSessionId={remote.id}
+              bpm={bpm}
+            />
           </div>
           <div className="mt-7 grid gap-px bg-border md:grid-cols-2">
             <div className="bg-surface p-4">
