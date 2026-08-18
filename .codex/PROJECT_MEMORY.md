@@ -43,6 +43,7 @@
 - 2026-08-15 — Studio recordings and takes are artifacts, never automatic Evidence or Mastery — promotion remains an explicit future assessment decision.
 - 2026-08-15 — The Web Studio uses the existing recorder/metronome plus a small `@waveform-playlist/core` peak adapter — no parallel recording stack or browser DAW was introduced.
 - 2026-08-15 — REAPER integration is user-configured and action-driven — it validates local paths, renders a managed `.RPP`, opens only on explicit command and distinguishes not configured, disconnected, available and connected states.
+- 2026-08-16 — Default Docker Compose builds `music-os-api:local` and `music-os-web:local` from this checkout with `pull_policy: build` — `docker compose up -d` now uses current source instead of stale GHCR `latest` images; Watchtower is opt-in under `remote-updates`.
 
 ## Current state
 - Completed: 107 Missions, 77 linked mission-specific Lessons and 111 Exercises; the generic fallback remains only for skills outside the current Mission catalog.
@@ -56,6 +57,7 @@
 - Completed: optional REAPER bridge exports tempo, tracks, managed audio clips, markers, regions, loop/time selection and record-arm state to a local `.RPP`.
 - In progress: none for the current Studio layer.
 - Known issues: full frontend ESLint remains red with 4,768 pre-existing CRLF/Prettier errors and 12 warnings; no files were mass-formatted. `npm audit` reports four high-severity transitive advisories outside `@waveform-playlist/core`.
+- Completed: Docker Compose validates as a local-source build configuration; frontend Docker build uses the committed lockfile with `npm ci`.
 - Verification performed: backend 79/79 plus focused V7/Studio rerun; frontend 10/10; scoped ESLint/Prettier; production build; browser QA on desktop and 390 px; real REAPER process opened the generated test project.
 
 ## Next safe actions

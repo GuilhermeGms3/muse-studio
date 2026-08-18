@@ -2,7 +2,11 @@ name: music-os
 
 services:
   api:
-    image: ghcr.io/guilhermegms3/music-os-api:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: music-os-api:local
+    pull_policy: build
     container_name: music-os-api
     restart: unless-stopped
     environment:
@@ -21,11 +25,12 @@ services:
       timeout: 5s
       retries: 8
       start_period: 30s
-    labels:
-      com.centurylinklabs.watchtower.enable: "true"
-
   web:
-    image: ghcr.io/guilhermegms3/music-os-web:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    image: music-os-web:local
+    pull_policy: build
     container_name: music-os-web
     restart: unless-stopped
     depends_on:
@@ -39,13 +44,11 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
-    labels:
-      com.centurylinklabs.watchtower.enable: "true"
-
   updater:
     image: nickfedor/watchtower:latest
     container_name: music-os-updater
     restart: unless-stopped
+    profiles: ["remote-updates"]
     environment:
       DOCKER_CONFIG: /config
       WATCHTOWER_CLEANUP: "true"
