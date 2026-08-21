@@ -12,6 +12,9 @@ public class ReaperIntegrationSettings {
     private String id;
     private String executablePath;
     private String workspacePath;
+    private String agentBaseUrl;
+    private String containerMediaRoot;
+    private String hostMediaRoot;
     private boolean enabled;
     private String lastStatus;
     private String lastMessage;
@@ -20,8 +23,14 @@ public class ReaperIntegrationSettings {
     protected ReaperIntegrationSettings() {}
 
     public ReaperIntegrationSettings(String executablePath, String workspacePath) {
-        this.id = "default";
+        this.id = LocalProfile.DEFAULT_ID;
         configure(executablePath, workspacePath);
+    }
+
+    public ReaperIntegrationSettings(String agentBaseUrl, String containerMediaRoot, String hostMediaRoot,
+                                     boolean agentConfiguration) {
+        this.id = LocalProfile.DEFAULT_ID;
+        configureAgent(agentBaseUrl, containerMediaRoot, hostMediaRoot);
     }
 
     public void configure(String executablePath, String workspacePath) {
@@ -29,6 +38,16 @@ public class ReaperIntegrationSettings {
         this.workspacePath = workspacePath;
         this.enabled = true;
         updateStatus("AVAILABLE", "Configuração local validada.");
+    }
+
+    public void configureAgent(String agentBaseUrl, String containerMediaRoot, String hostMediaRoot) {
+        this.executablePath = null;
+        this.workspacePath = null;
+        this.agentBaseUrl = agentBaseUrl;
+        this.containerMediaRoot = containerMediaRoot;
+        this.hostMediaRoot = hostMediaRoot;
+        this.enabled = true;
+        updateStatus("AGENT_OFFLINE", "Configuração salva; aguardando handshake do Muse Reaper Agent.");
     }
 
     public void updateStatus(String status, String message) {
@@ -49,6 +68,9 @@ public class ReaperIntegrationSettings {
     public String getId() { return id; }
     public String getExecutablePath() { return executablePath; }
     public String getWorkspacePath() { return workspacePath; }
+    public String getAgentBaseUrl() { return agentBaseUrl; }
+    public String getContainerMediaRoot() { return containerMediaRoot; }
+    public String getHostMediaRoot() { return hostMediaRoot; }
     public boolean isEnabled() { return enabled; }
     public String getLastStatus() { return lastStatus; }
     public String getLastMessage() { return lastMessage; }

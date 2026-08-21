@@ -2,7 +2,6 @@ import { useParams } from "@tanstack/react-router";
 import { Row } from "@/shared/ui/workspace/Panel";
 import { QueryState } from "@/shared/ui/query/QueryState";
 import { useProjects } from "@/lib/music-api";
-import { CatalogEditor } from "@/shared/catalog/CatalogEditor";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
 import { OpenStudioButton } from "@/features/studio/OpenStudioButton";
 
@@ -16,9 +15,6 @@ export function ProjectPage() {
 
   return (
     <div className="p-4">
-      <div className="mb-2 flex justify-end">
-        <CatalogEditor kind="project" instrument={instrument} initial={project} />
-      </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-semibold">{project.name}</h1>
         <OpenStudioButton

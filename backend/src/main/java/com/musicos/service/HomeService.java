@@ -1,11 +1,12 @@
 package com.musicos.service;
 
-import static com.musicos.api.ApiModels.*;
-import static com.musicos.service.ViewMapper.activity;
+import com.musicos.domain.LocalProfile;
 
+import static com.musicos.api.ApiModels.*;
 import com.musicos.domain.InstrumentId;
 import com.musicos.repository.JournalEntryRepository;
 import com.musicos.repository.InstrumentProfileRepository;
+import com.musicos.repository.UserPreferencesRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import org.springframework.stereotype.Service;
@@ -14,36 +15,36 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class HomeService {
-    private final StudyPlanService plans;
     private final JournalEntryRepository journal;
     private final InstrumentProfileRepository profiles;
+    private final UserPreferencesRepository preferences;
     private final Coach coach;
     private final com.musicos.repository.MissionExperienceRepository experiences;
 
-    public HomeService(StudyPlanService plans, JournalEntryRepository journal,
-                       InstrumentProfileRepository profiles, Coach coach,
+    public HomeService(JournalEntryRepository journal,
+                       InstrumentProfileRepository profiles, UserPreferencesRepository preferences, Coach coach,
                        com.musicos.repository.MissionExperienceRepository experiences) {
-        this.plans = plans;
         this.journal = journal;
         this.profiles = profiles;
+        this.preferences = preferences;
         this.coach = coach;
         this.experiences = experiences;
     }
 
     public HomeView home(InstrumentId instrument) {
-        var today = plans.today(instrument)
-                .stream().limit(4).map(ViewMapper::activity).toList();
-        var expectedMinutes = today.stream().mapToInt(PlanActivityView::minutes).sum();
-        var profile = profiles.findByOwnerIdAndInstrument("default", instrument)
+        var availableMinutes = preferences.findById(LocalProfile.DEFAULT_ID)
+                .map(value -> value.getSessionMinutes()).orElse(45);
+        var profile = profiles.findByOwnerIdAndInstrument(LocalProfile.DEFAULT_ID, instrument)
                 .orElseThrow(() -> new NotFoundException(
-                        "Perfil instrumental nÃ£o encontrado para a Home: " + instrument.value()));
+                        "Perfil instrumental não encontrado para a Home: " + instrument.value()));
         var coachAnswer = coach.whatShouldIDoToday(
-                profile.getId(), expectedMinutes > 0 ? expectedMinutes : null,
+                profile.getId(), availableMinutes,
                 java.time.Instant.now(), 3);
         var learningExperience = experiences.findByInstrumentProfileIdOrderByUpdatedAtDesc(profile.getId())
                 .stream().findFirst().map(MissionExperienceService::view).orElse(null);
 
-        return new HomeView(greeting(), "Hoje vamos praticar.", expectedMinutes, today, null,
+        return new HomeView(greeting(), "O Coach acompanha sua continuidade musical.",
+                availableMinutes, java.util.List.of(), null,
                 null, calculateStreak(), coachView(coachAnswer), learningExperience);
     }
 

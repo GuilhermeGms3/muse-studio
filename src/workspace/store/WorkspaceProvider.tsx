@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import type { InstrumentId } from "@/shared/api/contracts";
+import { consolidateWorkspaceTabs } from "@/features/product-model";
 import {
   isWorkspaceTab,
   tabKey,
@@ -15,22 +16,7 @@ import {
   type WorkspaceTab,
 } from "@/workspace/tabs/tab-model";
 
-const seedNotes = [
-  "Bends: conferir com a nota de referência",
-  "Estudar tríades antes de Little Wing",
-];
-
 export type OpenTab = WorkspaceTab;
-
-interface SessionState {
-  running: boolean;
-  seconds: number;
-  instrument: InstrumentId;
-  bpm: number;
-  goal: string;
-  notes: string;
-  exercises: string[];
-}
 
 interface WorkspaceValue {
   theme: "dark" | "light";
@@ -51,11 +37,6 @@ interface WorkspaceValue {
   notes: string[];
   addNote: (text: string) => void;
   removeNote: (text: string) => void;
-  session: SessionState;
-  startSession: (partial?: Partial<SessionState>) => void;
-  pauseSession: () => void;
-  resetSession: () => void;
-  updateSession: (partial: Partial<SessionState>) => void;
   metronome: { bpm: number; playing: boolean; beats: number; subdivision: number };
   setMetronome: (
     partial: Partial<{ bpm: number; playing: boolean; beats: number; subdivision: number }>,
@@ -88,7 +69,7 @@ function readPersistedWorkspace(): Partial<PersistedWorkspace> | null {
         return {
           ...parsed,
           tabs: Array.isArray(parsed.tabs)
-            ? parsed.tabs.filter(isWorkspaceTab).map(withTabDefaults)
+            ? consolidateWorkspaceTabs(parsed.tabs.filter(isWorkspaceTab)).map(withTabDefaults)
             : [],
         };
       }
@@ -117,17 +98,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [dockOpen, setDockOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [notes, setNotes] = useState<string[]>(seedNotes);
+  const [notes, setNotes] = useState<string[]>([]);
   const [hydrated, setHydrated] = useState(false);
-  const [session, setSession] = useState<SessionState>({
-    running: false,
-    seconds: 0,
-    instrument: "guitar",
-    bpm: 100,
-    goal: "Alternate Picking — 122 BPM limpo",
-    notes: "",
-    exercises: ["ex1", "ex12"],
-  });
   const [metronome, setMetronomeState] = useState({
     bpm: 100,
     playing: false,
@@ -166,15 +138,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
   }, [dockOpen, hydrated, inspectorOpen, instrument, notes, sidebarOpen, tabs, theme]);
 
-  useEffect(() => {
-    if (!session.running) return;
-    const timer = setInterval(
-      () => setSession((current) => ({ ...current, seconds: current.seconds + 1 })),
-      1000,
-    );
-    return () => clearInterval(timer);
-  }, [session.running]);
-
   const openTab = useCallback((incoming: OpenTab) => {
     const tab = withTabDefaults(incoming);
     setTabs((current) => {
@@ -208,13 +171,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       notes,
       addNote: (text) => setNotes((current) => [text, ...current]),
       removeNote: (text) => setNotes((current) => current.filter((note) => note !== text)),
-      session,
-      startSession: (partial) =>
-        setSession((current) => ({ ...current, ...partial, running: true })),
-      pauseSession: () => setSession((current) => ({ ...current, running: false })),
-      resetSession: () =>
-        setSession((current) => ({ ...current, running: false, seconds: 0, notes: "" })),
-      updateSession: (partial) => setSession((current) => ({ ...current, ...partial })),
       metronome,
       setMetronome: (partial) => setMetronomeState((current) => ({ ...current, ...partial })),
     }),
@@ -226,7 +182,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       notes,
       openTab,
       paletteOpen,
-      session,
       sidebarOpen,
       tabs,
       theme,
@@ -240,11 +195,4 @@ export function useWorkspace() {
   const context = useContext(WorkspaceContext);
   if (!context) throw new Error("useWorkspace must be used inside WorkspaceProvider");
   return context;
-}
-
-export function formatClock(totalSeconds: number) {
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }

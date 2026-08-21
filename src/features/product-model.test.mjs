@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  consolidateWorkspaceTabs,
   journeyStatusCopy,
   missionRequiresRecording,
   primaryNavigationPaths,
@@ -48,6 +49,25 @@ test("Jornada traduz todos os estados curriculares sem linguagem de jogo", () =>
 test("navegação principal contém somente as cinco rotas de produto", () => {
   assert.deepEqual(
     primaryNavigationPaths.map((item) => item.path),
-    ["/", "/jornada", "/musicas", "/historico", "/explorar"],
+    ["/", "/pratica", "/jornada", "/musicas", "/historico"],
+  );
+});
+
+test("abas persistidas do Muse legado migram para destinos consolidados", () => {
+  assert.deepEqual(
+    consolidateWorkspaceTabs([
+      { path: "/plano", title: "Plano de Hoje" },
+      { path: "/sessao", title: "Sessão em foco" },
+      { path: "/repertorio", title: "Repertório" },
+      { path: "/treino-musica", title: "Treinar música" },
+      { path: "/skills", title: "Skill Tree" },
+      { path: "/projetos", title: "Projetos" },
+    ]),
+    [
+      { path: "/pratica", title: "Prática", id: "/pratica", context: undefined, type: undefined },
+      { path: "/musicas", title: "Músicas", id: "/musicas", context: undefined, type: undefined },
+      { path: "/jornada", title: "Jornada", id: "/jornada", context: undefined, type: undefined },
+      { path: "/projetos", title: "Projetos" },
+    ],
   );
 });

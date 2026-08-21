@@ -1,5 +1,7 @@
 package com.musicos.service;
 
+import com.musicos.domain.LocalProfile;
+
 import com.musicos.config.TeachingContentCatalog;
 import com.musicos.domain.Assessment;
 import com.musicos.domain.Competency;
@@ -292,23 +294,26 @@ public class PedagogicalDomainMigration {
     }
 
     private void migrateInstrumentProfiles() {
-        preferences.findById("default").ifPresent(existing -> {
-            for (var instrument : InstrumentId.values()) {
-                var profile = instrumentProfiles.findByOwnerIdAndInstrument(existing.getId(), instrument)
-                        .orElseGet(() -> new InstrumentProfile(
-                                "legacy-profile-" + existing.getId() + "-" + instrument.value(),
-                                existing.getId(), instrument, instrumentLabel(instrument),
-                                parseStage(existing.getLevel()), legacyCurriculumId(instrument), existing.getId()));
-                profile.changeCurriculum(legacyCurriculumId(instrument));
-                profile.updateStage(parseStage(existing.getLevel()));
-                profile.markPrimary(instrument == existing.getPrimaryInstrument());
-                instrumentProfiles.save(profile);
-            }
-        });
+        var existingPreferences = preferences.findById(LocalProfile.DEFAULT_ID).orElse(null);
+        var stage = existingPreferences == null
+                ? LearningStage.FIRST_STEPS : parseStage(existingPreferences.getLevel());
+        var primaryInstrument = existingPreferences == null
+                ? InstrumentId.GUITAR : existingPreferences.getPrimaryInstrument();
+        for (var instrument : InstrumentId.values()) {
+            var profile = instrumentProfiles.findByOwnerIdAndInstrument(LocalProfile.DEFAULT_ID, instrument)
+                    .orElseGet(() -> new InstrumentProfile(
+                            "legacy-profile-" + LocalProfile.DEFAULT_ID + "-" + instrument.value(),
+                            LocalProfile.DEFAULT_ID, instrument, instrumentLabel(instrument),
+                            stage, legacyCurriculumId(instrument), LocalProfile.DEFAULT_ID));
+            profile.changeCurriculum(legacyCurriculumId(instrument));
+            profile.updateStage(stage);
+            profile.markPrimary(instrument == primaryInstrument);
+            instrumentProfiles.save(profile);
+        }
     }
 
     private void migrateLearningPaths() {
-        instrumentProfiles.findByOwnerIdAndActiveTrue("default").forEach(profile -> {
+        instrumentProfiles.findByOwnerIdAndActiveTrue(LocalProfile.DEFAULT_ID).forEach(profile -> {
             var ordered = orderedCompetencies(profile.getInstrument());
             if (ordered.isEmpty()) return;
             var steps = ordered.stream()

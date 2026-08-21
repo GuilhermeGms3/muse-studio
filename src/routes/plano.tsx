@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { PlanPage } from "@/features/practice/PlanWorkspace";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/plano")({
-  head: () => ({ meta: [{ title: "Plano de Estudos - Muse Studio" }] }),
-  component: PlanPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/pratica", replace: true });
+  },
 });

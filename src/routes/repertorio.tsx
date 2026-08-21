@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { RepertoireLayout } from "@/features/repertoire/RepertoireWorkspace";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/repertorio")({
-  head: () => ({ meta: [{ title: "Repertório - Muse Studio" }] }),
-  component: RepertoireLayout,
+  beforeLoad: () => {
+    throw redirect({ to: "/musicas", replace: true });
+  },
 });

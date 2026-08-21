@@ -79,10 +79,10 @@ class PedagogicalDomainTest {
     void learningPathStartsWithoutInferringReadiness() {
         var step = new LearningPathStep(
                 "pulse", LearningPathStep.Kind.CORE, LearningPathStep.Readiness.UNASSESSED,
-                "ConteÃºdo migrado sem evidÃªncia admissÃ­vel.");
+                "Conteúdo migrado sem evidência admissível.");
         var path = new LearningPath(
                 "path-1", "profile-1", "curriculum-1", "Trilha inicial", "legacy-v2",
-                "Ordem derivada do currÃ­culo; prontidÃ£o nÃ£o inferida.", List.of(), List.of(step));
+                "Ordem derivada do currículo; prontidão não inferida.", List.of(), List.of(step));
 
         assertThat(path.getSteps()).singleElement().isEqualTo(step);
         assertThat(path.getSteps().getFirst().getReadiness()).isEqualTo(LearningPathStep.Readiness.UNASSESSED);
@@ -98,19 +98,19 @@ class PedagogicalDomainTest {
                 LearningContentRelation.ContentType.COMPETENCY, "rhythm",
                 LearningContentRelation.RelationType.PREPARES,
                 LearningContentRelation.ContentType.COMPETENCY, "alternate-picking",
-                LearningContentRelation.Strength.MODERATE, "RelaÃ§Ã£o legada.", null, "skill.nextSkills");
+                LearningContentRelation.Strength.MODERATE, "Relação legada.", null, "skill.nextSkills");
         var second = new LearningContentRelation(
                 LearningContentRelation.ContentType.COMPETENCY, "rhythm",
                 LearningContentRelation.RelationType.PREPARES,
                 LearningContentRelation.ContentType.COMPETENCY, "alternate-picking",
-                LearningContentRelation.Strength.MODERATE, "Outra descriÃ§Ã£o.", null, "skill.nextSkills");
+                LearningContentRelation.Strength.MODERATE, "Outra descrição.", null, "skill.nextSkills");
 
         assertThat(first.getId()).isEqualTo(second.getId());
         assertThatThrownBy(() -> new LearningContentRelation(
                 LearningContentRelation.ContentType.COMPETENCY, "rhythm",
                 LearningContentRelation.RelationType.REQUIRES,
                 LearningContentRelation.ContentType.COMPETENCY, "rhythm",
-                LearningContentRelation.Strength.REQUIRED, "InvÃ¡lida.", null, null))
+                LearningContentRelation.Strength.REQUIRED, "Inválida.", null, null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

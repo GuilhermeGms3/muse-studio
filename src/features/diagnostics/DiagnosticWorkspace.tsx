@@ -283,7 +283,8 @@ export function DiagnosticPage() {
               <Check className="size-5 text-signal" />
               <h1 className="mt-3 text-xl font-semibold">Como o instrumento se sente hoje?</h1>
               <p className="mt-1 text-xs text-muted-foreground">
-                Escolha a descricao mais proxima. O plano vai se corrigir conforme voce pratica.
+                Escolha a descrição mais próxima. O Coach ajustará o ponto de partida conforme
+                surgirem evidências reais da sua prática.
               </p>
               <div className="mt-6 divide-y divide-border border-y border-border">
                 {techniqueOptions.map((label, index) => (

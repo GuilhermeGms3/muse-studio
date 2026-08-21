@@ -8,6 +8,7 @@ import com.musicos.domain.InstrumentId;
 import com.musicos.service.CatalogService;
 import com.musicos.service.DiagnosticService;
 import com.musicos.service.PracticeSessionService;
+import com.musicos.repository.CompetencyRepository;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,18 +24,23 @@ class DrumCurriculumIntegrationTest {
     private DiagnosticService diagnostic;
     @Autowired
     private PracticeSessionService sessions;
+    @Autowired
+    private CompetencyRepository competencies;
 
     @Test
     void exposesAProgressiveDrumTreeWithLessonsExercisesAndSongs() {
         assertThat(catalog.instruments()).anyMatch(value -> value.id() == InstrumentId.DRUMS);
 
-        var skills = catalog.skills(InstrumentId.DRUMS, null);
+        var skills = competencies.findAll().stream()
+                .filter(item -> item.getInstruments().contains(InstrumentId.DRUMS))
+                .toList();
         assertThat(skills).hasSizeGreaterThanOrEqualTo(30);
-        assertThat(skills).extracting("id")
+        assertThat(skills).extracting(item -> item.getId())
                 .contains("drum-kit-map", "drum-rock-groove", "drum-one-beat-fill", "drum-play-along");
 
-        var fill = catalog.skill("drum-one-beat-fill");
-        assertThat(fill.prerequisites()).contains("drum-groove-consistency", "drum-single-stroke");
+        var fill = competencies.findById("drum-one-beat-fill").orElseThrow();
+        assertThat(fill.getPrerequisites()).extracting(item -> item.getCompetencyId())
+                .contains("drum-groove-consistency", "drum-single-stroke");
         assertThat(catalog.libraryContent("lesson-drum-one-beat-fill").steps()).hasSize(3);
         assertThat(catalog.exercises(InstrumentId.DRUMS, null)).hasSizeGreaterThanOrEqualTo(8);
         assertThat(catalog.songs(InstrumentId.DRUMS)).hasSizeGreaterThanOrEqualTo(20);
@@ -96,13 +102,10 @@ class DrumCurriculumIntegrationTest {
                 List.of("Rock"), List.of("AC/DC"), List.of("Back In Black"),
                 58, 35, 60));
 
-        assertThat(result.startingSkills()).extracting("id")
-                .contains("drum-kit-map", "drum-rock-groove");
+        assertThat(result.startingSkills()).isEmpty();
 
         var session = sessions.start(new StartSessionRequest(InstrumentId.DRUMS, 30));
-        assertThat(session.activities()).hasSizeBetween(2, 3);
-        assertThat(session.activities()).allMatch(activity -> activity.instrument() == InstrumentId.DRUMS);
-        assertThat(session.activities().stream().mapToInt(activity -> activity.minutes()).sum())
-                .isLessThanOrEqualTo(30);
+        assertThat(session.activities()).isEmpty();
+        assertThat(session.instrument()).isEqualTo(InstrumentId.DRUMS);
     }
 }

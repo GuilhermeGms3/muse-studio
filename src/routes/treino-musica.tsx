@@ -1,12 +1,7 @@
-import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
-import { PracticeSongSearch } from "@/features/practice-song/PracticeSongSearch";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/treino-musica")({
-  head: () => ({ meta: [{ title: "Treinar música - Muse Studio" }] }),
-  component: PracticeSongLayout,
+  beforeLoad: () => {
+    throw redirect({ to: "/musicas", replace: true });
+  },
 });
-
-function PracticeSongLayout() {
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
-  return pathname === "/treino-musica" ? <PracticeSongSearch /> : <Outlet />;
-}

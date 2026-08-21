@@ -18,6 +18,8 @@ import {
   addStudioClip,
   addStudioTake,
   configureReaper,
+  commandReaper,
+  controlReaper,
   createStudioProject,
   disconnectReaper,
   openInReaper,
@@ -128,7 +130,11 @@ export function StudioProjectWorkspace({ id }: { id: string }) {
   const [project, setProject] = useState<StudioProject>();
   const [saveState, setSaveState] = useState<"saved" | "saving" | "error">("saved");
   const [message, setMessage] = useState<string>();
-  const [reaperForm, setReaperForm] = useState({ executablePath: "", workspacePath: "" });
+  const [reaperForm, setReaperForm] = useState({
+    agentBaseUrl: "http://host.docker.internal:47831",
+    containerMediaRoot: "/app/data",
+    hostMediaRoot: "",
+  });
   const dirty = useRef(false);
   const hydratedVersion = useRef<string>();
   const setMetronomeRef = useRef(setMetronome);
@@ -205,8 +211,12 @@ function StudioSurface({
   reaperStatus: ReturnType<typeof useReaperStatus>["data"];
   saveState: "saved" | "saving" | "error";
   message?: string;
-  reaperForm: { executablePath: string; workspacePath: string };
-  onReaperForm: (value: { executablePath: string; workspacePath: string }) => void;
+  reaperForm: { agentBaseUrl: string; containerMediaRoot: string; hostMediaRoot: string };
+  onReaperForm: (value: {
+    agentBaseUrl: string;
+    containerMediaRoot: string;
+    hostMediaRoot: string;
+  }) => void;
   onChange: (value: StudioProject) => void;
   onRefresh: (value: StudioProject) => void;
   onMessage: (value?: string) => void;
@@ -220,10 +230,15 @@ function StudioSurface({
   );
   const [importing, setImporting] = useState(false);
   const loop = project.regions.find((region) => region.id === project.selectedRegionId);
+  const reaperReady = reaperStatus?.status === "PROJECT_CONNECTED";
+  const transportPosition =
+    project.engineMode === "REAPER" ? (reaperStatus?.positionSeconds ?? 0) : engine.position;
+  const transportPlaying =
+    project.engineMode === "REAPER" ? (reaperStatus?.playState ?? 0) > 0 : engine.playing;
   const returnPath = project.missionId
     ? `/missoes/${project.missionId}`
     : project.songId
-      ? `/repertorio/${project.songId}`
+      ? `/musicas/${project.songId}`
       : project.musicProjectId
         ? `/projetos/${project.musicProjectId}`
         : "/studio";
@@ -324,7 +339,7 @@ function StudioSurface({
                     ))}
                   <div
                     className="pointer-events-none absolute inset-y-0 w-px bg-signal"
-                    style={{ left: `${(engine.position / engine.duration) * 100}%` }}
+                    style={{ left: `${(transportPosition / engine.duration) * 100}%` }}
                   />
                 </div>
               </div>
@@ -334,21 +349,47 @@ function StudioSurface({
           <div className="shrink-0 border-t border-border bg-rail p-2">
             <div className="flex flex-wrap items-center gap-2">
               <TransportButton
-                label={engine.playing ? "Pause" : "Play"}
-                onClick={engine.playing ? engine.pause : engine.play}
-                disabled={project.engineMode === "REAPER"}
+                label={
+                  project.engineMode === "REAPER" ? "Play" : transportPlaying ? "Pause" : "Play"
+                }
+                onClick={() => {
+                  if (project.engineMode === "REAPER") void controlReaper("PLAY");
+                  else (transportPlaying ? engine.pause : engine.play)();
+                }}
+                disabled={project.engineMode === "REAPER" && !reaperReady}
               >
-                {engine.playing ? <Pause className="size-4" /> : <Play className="size-4" />}
+                {transportPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
               </TransportButton>
+              {project.engineMode === "REAPER" && (
+                <>
+                  <TransportButton
+                    label="Pause"
+                    onClick={() => void controlReaper("PAUSE")}
+                    disabled={!reaperReady}
+                  >
+                    <Pause className="size-4" />
+                  </TransportButton>
+                  <TransportButton
+                    label="Record"
+                    onClick={() => void controlReaper("RECORD")}
+                    disabled={!reaperReady}
+                  >
+                    <Circle className="size-3.5 fill-destructive text-destructive" />
+                  </TransportButton>
+                </>
+              )}
               <TransportButton
                 label="Stop"
-                onClick={engine.stop}
-                disabled={project.engineMode === "REAPER"}
+                onClick={() => {
+                  if (project.engineMode === "REAPER") void controlReaper("STOP");
+                  else engine.stop();
+                }}
+                disabled={project.engineMode === "REAPER" && !reaperReady}
               >
                 <Square className="size-3.5" />
               </TransportButton>
               <span className="num min-w-20 text-center text-xs">
-                {formatTime(engine.position)}
+                {formatTime(transportPosition)}
               </span>
               <input
                 aria-label="Posição do transporte"
@@ -356,12 +397,26 @@ function StudioSurface({
                 min={0}
                 max={engine.duration}
                 step={0.05}
-                value={engine.position}
-                onChange={(event) => engine.seek(Number(event.target.value))}
+                value={transportPosition}
+                onChange={(event) => {
+                  const position = Number(event.target.value);
+                  if (project.engineMode === "REAPER") {
+                    void commandReaper(project.id, "SET_POSITION", { position });
+                  } else engine.seek(position);
+                }}
                 className="min-w-32 flex-1 accent-[var(--color-signal)]"
               />
               <button
-                onClick={() => onChange({ ...project, loopEnabled: !project.loopEnabled })}
+                onClick={() => {
+                  const enabled = !project.loopEnabled;
+                  onChange({ ...project, loopEnabled: enabled });
+                  if (project.engineMode === "REAPER" && loop && enabled) {
+                    void commandReaper(project.id, "SET_LOOP", {
+                      start: loop.startSeconds,
+                      end: loop.endSeconds,
+                    });
+                  }
+                }}
                 aria-pressed={project.loopEnabled}
                 className={`inline-flex h-8 items-center gap-1 border px-2 text-xs ${project.loopEnabled ? "border-signal text-signal" : "border-border"}`}
               >
@@ -379,6 +434,11 @@ function StudioSurface({
                     const bpm = Number(event.target.value);
                     setMetronome({ bpm });
                     onChange({ ...project, bpm });
+                  }}
+                  onBlur={() => {
+                    if (project.engineMode === "REAPER") {
+                      void commandReaper(project.id, "SET_TEMPO", { bpm: project.bpm });
+                    }
                   }}
                   className="num h-8 w-16 border border-border bg-surface px-2"
                 />
@@ -411,7 +471,7 @@ function StudioSurface({
                       engine.stop();
                       onChange({ ...project, engineMode: mode });
                     }}
-                    disabled={mode === "REAPER" && !reaperStatus?.configured}
+                    disabled={mode === "REAPER" && !reaperReady}
                     className={`px-2 ${project.engineMode === mode ? "bg-signal text-background" : "text-muted-foreground"}`}
                   >
                     {mode}
@@ -434,6 +494,7 @@ function StudioSurface({
                 >
                   <span>{region.name}</span>
                   <span className="num text-2xs text-muted-foreground">
+                    {region.boundaryConfidence === "ESTIMATED" ? "estimada · " : ""}
                     {formatTime(region.startSeconds)}–{formatTime(region.endSeconds)}
                   </span>
                 </button>
@@ -447,6 +508,7 @@ function StudioSurface({
                     startSeconds: engine.position,
                     endSeconds: Math.min(engine.duration, engine.position + seconds),
                     origin: "USER" as const,
+                    boundaryConfidence: "DEFINED" as const,
                   };
                   onChange({
                     ...project,
@@ -568,7 +630,7 @@ function StudioSurface({
               <span className="label-tech">REAPER Integration</span>
               <span className="inline-flex items-center gap-1 text-2xs">
                 <Circle
-                  className={`size-2 fill-current ${reaperStatus?.status === "CONNECTED" ? "text-ok" : reaperStatus?.configured ? "text-signal" : "text-muted-foreground"}`}
+                  className={`size-2 fill-current ${reaperStatus?.status === "PROJECT_CONNECTED" ? "text-ok" : reaperStatus?.status === "REAPER_AVAILABLE" ? "text-signal" : "text-muted-foreground"}`}
                 />
                 {reaperStatus?.status ?? "NOT_CONFIGURED"}
               </span>
@@ -576,18 +638,26 @@ function StudioSurface({
             {!reaperStatus?.configured ? (
               <div className="mt-2 space-y-2">
                 <input
-                  placeholder="C:\Program Files\REAPER (x64)\reaper.exe"
-                  value={reaperForm.executablePath}
+                  placeholder="http://host.docker.internal:47831"
+                  value={reaperForm.agentBaseUrl}
                   onChange={(event) =>
-                    onReaperForm({ ...reaperForm, executablePath: event.target.value })
+                    onReaperForm({ ...reaperForm, agentBaseUrl: event.target.value })
                   }
                   className="h-8 w-full border border-border bg-surface px-2 text-2xs"
                 />
                 <input
-                  placeholder="Pasta dos projetos Muse"
-                  value={reaperForm.workspacePath}
+                  placeholder="Raiz no container, ex.: /app/data"
+                  value={reaperForm.containerMediaRoot}
                   onChange={(event) =>
-                    onReaperForm({ ...reaperForm, workspacePath: event.target.value })
+                    onReaperForm({ ...reaperForm, containerMediaRoot: event.target.value })
+                  }
+                  className="h-8 w-full border border-border bg-surface px-2 text-2xs"
+                />
+                <input
+                  placeholder="Mesma raiz no Windows, ex.: D:\\muse-studio\\data"
+                  value={reaperForm.hostMediaRoot}
+                  onChange={(event) =>
+                    onReaperForm({ ...reaperForm, hostMediaRoot: event.target.value })
                   }
                   className="h-8 w-full border border-border bg-surface px-2 text-2xs"
                 />
@@ -595,8 +665,9 @@ function StudioSurface({
                   onClick={async () => {
                     try {
                       const status = await configureReaper(
-                        reaperForm.executablePath,
-                        reaperForm.workspacePath,
+                        reaperForm.agentBaseUrl,
+                        reaperForm.containerMediaRoot,
+                        reaperForm.hostMediaRoot,
                       );
                       onMessage(status.message);
                       await queryClient.invalidateQueries({ queryKey: ["reaper-status"] });
@@ -630,7 +701,7 @@ function StudioSurface({
                   Desconectar
                 </button>
                 <button
-                  disabled={reaperStatus.status === "DISCONNECTED"}
+                  disabled={reaperStatus.status === "AGENT_OFFLINE"}
                   onClick={async () => {
                     engine.stop();
                     onMessage((await openInReaper(project.id)).message);
@@ -642,6 +713,12 @@ function StudioSurface({
                 </button>
               </div>
             )}
+            {reaperStatus?.status === "PROJECT_CONNECTED" ? (
+              <p className="num mt-2 text-2xs text-muted-foreground">
+                Posição {formatTime(reaperStatus.positionSeconds ?? 0)} · estado{" "}
+                {reaperStatus.playState ?? 0}
+              </p>
+            ) : null}
             {message && (
               <p
                 role="status"

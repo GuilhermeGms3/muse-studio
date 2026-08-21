@@ -1,15 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { SongPracticeWorkspace } from "@/features/practice-song/SongPracticeWorkspace";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/treino-musica/$songId/$instrument")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    q: typeof search.q === "string" ? search.q : undefined,
-  }),
-  head: () => ({ meta: [{ title: "Treino musical - Muse Studio" }] }),
-  component: PracticeSongRoute,
+  beforeLoad: () => {
+    throw redirect({ to: "/musicas", replace: true });
+  },
 });
-
-function PracticeSongRoute() {
-  const { q } = Route.useSearch();
-  return <SongPracticeWorkspace query={q} />;
-}

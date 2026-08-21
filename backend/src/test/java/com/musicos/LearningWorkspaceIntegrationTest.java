@@ -116,11 +116,10 @@ class LearningWorkspaceIntegrationTest {
     }
 
     @Test
-    void unifiesRealLearningRecordsInReverseChronologicalOrder() {
+    void returnsOnlyRealHistoryWithoutSynthesizingSessions() {
         var items = history.history(InstrumentId.GUITAR);
 
-        assertThat(items).isNotEmpty();
-        assertThat(items).extracting(item -> item.kind()).contains("SESSION");
+        assertThat(items).extracting(item -> item.kind()).doesNotContain("SESSION");
         assertThat(items).extracting(item -> item.occurredAt()).isSortedAccordingTo(
                 java.util.Comparator.reverseOrder());
     }

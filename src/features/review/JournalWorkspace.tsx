@@ -18,7 +18,19 @@ export function JournalPage() {
   if (!journalQuery.data) return <QueryState error={journalQuery.error} />;
   const entry = journal.find((item) => item.id === selected) ?? journal[0];
   const instruments = instrumentsQuery.data ?? [];
-  if (!entry) return <QueryState error={new Error("Nenhuma sessão registrada.")} />;
+  if (!entry) {
+    return (
+      <div className="flex h-full min-h-0 flex-col">
+        <Breadcrumb trail={["Revisar", "Diário"]} />
+        <Panel title="Sessões (0)" className="m-3">
+          <p className="text-sm text-muted-foreground">
+            Nenhuma prática foi registrada ainda. Quando você concluir uma sessão, o registro
+            aparecerá aqui.
+          </p>
+        </Panel>
+      </div>
+    );
+  }
 
   const date = (value: string) => new Intl.DateTimeFormat("pt-BR").format(new Date(value));
   const duration = (seconds: number) =>

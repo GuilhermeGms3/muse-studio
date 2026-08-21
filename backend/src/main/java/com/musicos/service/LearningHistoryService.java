@@ -1,5 +1,7 @@
 package com.musicos.service;
 
+import com.musicos.domain.LocalProfile;
+
 import static com.musicos.api.ApiModels.LearningHistoryItemView;
 
 import com.musicos.domain.InstrumentId;
@@ -49,7 +51,7 @@ public class LearningHistoryService {
     }
 
     public java.util.List<LearningHistoryItemView> history(InstrumentId instrument) {
-        var profile = profiles.findByOwnerIdAndInstrument("default", instrument)
+        var profile = profiles.findByOwnerIdAndInstrument(LocalProfile.DEFAULT_ID, instrument)
                 .orElseThrow(() -> new NotFoundException("Perfil instrumental não encontrado"));
         var profileExperiences = experiences.findByInstrumentProfileIdOrderByUpdatedAtDesc(profile.getId());
         var experienceIds = profileExperiences.stream().map(item -> item.getId().toString()).collect(Collectors.toSet());

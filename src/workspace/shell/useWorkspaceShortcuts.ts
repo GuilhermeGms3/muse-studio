@@ -30,7 +30,7 @@ export function useWorkspaceShortcuts() {
         toggleDock();
       } else if (event.shiftKey && key === "p") {
         event.preventDefault();
-        navigate({ to: "/sessao" });
+        navigate({ to: "/pratica" });
       }
     };
 

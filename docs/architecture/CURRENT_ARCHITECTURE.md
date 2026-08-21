@@ -50,20 +50,27 @@ backend/
 ```text
 /                         Home
 /diagnostico              Diagnóstico inicial
-/sessao                   Sessão em foco
-/plano                    Plano de estudos
+/pratica                  Prática consolidada
+/sessao                   Redirect para /pratica
+/plano                    Redirect para /pratica
 /diario                   Diário
+/jornada                  Jornada curricular
 /biblioteca               Biblioteca
 /biblioteca/$nodeId       Aula/conteúdo
-/skills                   Skill Tree
-/mapa                     Redirect para /skills
-/repertorio               Repertório
-/repertorio/$songId       Música
+/skills                   Redirect para /jornada
+/mapa                     Redirect para /jornada
+/musicas                  Músicas
+/musicas/$songId          Música e seções
+/repertorio               Redirect para /musicas
+/treino-musica            Redirect para /musicas
 /exercicios               Exercícios
 /ouvido                   Treino de ouvido
 /metronomo                Metrônomo
 /projetos                 Projetos
 /projetos/$projectId      Projeto
+/studio                   Studios salvos
+/studio/$studioProjectId  Studio Web/REAPER
+/editor                   Ferramentas editoriais sob feature flag
 /dados                    Dados e integrações
 ```
 
@@ -185,9 +192,12 @@ Services principais:
 - `CatalogService`
 - `LearningContentService`
 - `PracticeSessionService`
-- `StudyPlanService`
-- `ProgressEngine`
-- `RepertoirePlanningService`
+- `CurriculumEngine`
+- `Coach`
+- `EvidenceEngine`
+- `MissionExperienceService`
+- `StudioService`
+- `BuildIdentityService`
 - `RecordingService`
 - `DataManagementService`
 - `DiagnosticService`
@@ -207,4 +217,3 @@ Contratos públicos:
 - `navTree` ainda é uma árvore de navegação simples, não um modelo de contexto.
 - `styles.css` está em design system escuro, enquanto `docs/ui` define tema claro como direção primária.
 - `/mapa` ainda não é uma experiência independente.
-

@@ -79,36 +79,36 @@ Route/Component
 Controllers
   HomeController
     HomeService
-      StudyPlanService
-      SongRepository
-      SkillRepository
-      UserPreferencesRepository
+      Coach
+      MissionExperienceRepository
+      InstrumentProfileRepository
 
   CatalogController
     CatalogService
       InstrumentRepository
-      PlanActivityRepository
-      SkillRepository
       LibraryContentRepository
       SongRepository
       ExerciseRepository
       MusicProjectRepository
       JournalEntryRepository
       ViewMapper
-      ProgressEngine
 
   LearningController
     LearningContentService
     DiagnosticService
     SongRecommendationService
-    RepertoirePlanningService
+    LearningWorkspaceService
+    MissionExperienceService
+    AssessmentService
 
   PracticeSessionController
     PracticeSessionService
-      StudyPlanService
-      ProgressEngine
       JournalEntryRepository
-      SessionActivityResultRepository
+      PracticeSessionRepository
+
+  StudioController
+    StudioService
+    ReaperBridge
 
   RecordingController
     RecordingService
@@ -175,4 +175,3 @@ Backend:
 - Skill states.
 - Instrument IDs.
 - Campos de Song, Skill, Exercise, LibraryContent, Project, Journal, Recording.
-

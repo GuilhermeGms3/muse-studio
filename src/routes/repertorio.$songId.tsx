@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { SongPage } from "@/features/repertoire/SongWorkspace";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/repertorio/$songId")({
-  head: () => ({ meta: [{ title: "Repertório - Muse Studio" }] }),
-  component: SongPage,
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: "/musicas/$songId", params: { songId: params.songId }, replace: true });
+  },
 });

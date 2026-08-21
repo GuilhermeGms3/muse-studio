@@ -27,8 +27,6 @@ export interface NavigationEntry {
   icon: LucideIcon;
   hint?: string;
   matchPaths?: string[];
-  legacyGroup?: string;
-  legacyOrder?: number;
 }
 
 export interface NavigationGroup {

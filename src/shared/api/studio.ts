@@ -1,4 +1,5 @@
 import { API_URL, apiRequest, useApiQuery } from "./client";
+import { useQuery } from "@tanstack/react-query";
 import type {
   InstrumentId,
   ReaperStatus,
@@ -78,12 +79,20 @@ export const studioAudioUrl = (path?: string) =>
   path ? `${new URL(API_URL).origin}${path}` : undefined;
 
 export const useReaperStatus = () =>
-  useApiQuery<ReaperStatus>(["reaper-status"], "/integrations/reaper");
+  useQuery({
+    queryKey: ["reaper-status"],
+    queryFn: () => apiRequest<ReaperStatus>("/integrations/reaper"),
+    refetchInterval: 3_000,
+  });
 
-export const configureReaper = (executablePath: string, workspacePath: string) =>
+export const configureReaper = (
+  agentBaseUrl: string,
+  containerMediaRoot: string,
+  hostMediaRoot: string,
+) =>
   apiRequest<ReaperStatus>("/integrations/reaper", {
     method: "PUT",
-    body: JSON.stringify({ executablePath, workspacePath }),
+    body: JSON.stringify({ agentBaseUrl, containerMediaRoot, hostMediaRoot }),
   });
 
 export const testReaper = () =>
@@ -96,4 +105,20 @@ export const openInReaper = (projectId: string) =>
   apiRequest<{ projectPath: string; status: string; message: string }>(
     `/studio/projects/${projectId}/open-in-reaper`,
     { method: "POST" },
+  );
+
+export const controlReaper = (action: "PLAY" | "PAUSE" | "STOP" | "RECORD") =>
+  apiRequest<{ status: string; operation: string }>("/integrations/reaper/transport", {
+    method: "POST",
+    body: JSON.stringify({ action }),
+  });
+
+export const commandReaper = (
+  projectId: string,
+  operation: string,
+  payload: Record<string, unknown>,
+) =>
+  apiRequest<{ status: string; commandId: string; operation: string }>(
+    `/studio/projects/${projectId}/reaper/commands`,
+    { method: "POST", body: JSON.stringify({ operation, payload }) },
   );

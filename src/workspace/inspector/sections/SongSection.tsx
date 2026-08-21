@@ -7,7 +7,7 @@ export function SongSection({ song }: { song?: Song }) {
   return (
     <Panel title="Música atual">
       <Link
-        to="/repertorio/$songId"
+        to="/musicas/$songId"
         params={{ songId: song.id }}
         className="text-xs hover:text-signal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >

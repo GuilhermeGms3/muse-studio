@@ -1,5 +1,7 @@
 package com.musicos.service;
 
+import com.musicos.domain.LocalProfile;
+
 import static com.musicos.api.ApiModels.*;
 
 import com.musicos.domain.Assessment;
@@ -44,7 +46,7 @@ public class AssessmentService {
             throw new IllegalStateException(
                     "Assessment com múltiplas competências exige mapeamento explícito de critérios");
         }
-        var profile = profiles.findByOwnerIdAndInstrument("default", request.instrument())
+        var profile = profiles.findByOwnerIdAndInstrument(LocalProfile.DEFAULT_ID, request.instrument())
                 .orElseThrow(() -> new NotFoundException("Perfil instrumental não encontrado"));
         var observations = observationsByCriterion(assessment, request.observations());
         var artifactReference = artifactReference(assessmentId, request);

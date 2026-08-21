@@ -14,7 +14,7 @@ import java.util.List;
 @Table(name = "user_preferences")
 public class UserPreferences {
     @Id
-    private String id = "default";
+    private String id = LocalProfile.DEFAULT_ID;
     private String level;
     private Integer sessionMinutes;
     @Enumerated(EnumType.STRING)

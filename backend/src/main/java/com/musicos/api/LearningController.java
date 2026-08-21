@@ -17,21 +17,18 @@ public class LearningController {
     private final LearningContentService learning;
     private final SongRecommendationService recommendations;
     private final com.musicos.service.DiagnosticService diagnostic;
-    private final com.musicos.service.RepertoirePlanningService repertoirePlanning;
     private final LearningWorkspaceService workspace;
     private final com.musicos.service.AssessmentService assessments;
     private final com.musicos.service.MissionExperienceService experiences;
 
     public LearningController(LearningContentService learning, SongRecommendationService recommendations,
                               com.musicos.service.DiagnosticService diagnostic,
-                              com.musicos.service.RepertoirePlanningService repertoirePlanning,
                               LearningWorkspaceService workspace,
                               com.musicos.service.AssessmentService assessments,
                               com.musicos.service.MissionExperienceService experiences) {
         this.learning = learning;
         this.recommendations = recommendations;
         this.diagnostic = diagnostic;
-        this.repertoirePlanning = repertoirePlanning;
         this.workspace = workspace;
         this.assessments = assessments;
         this.experiences = experiences;
@@ -159,13 +156,6 @@ public class LearningController {
     public SongView saveSong(@PathVariable String id, @Valid @RequestBody SongRequest request) {
         if (!id.equals(request.id())) throw new IllegalArgumentException("ID divergente");
         return learning.saveSong(request);
-    }
-
-    @PostMapping("/songs/{id}/practice-plan")
-    public List<PlanActivityView> createSongPlan(@PathVariable String id,
-                                                 @RequestParam(defaultValue = "45") int minutes) {
-        if (repertoirePlanning == null) throw new IllegalStateException("Planejador indisponivel");
-        return repertoirePlanning.create(id, minutes);
     }
 
     @DeleteMapping("/songs/{id}")

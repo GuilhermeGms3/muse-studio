@@ -128,7 +128,7 @@ class CurriculumEngineTest {
                 LearningContentRelation.ContentType.COMPETENCY, "pulse",
                 LearningContentRelation.RelationType.REQUIRES,
                 LearningContentRelation.ContentType.COMPETENCY, "technique",
-                LearningContentRelation.Strength.REQUIRED, "DependÃªncia de teste.", null, null);
+                LearningContentRelation.Strength.REQUIRED, "Dependência de teste.", null, null);
         when(fixture.relations().findBySourceTypeAndTargetType(
                 LearningContentRelation.ContentType.COMPETENCY,
                 LearningContentRelation.ContentType.COMPETENCY)).thenReturn(List.of(relation));
@@ -166,7 +166,7 @@ class CurriculumEngineTest {
 
     private Competency competency(String id, List<CompetencyPrerequisite> prerequisites) {
         return new Competency(
-                id, id, id, "Teste", "Executar " + id, "CompetÃªncia de teste.", "CondiÃ§Ã£o controlada.",
+                id, id, id, "Teste", "Executar " + id, "Competência de teste.", "Condição controlada.",
                 SkillKind.ABILITY, LearningTrack.TECHNIQUE, LearningStage.BEGINNER,
                 List.of(InstrumentId.GUITAR), prerequisites, List.of("criterion"), "policy-v1", 7, null);
     }
@@ -176,7 +176,7 @@ class CurriculumEngineTest {
         var probable = state == Mastery.State.PROBABLE_MASTERY_APPLICATION || state == Mastery.State.RETAINED;
         result.reviseHypothesis(
                 state, probable, probable ? 2 : 1, probable, false, state == Mastery.State.RETAINED,
-                false, "HipÃ³tese de teste.", lastEvidenceAt, nextReviewAt, List.of(), List.of());
+                false, "Hipótese de teste.", lastEvidenceAt, nextReviewAt, List.of(), List.of());
         return result;
     }
 
@@ -198,7 +198,7 @@ class CurriculumEngineTest {
                         id, LearningPathStep.Kind.CORE, LearningPathStep.Readiness.UNASSESSED,
                         "Passo de teste.")).toList());
         var curriculum = new Curriculum(
-                "curriculum", "CurrÃ­culo", "test-v1", "PropÃ³sito de teste.", "PÃºblico de teste.",
+                "curriculum", "Currículo", "test-v1", "Propósito de teste.", "Público de teste.",
                 InstrumentId.GUITAR, LearningStage.FIRST_STEPS, LearningStage.ADVANCED,
                 List.of("Resultado."), orderedIds);
 

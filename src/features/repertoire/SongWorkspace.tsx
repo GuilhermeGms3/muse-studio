@@ -1,30 +1,24 @@
 import { useParams } from "@tanstack/react-router";
-import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ListMusic, Play } from "lucide-react";
-import { CatalogEditor } from "@/shared/catalog/CatalogEditor";
+import { useQuery } from "@tanstack/react-query";
+import { Play } from "lucide-react";
 import { InteractiveTab } from "@/shared/music/InteractiveTab";
 import { QueryState } from "@/shared/ui/query/QueryState";
 import { Meter, Row } from "@/shared/ui/workspace/Panel";
-import { createSongPracticePlan, usePreferences, useSongs } from "@/lib/music-api";
+import { searchPracticeSong, useSongs } from "@/lib/music-api";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
 import { OpenStudioButton } from "@/features/studio/OpenStudioButton";
+import { PracticeMediaPanel } from "@/features/practice-song/PracticeMediaPanel";
 
 export function SongPage() {
   const { setMetronome } = useWorkspace();
-  const { songId } = useParams({ from: "/repertorio/$songId" });
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { songId } = useParams({ from: "/musicas/$songId" });
   const songsQuery = useSongs();
-  const preferences = usePreferences();
   const song = songsQuery.data?.find((item) => item.id === songId);
-  const plan = useMutation({
-    mutationFn: () => createSongPracticePlan(songId, preferences.data?.sessionMinutes ?? 45),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["plan"] });
-      queryClient.invalidateQueries({ queryKey: ["home"] });
-      navigate({ to: "/sessao" });
-    },
+  const materials = useQuery({
+    queryKey: ["song-materials", song?.id, song?.instrument],
+    queryFn: () => searchPracticeSong(`${song?.title} ${song?.artist}`, song?.instrument),
+    enabled: Boolean(song),
+    retry: false,
   });
 
   if (!songsQuery.data) return <QueryState error={songsQuery.error} />;
@@ -32,9 +26,6 @@ export function SongPage() {
 
   return (
     <div className="p-4">
-      <div className="mb-2 flex justify-end">
-        <CatalogEditor kind="song" instrument={song.instrument} initial={song} />
-      </div>
       <h1 className="text-lg font-semibold">{song.title}</h1>
       <p className="text-xs text-muted-foreground">{song.artist}</p>
       <div className="mt-2 flex flex-wrap gap-1">
@@ -45,14 +36,6 @@ export function SongPage() {
           <Play className="size-3 text-signal" />
           Metrônomo em {song.bpm} BPM
         </button>
-        <button
-          onClick={() => plan.mutate()}
-          disabled={plan.isPending}
-          className="inline-flex h-7 items-center gap-2 border border-signal bg-signal px-2 text-2xs text-signal-foreground disabled:opacity-40"
-        >
-          <ListMusic className="size-3" />
-          {plan.isPending ? "Montando..." : "Praticar esta música"}
-        </button>
         <OpenStudioButton
           instrument={song.instrument}
           sourceKind="REPERTOIRE"
@@ -61,6 +44,29 @@ export function SongPage() {
           bpm={song.bpm}
         />
       </div>
+
+      {materials.data && (
+        <div className="mt-5 grid gap-3 lg:grid-cols-2">
+          {(() => {
+            const material = materials.data.instruments.find(
+              (item) => item.instrument === song.instrument,
+            );
+            if (!material?.available) return null;
+            return (
+              <>
+                <PracticeMediaPanel title="Referência e demonstração" items={material.videos} />
+                <PracticeMediaPanel title="Playback" items={material.backingTracks} />
+              </>
+            );
+          })()}
+        </div>
+      )}
+      {materials.error && (
+        <p className="mt-4 text-xs text-muted-foreground">
+          Materiais externos indisponíveis. A música, a tablatura local e o Studio continuam
+          utilizáveis.
+        </p>
+      )}
 
       <div className="mt-3 grid grid-cols-2 gap-x-6 md:grid-cols-4">
         <Row label="Afinação" value={song.tuning} />

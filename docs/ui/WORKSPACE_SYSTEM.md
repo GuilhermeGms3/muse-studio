@@ -67,7 +67,7 @@ Conceitualmente, os seguintes elementos podem evoluir para modo destacado/desaco
 - Player de áudio.
 - Inspector de objeto.
 - Mapa do conhecimento.
-- Sessão em foco.
+- Prática e Studio dentro do shell único.
 
 Mesmo desacoplados, devem preservar vínculo com o objeto/contexto.
 

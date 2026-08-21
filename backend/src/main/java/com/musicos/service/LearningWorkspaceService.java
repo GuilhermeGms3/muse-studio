@@ -1,5 +1,7 @@
 package com.musicos.service;
 
+import com.musicos.domain.LocalProfile;
+
 import static com.musicos.api.ApiModels.*;
 
 import com.musicos.domain.InstrumentId;
@@ -74,7 +76,7 @@ public class LearningWorkspaceService {
         if (mission.getInstrument() != null && mission.getInstrument() != instrument) {
             throw new NotFoundException("Missão não pertence ao instrumento selecionado");
         }
-        var profile = profiles.findByOwnerIdAndInstrument("default", instrument)
+        var profile = profiles.findByOwnerIdAndInstrument(LocalProfile.DEFAULT_ID, instrument)
                 .orElseThrow(() -> new NotFoundException("Perfil instrumental não encontrado"));
 
         var lessonViews = mission.getLessonIds().stream().map(lessonId -> {
@@ -168,7 +170,7 @@ public class LearningWorkspaceService {
     }
 
     public JourneyView journey(InstrumentId instrument) {
-        var profile = profiles.findByOwnerIdAndInstrument("default", instrument)
+        var profile = profiles.findByOwnerIdAndInstrument(LocalProfile.DEFAULT_ID, instrument)
                 .orElseThrow(() -> new NotFoundException("Perfil instrumental não encontrado"));
         var navigation = curriculumEngine.navigate(profile.getId(), Instant.now(), 8);
         var activeMissions = missions.findByCurriculumIdAndStatus(

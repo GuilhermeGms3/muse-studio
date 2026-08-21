@@ -25,6 +25,7 @@ public class StudioProject {
     public enum TrackRole { BACKING, REFERENCE, RECORDING, CLICK, CREATIVE }
     public enum ClipSourceKind { RECORDING, MANAGED_AUDIO, EXTERNAL_REFERENCE }
     public enum RegionOrigin { MISSION, EXERCISE, REPERTOIRE, USER }
+    public enum BoundaryConfidence { DEFINED, ESTIMATED, UNKNOWN }
 
     @Id
     private UUID id;
@@ -83,7 +84,7 @@ public class StudioProject {
 
     public StudioProject(String title, InstrumentId instrument, SourceKind sourceKind, String sourceId, int bpm) {
         this.id = UUID.randomUUID();
-        this.ownerId = "default";
+        this.ownerId = LocalProfile.DEFAULT_ID;
         this.title = title;
         this.instrument = instrument;
         this.sourceKind = sourceKind;
@@ -175,6 +176,15 @@ public class StudioProject {
         touch();
     }
 
+    public void ensureExternalIdentities() {
+        tracks.forEach(item -> { if (item.externalTrackId == null) item.externalTrackId = UUID.randomUUID().toString(); });
+        clips.forEach(item -> { if (item.externalItemId == null) item.externalItemId = UUID.randomUUID().toString(); });
+        regions.forEach(item -> { if (item.externalRegionId == null) item.externalRegionId = UUID.randomUUID().toString(); });
+        markers.forEach(item -> { if (item.externalMarkerId == null) item.externalMarkerId = UUID.randomUUID().toString(); });
+        takes.forEach(item -> { if (item.externalTakeId == null) item.externalTakeId = UUID.randomUUID().toString(); });
+        touch();
+    }
+
     private void touch() { this.updatedAt = Instant.now(); }
 
     public UUID getId() { return id; }
@@ -252,6 +262,7 @@ public class StudioProject {
         private double startSeconds;
         private double offsetSeconds;
         private double durationSeconds;
+        private String externalItemId;
         protected Clip() {}
         public Clip(UUID id, UUID trackId, String title, ClipSourceKind sourceKind, UUID recordingId,
                     String sourceReference, double startSeconds, double offsetSeconds, double durationSeconds) {
@@ -265,6 +276,13 @@ public class StudioProject {
             this.offsetSeconds = Math.max(0, offsetSeconds);
             this.durationSeconds = Math.max(0, durationSeconds);
         }
+        public Clip(UUID id, UUID trackId, String title, ClipSourceKind sourceKind, UUID recordingId,
+                    String sourceReference, double startSeconds, double offsetSeconds, double durationSeconds,
+                    String externalItemId) {
+            this(id, trackId, title, sourceKind, recordingId, sourceReference, startSeconds, offsetSeconds,
+                    durationSeconds);
+            this.externalItemId = externalItemId;
+        }
         public UUID id() { return id; }
         public UUID trackId() { return trackId; }
         public String title() { return title; }
@@ -274,6 +292,7 @@ public class StudioProject {
         public double startSeconds() { return startSeconds; }
         public double offsetSeconds() { return offsetSeconds; }
         public double durationSeconds() { return durationSeconds; }
+        public String externalItemId() { return externalItemId; }
     }
 
     @Embeddable
@@ -284,19 +303,30 @@ public class StudioProject {
         private double endSeconds;
         @Enumerated(EnumType.STRING)
         private RegionOrigin origin;
+        @Enumerated(EnumType.STRING)
+        private BoundaryConfidence boundaryConfidence;
+        private String externalRegionId;
         protected Region() {}
         public Region(UUID id, String name, double startSeconds, double endSeconds, RegionOrigin origin) {
+            this(id, name, startSeconds, endSeconds, origin, BoundaryConfidence.DEFINED, null);
+        }
+        public Region(UUID id, String name, double startSeconds, double endSeconds, RegionOrigin origin,
+                      BoundaryConfidence boundaryConfidence, String externalRegionId) {
             this.id = id == null ? UUID.randomUUID() : id;
             this.name = name;
             this.startSeconds = startSeconds;
             this.endSeconds = endSeconds;
             this.origin = origin;
+            this.boundaryConfidence = boundaryConfidence == null ? BoundaryConfidence.UNKNOWN : boundaryConfidence;
+            this.externalRegionId = externalRegionId;
         }
         public UUID id() { return id; }
         public String name() { return name; }
         public double startSeconds() { return startSeconds; }
         public double endSeconds() { return endSeconds; }
         public RegionOrigin origin() { return origin; }
+        public BoundaryConfidence boundaryConfidence() { return boundaryConfidence; }
+        public String externalRegionId() { return externalRegionId; }
     }
 
     @Embeddable
@@ -306,17 +336,23 @@ public class StudioProject {
         private double positionSeconds;
         @Enumerated(EnumType.STRING)
         private RegionOrigin origin;
+        private String externalMarkerId;
         protected Marker() {}
         public Marker(UUID id, String name, double positionSeconds, RegionOrigin origin) {
+            this(id, name, positionSeconds, origin, null);
+        }
+        public Marker(UUID id, String name, double positionSeconds, RegionOrigin origin, String externalMarkerId) {
             this.id = id == null ? UUID.randomUUID() : id;
             this.name = name;
             this.positionSeconds = Math.max(0, positionSeconds);
             this.origin = origin;
+            this.externalMarkerId = externalMarkerId;
         }
         public UUID id() { return id; }
         public String name() { return name; }
         public double positionSeconds() { return positionSeconds; }
         public RegionOrigin origin() { return origin; }
+        public String externalMarkerId() { return externalMarkerId; }
     }
 
     @Embeddable

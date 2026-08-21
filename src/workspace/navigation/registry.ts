@@ -13,11 +13,9 @@ import {
   ListChecks,
   Music2,
   PenTool,
-  RotateCcw,
   SearchCheck,
   Settings2,
   Target,
-  Timer,
   AudioLines,
   Wrench,
 } from "lucide-react";
@@ -46,8 +44,6 @@ export const navigationRegistry: NavigationEntry[] = [
     path: "/",
     icon: Activity,
     hint: "O que praticar agora",
-    legacyGroup: "Estacao",
-    legacyOrder: 0,
   },
   {
     id: "home.journey",
@@ -59,14 +55,6 @@ export const navigationRegistry: NavigationEntry[] = [
     hint: "Caminho guiado ativo",
   },
   {
-    id: "home.plan",
-    context: "home",
-    label: "Plano de hoje",
-    path: "/plano",
-    icon: ListChecks,
-    hint: "Sequência de estudo",
-  },
-  {
     id: "home.diagnostic",
     context: "home",
     label: "Diagnóstico inicial",
@@ -75,14 +63,12 @@ export const navigationRegistry: NavigationEntry[] = [
     hint: "Definir ponto de partida",
   },
   {
-    id: "practice.session",
+    id: "practice.workspace",
     context: "practice",
-    label: "Sessão",
-    path: "/sessao",
-    icon: Timer,
-    hint: "Modo foco",
-    legacyGroup: "Estacao",
-    legacyOrder: 1,
+    label: "Prática",
+    path: "/pratica",
+    icon: Target,
+    hint: "Missão, exercício ou Studio",
   },
   {
     id: "practice.studio",
@@ -94,50 +80,12 @@ export const navigationRegistry: NavigationEntry[] = [
     hint: "Loop, backing e takes",
   },
   {
-    id: "practice.songs",
-    context: "practice",
-    label: "Músicas",
-    path: "/musicas",
-    icon: Music2,
-    hint: "Aplicar no repertório",
-  },
-  {
-    id: "practice.plan",
-    context: "practice",
-    label: "Plano de hoje",
-    path: "/plano",
-    icon: ListChecks,
-    hint: "Atividades planejadas",
-  },
-  {
     id: "practice.exercises",
     context: "practice",
     label: "Exercícios",
     path: "/exercicios",
     icon: ListChecks,
     hint: "Banco por técnica",
-    legacyGroup: "Praticar",
-    legacyOrder: 1,
-  },
-  {
-    id: "practice.song-workspace",
-    context: "practice",
-    label: "Treinar música",
-    path: "/treino-musica",
-    matchPaths: ["/treino-musica/"],
-    icon: Music2,
-    hint: "Tablatura, vídeo e playback",
-  },
-  {
-    id: "practice.repertoire",
-    context: "practice",
-    label: "Repertório",
-    path: "/repertorio",
-    matchPaths: ["/repertorio/"],
-    icon: Music2,
-    hint: "Músicas e seções",
-    legacyGroup: "Praticar",
-    legacyOrder: 0,
   },
   {
     id: "practice.ear",
@@ -146,8 +94,6 @@ export const navigationRegistry: NavigationEntry[] = [
     path: "/ouvido",
     icon: Ear,
     hint: "Reconhecimento",
-    legacyGroup: "Praticar",
-    legacyOrder: 2,
   },
   {
     id: "practice.metronome",
@@ -156,19 +102,6 @@ export const navigationRegistry: NavigationEntry[] = [
     path: "/metronomo",
     icon: Gauge,
     hint: "BPM e presets",
-    legacyGroup: "Praticar",
-    legacyOrder: 3,
-  },
-  {
-    id: "learning.skills",
-    context: "learning",
-    label: "Skill Tree",
-    path: "/skills",
-    matchPaths: ["/mapa"],
-    icon: GitBranch,
-    hint: "Mapa de habilidades",
-    legacyGroup: "Aprender",
-    legacyOrder: 1,
   },
   {
     id: "learning.journey",
@@ -189,17 +122,6 @@ export const navigationRegistry: NavigationEntry[] = [
     hint: "Conteúdos ligados às habilidades",
   },
   {
-    id: "library.content",
-    context: "library",
-    label: "Conteúdos",
-    path: "/biblioteca",
-    matchPaths: ["/biblioteca/"],
-    icon: BookOpen,
-    hint: "Teoria e técnica",
-    legacyGroup: "Aprender",
-    legacyOrder: 0,
-  },
-  {
     id: "library.songs",
     context: "library",
     label: "Músicas",
@@ -216,23 +138,6 @@ export const navigationRegistry: NavigationEntry[] = [
     hint: "Descoberta livre por contexto",
   },
   {
-    id: "library.repertoire",
-    context: "library",
-    label: "Repertório",
-    path: "/repertorio",
-    matchPaths: ["/repertorio/"],
-    icon: Music2,
-    hint: "Coleção de músicas",
-  },
-  {
-    id: "library.import",
-    context: "library",
-    label: "Importação",
-    path: "/dados",
-    icon: Database,
-    hint: "Arquivos musicais",
-  },
-  {
     id: "compose.projects",
     context: "compose",
     label: "Projetos",
@@ -240,8 +145,6 @@ export const navigationRegistry: NavigationEntry[] = [
     matchPaths: ["/projetos/"],
     icon: Boxes,
     hint: "Riffs e ideias",
-    legacyGroup: "Criar",
-    legacyOrder: 0,
   },
   {
     id: "review.journal",
@@ -258,14 +161,6 @@ export const navigationRegistry: NavigationEntry[] = [
     path: "/historico",
     icon: History,
     hint: "Sessões, tentativas e evidências",
-  },
-  {
-    id: "review.skills",
-    context: "review",
-    label: "Evidências de habilidade",
-    path: "/skills",
-    icon: RotateCcw,
-    hint: "Progresso por instrumento",
   },
   {
     id: "review.exports",
@@ -308,19 +203,19 @@ export function entryMatchesPath(entry: NavigationEntry, pathname: string) {
 export function contextForPath(pathname: string): MacroContextId {
   if (pathname === "/") return "home";
   if (pathname === "/jornada" || pathname.startsWith("/missoes/")) return "learning";
-  if (pathname === "/musicas") return "practice";
+  if (pathname === "/musicas" || pathname.startsWith("/musicas/")) return "library";
   if (pathname === "/historico") return "review";
   if (pathname === "/explorar") return "library";
   if (pathname === "/diagnostico") return "home";
   if (pathname.startsWith("/exercicios/")) return "practice";
-  if (["/sessao", "/plano", "/exercicios", "/ouvido", "/metronomo"].includes(pathname)) {
+  if (
+    ["/pratica", "/sessao", "/plano", "/exercicios", "/ouvido", "/metronomo"].includes(pathname)
+  ) {
     return "practice";
   }
-  if (pathname === "/treino-musica" || pathname.startsWith("/treino-musica/")) return "practice";
   if (pathname === "/studio" || pathname.startsWith("/studio/")) return "practice";
   if (pathname === "/skills" || pathname === "/mapa") return "learning";
   if (pathname === "/biblioteca" || pathname.startsWith("/biblioteca/")) return "library";
-  if (pathname === "/repertorio" || pathname.startsWith("/repertorio/")) return "practice";
   if (pathname === "/projetos" || pathname.startsWith("/projetos/")) return "compose";
   if (pathname === "/diario") return "review";
   if (pathname === "/dados") return "tools";
@@ -335,15 +230,13 @@ export function titleForRegisteredPath(pathname: string): string {
     "/historico": "Histórico",
     "/explorar": "Explorar",
     "/diagnostico": "Diagnóstico",
-    "/sessao": "Sessão",
+    "/pratica": "Prática",
     "/studio": "Studio",
-    "/plano": "Plano de Hoje",
+    "/plano": "Prática",
     "/diario": "Diário",
     "/biblioteca": "Biblioteca",
-    "/skills": "Skill Tree",
+    "/skills": "Jornada",
     "/mapa": "Mapa do Conhecimento",
-    "/treino-musica": "Treinar música",
-    "/repertorio": "Repertório",
     "/exercicios": "Exercícios",
     "/ouvido": "Ear Training",
     "/metronomo": "Metrônomo",
@@ -354,8 +247,7 @@ export function titleForRegisteredPath(pathname: string): string {
   if (pathname.startsWith("/biblioteca/")) return "Biblioteca";
   if (pathname.startsWith("/missoes/")) return "Missão";
   if (pathname.startsWith("/exercicios/")) return "Exercício";
-  if (pathname.startsWith("/treino-musica/")) return "Treino musical";
-  if (pathname.startsWith("/repertorio/")) return "Repertório";
+  if (pathname.startsWith("/musicas/")) return "Música";
   if (pathname.startsWith("/projetos/")) return "Projeto";
   return pathname;
 }

@@ -69,6 +69,17 @@ public class StudioController {
     @DeleteMapping("/integrations/reaper")
     public ReaperStatusView disconnectReaper() { return reaper.disconnect(); }
 
+    @PostMapping("/integrations/reaper/transport")
+    public ReaperOperationView reaperTransport(@Valid @RequestBody ReaperTransportRequest request) {
+        return reaper.transport(request);
+    }
+
+    @PostMapping("/studio/projects/{id}/reaper/commands")
+    public ReaperOperationView reaperCommand(@PathVariable UUID id,
+                                             @Valid @RequestBody ReaperOperationRequest request) {
+        return reaper.command(studio.mutable(id), request);
+    }
+
     @PostMapping("/studio/projects/{id}/open-in-reaper")
     public OpenInReaperView openInReaper(@PathVariable UUID id) {
         var project = studio.mutable(id);

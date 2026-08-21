@@ -5,7 +5,6 @@ import type { Exercise } from "@/lib/music-api";
 import { recordExerciseAttempt, useExerciseHistory } from "@/lib/music-api";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
 import { PracticeRecorder } from "@/features/practice/recording/PracticeRecorder";
-import { CatalogEditor } from "@/shared/catalog/CatalogEditor";
 import { getExerciseRecommendations } from "@/shared/api/learning";
 import { PracticeMediaPanel } from "@/features/practice-song/PracticeMediaPanel";
 import { OpenStudioButton } from "@/features/studio/OpenStudioButton";
@@ -35,17 +34,15 @@ export function ExerciseRunner({ exercise }: { exercise: Exercise }) {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["exercises"] });
-      queryClient.invalidateQueries({ queryKey: ["skills"] });
-      queryClient.invalidateQueries({ queryKey: ["plan"] });
+      queryClient.invalidateQueries({ queryKey: ["learning-history"] });
       queryClient.invalidateQueries({ queryKey: ["exercise-attempts", exercise.id] });
     },
   });
 
   return (
     <main className="h-full min-h-0 overflow-auto bg-panel">
-      <div className="flex items-center justify-between border-b border-border bg-surface px-3 py-2">
+      <div className="flex items-center border-b border-border bg-surface px-3 py-2">
         <span className="label-tech">Prática guiada</span>
-        <CatalogEditor kind="exercise" instrument={exercise.instrument} initial={exercise} />
       </div>
       <div className="mx-auto max-w-5xl space-y-4 p-5">
         <div>
@@ -91,7 +88,7 @@ export function ExerciseRunner({ exercise }: { exercise: Exercise }) {
         )}
         {exercise.practiceSongQuery && (
           <a
-            href={`/treino-musica?q=${encodeURIComponent(exercise.practiceSongQuery)}`}
+            href="/musicas"
             className="flex items-center gap-2 border border-border bg-surface p-3 text-xs hover:border-signal"
           >
             <Music2 className="size-4 text-signal" />

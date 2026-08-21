@@ -144,10 +144,10 @@ routes permanecem estaveis
   /diario
   /biblioteca
   /biblioteca/$nodeId
-  /skills
-  /mapa
-  /repertorio
-  /repertorio/$songId
+  /jornada
+  /musicas
+  /musicas/$songId
+  /pratica
   /exercicios
   /ouvido
   /metronomo
@@ -156,9 +156,9 @@ routes permanecem estaveis
   /dados
 
 features fornecem telas e módulos
-  features/practice/SessionWorkspace
+  features/practice/PracticeWorkspace
   features/library/LibraryWorkspace
-  features/learning/SkillTreeWorkspace
+  features/learning/DeepLearningExperience
 ```
 
 Regra:
@@ -298,4 +298,3 @@ Possível evolução futura:
 - Separar `ApiModels` por domínio.
 - Separar `CatalogController` em controllers por contexto.
 - Manter `/api/v1` estável ou criar `/api/v2` se contratos mudarem.
-

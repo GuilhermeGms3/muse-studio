@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { StudioProject } from "@/shared/api/contracts";
-import { audibleTrackIds, selectedLoop, studioDuration } from "./studio-timeline";
+import { selectedLoop, studioDuration } from "./studio-timeline";
+import { studioAudioTransport } from "./audio-transport";
 
 export function useWebStudio(project: StudioProject) {
   const [position, setPosition] = useState(0);
@@ -8,18 +9,10 @@ export function useWebStudio(project: StudioProject) {
   const startedAt = useRef(0);
   const startPosition = useRef(0);
   const frame = useRef<number>();
-  const audio = useRef<HTMLAudioElement[]>([]);
-  const pendingStarts = useRef<number[]>([]);
   const duration = useMemo(() => studioDuration(project), [project]);
 
   const releaseAudio = useCallback(() => {
-    pendingStarts.current.forEach((id) => window.clearTimeout(id));
-    pendingStarts.current = [];
-    audio.current.forEach((item) => {
-      item.pause();
-      item.src = "";
-    });
-    audio.current = [];
+    studioAudioTransport.stop();
   }, []);
 
   const pause = useCallback(() => {
@@ -31,22 +24,9 @@ export function useWebStudio(project: StudioProject) {
   const startAudio = useCallback(
     (from: number) => {
       releaseAudio();
-      const audible = audibleTrackIds(project);
-      project.clips
-        .filter((clip) => clip.audioUrl && audible.has(clip.trackId))
-        .forEach((clip) => {
-          const track = project.tracks.find((item) => item.id === clip.trackId);
-          const element = new Audio(clip.audioUrl);
-          element.volume = track?.volume ?? 1;
-          const relative = from - clip.startSeconds;
-          const begin = () => {
-            element.currentTime = clip.offsetSeconds + Math.max(0, relative);
-            void element.play().catch(() => undefined);
-          };
-          if (relative >= 0) begin();
-          else pendingStarts.current.push(window.setTimeout(begin, Math.max(0, -relative * 1000)));
-          audio.current.push(element);
-        });
+      void studioAudioTransport.play(project, from).catch(() => {
+        studioAudioTransport.stop();
+      });
     },
     [project, releaseAudio],
   );

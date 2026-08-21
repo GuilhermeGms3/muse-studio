@@ -4,7 +4,6 @@ import { QueryState } from "@/shared/ui/query/QueryState";
 import { Breadcrumb } from "@/workspace/navigation/Breadcrumb";
 import { useProjects } from "@/lib/music-api";
 import { cn } from "@/shared/utils/cn";
-import { CatalogEditor } from "@/shared/catalog/CatalogEditor";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
 
 export function ProjectsLayout() {
@@ -19,11 +18,7 @@ export function ProjectsLayout() {
     <div className="flex h-full min-h-0 flex-col">
       <Breadcrumb trail={["Compor", "Projetos"]} />
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-px overflow-hidden bg-border lg:grid-cols-[220px_1fr]">
-        <Panel
-          title="Projetos"
-          bodyClassName="p-0"
-          actions={<CatalogEditor kind="project" instrument={instrument} />}
-        >
+        <Panel title="Projetos" bodyClassName="p-0">
           {projects.map((project) => (
             <Link
               key={project.id}

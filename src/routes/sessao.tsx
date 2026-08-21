@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { SessionPage } from "@/features/practice/SessionWorkspace";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/sessao")({
-  head: () => ({ meta: [{ title: "Sessão - Muse Studio" }] }),
-  component: SessionPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/pratica", replace: true });
+  },
 });

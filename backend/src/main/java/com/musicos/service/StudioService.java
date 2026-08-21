@@ -1,5 +1,7 @@
 package com.musicos.service;
 
+import com.musicos.domain.LocalProfile;
+
 import static com.musicos.api.StudioApiModels.*;
 
 import com.musicos.domain.LearningContentRelation;
@@ -50,7 +52,7 @@ public class StudioService {
 
     @Transactional(readOnly = true)
     public List<StudioProjectView> list() {
-        return studios.findByOwnerIdOrderByUpdatedAtDesc("default").stream().map(this::view).toList();
+        return studios.findByOwnerIdOrderByUpdatedAtDesc(LocalProfile.DEFAULT_ID).stream().map(this::view).toList();
     }
 
     @Transactional(readOnly = true)
@@ -61,7 +63,7 @@ public class StudioService {
         var sourceId = sourceId(request);
         if (sourceId != null) {
             var current = studios.findFirstByOwnerIdAndSourceKindAndSourceIdOrderByUpdatedAtDesc(
-                    "default", request.sourceKind(), sourceId);
+                    LocalProfile.DEFAULT_ID, request.sourceKind(), sourceId);
             if (current.isPresent()) return view(current.get());
         }
 
@@ -117,8 +119,11 @@ public class StudioService {
             for (var section : song.getSections()) {
                 var start = section.getStartSeconds() == null ? cursor : section.getStartSeconds().doubleValue();
                 var end = section.getEndSeconds() == null ? start + barsSeconds(bpm, 8) : section.getEndSeconds();
+                var confidence = section.getStartSeconds() != null && section.getEndSeconds() != null
+                        ? StudioProject.BoundaryConfidence.DEFINED
+                        : StudioProject.BoundaryConfidence.ESTIMATED;
                 regions.add(new StudioProject.Region(null, section.getName(), start, end,
-                        StudioProject.RegionOrigin.REPERTOIRE));
+                        StudioProject.RegionOrigin.REPERTOIRE, confidence, null));
                 cursor = end;
             }
         }
@@ -150,11 +155,12 @@ public class StudioService {
                 item.role(), item.muted(), item.solo(), item.volume(), item.pan(), item.externalTrackId())).toList();
         var clips = request.clips().stream().map(item -> new StudioProject.Clip(item.id(), item.trackId(),
                 item.title(), item.sourceKind(), item.recordingId(), item.sourceReference(), item.startSeconds(),
-                item.offsetSeconds(), item.durationSeconds())).toList();
+                item.offsetSeconds(), item.durationSeconds(), item.externalItemId())).toList();
         var regions = request.regions().stream().map(item -> new StudioProject.Region(item.id(), item.name(),
-                item.startSeconds(), item.endSeconds(), item.origin())).toList();
+                item.startSeconds(), item.endSeconds(), item.origin(), item.boundaryConfidence(),
+                item.externalRegionId())).toList();
         var markers = request.markers().stream().map(item -> new StudioProject.Marker(item.id(), item.name(),
-                item.positionSeconds(), item.origin())).toList();
+                item.positionSeconds(), item.origin(), item.externalMarkerId())).toList();
         studio.replaceStructure(tracks, clips, regions, markers);
         studio.configure(request.bpm(), request.timeSignatureNumerator(), request.timeSignatureDenominator(),
                 request.countInBars(), request.loopEnabled(), request.selectedRegionId(), request.engineMode());
@@ -214,11 +220,13 @@ public class StudioService {
                         item.externalTrackId())).toList(), value.getClips().stream().map(item ->
                         new StudioClipView(item.id(), item.trackId(), item.title(), item.sourceKind().name(),
                                 item.recordingId(), item.sourceReference(), audioUrl(item.recordingId()),
-                                item.startSeconds(), item.offsetSeconds(), item.durationSeconds())).toList(),
+                                item.startSeconds(), item.offsetSeconds(), item.durationSeconds(),
+                                item.externalItemId())).toList(),
                 value.getRegions().stream().map(item -> new StudioRegionView(item.id(), item.name(),
-                        item.startSeconds(), item.endSeconds(), item.origin().name())).toList(),
+                        item.startSeconds(), item.endSeconds(), item.origin().name(),
+                        item.boundaryConfidence().name(), item.externalRegionId())).toList(),
                 value.getMarkers().stream().map(item -> new StudioMarkerView(item.id(), item.name(),
-                        item.positionSeconds(), item.origin().name())).toList(),
+                        item.positionSeconds(), item.origin().name(), item.externalMarkerId())).toList(),
                 value.getTakes().stream().map(item -> new StudioTakeView(item.id(), item.trackId(),
                         item.recordingId(), item.title(), item.preferred(), item.createdAt(), item.externalTakeId(),
                         audioUrl(item.recordingId()))).toList());

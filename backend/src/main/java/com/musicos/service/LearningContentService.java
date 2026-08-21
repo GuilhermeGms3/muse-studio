@@ -21,7 +21,7 @@ public class LearningContentService {
     private final ExerciseAttemptRepository exerciseAttempts;
     private final EarTrainingAttemptRepository earAttempts;
     private final UserPreferencesRepository preferences;
-    private final SkillRepository skills;
+    private final CompetencyRepository competencies;
     private final SongRepository songs;
     private final MusicProjectRepository projects;
     private final InstrumentProfileRepository instrumentProfiles;
@@ -32,7 +32,7 @@ public class LearningContentService {
     public LearningContentService(LibraryContentRepository library, ExerciseRepository exercises,
                                   ExerciseAttemptRepository exerciseAttempts,
                                   EarTrainingAttemptRepository earAttempts,
-                                  UserPreferencesRepository preferences, SkillRepository skills,
+                                  UserPreferencesRepository preferences, CompetencyRepository competencies,
                                   SongRepository songs, MusicProjectRepository projects,
                                   InstrumentProfileRepository instrumentProfiles,
                                   EvidenceEngine evidenceEngine,
@@ -43,7 +43,7 @@ public class LearningContentService {
         this.exerciseAttempts = exerciseAttempts;
         this.earAttempts = earAttempts;
         this.preferences = preferences;
-        this.skills = skills;
+        this.competencies = competencies;
         this.songs = songs;
         this.projects = projects;
         this.instrumentProfiles = instrumentProfiles;
@@ -113,20 +113,13 @@ public class LearningContentService {
                 request.missionExperienceId()));
         entity.recordResult(request.bpm(), passed);
         exercises.save(entity);
-        if (entity.getSkillId() != null) {
-            skills.findById(entity.getSkillId()).ifPresent(skill -> {
-                skill.recordEvidence(request.durationSeconds() / 3600.0, request.accuracy(), request.bpm(),
-                        false, passed, false, null, request.perceivedDifficulty());
-                skills.save(skill);
-            });
-        }
         recordProvisionalExerciseEvidence(entity, attempt, request, passed);
         return exerciseAttempt(attempt);
     }
 
     private void recordProvisionalExerciseEvidence(Exercise exercise, ExerciseAttempt attempt,
                                                     ExerciseAttemptRequest request, boolean passed) {
-        var profile = instrumentProfiles.findByOwnerIdAndInstrument("default", exercise.getInstrument())
+        var profile = instrumentProfiles.findByOwnerIdAndInstrument(LocalProfile.DEFAULT_ID, exercise.getInstrument())
                 .orElse(null);
         if (profile == null || exercise.getCompetencyIds().isEmpty()) return;
         var attemptKey = attempt.getId().toString();
@@ -159,20 +152,15 @@ public class LearningContentService {
         var attempt = earAttempts.save(new EarTrainingAttempt(request.module(), request.prompt(), request.answer(),
                 request.correct(), request.responseMillis(), request.difficulty()));
         var competencyId = skillForEarModule(request.module());
-        skills.findById(competencyId).ifPresent(skill -> {
-            skill.recordEvidence(0.03, request.correct() ? 100 : 40, null, false,
-                    request.correct(), false, null, request.correct() ? 2 : 4);
-            skills.save(skill);
-        });
         recordEarEvidence(attempt, competencyId, request);
         return earStats();
     }
 
     private void recordEarEvidence(EarTrainingAttempt attempt, String competencyId, EarAttemptRequest request) {
-        var primaryInstrument = preferences.findById("default")
+        var primaryInstrument = preferences.findById(LocalProfile.DEFAULT_ID)
                 .map(UserPreferences::getPrimaryInstrument).orElse(InstrumentId.GUITAR);
-        var profile = instrumentProfiles.findByOwnerIdAndInstrument("default", primaryInstrument).orElse(null);
-        if (profile == null || !skills.existsById(competencyId)) return;
+        var profile = instrumentProfiles.findByOwnerIdAndInstrument(LocalProfile.DEFAULT_ID, primaryInstrument).orElse(null);
+        if (profile == null || !competencies.existsById(competencyId)) return;
         var attemptId = attempt.getId().toString();
         var observation = request.correct()
                 ? "Resposta perceptiva correta para o estímulo '" + request.prompt() + "'."
@@ -200,14 +188,13 @@ public class LearningContentService {
     }
 
     public PreferencesView preferences() {
-        return view(preferences.findById("default").orElseGet(() ->
-                new UserPreferences("intermediate", 60, List.of("Rock", "Blues", "Post-rock"),
-                        List.of("Guns N' Roses", "Jimi Hendrix", "The Beatles"))));
+        return view(preferences.findById(LocalProfile.DEFAULT_ID).orElseGet(() ->
+                new UserPreferences("beginner", 45, List.of(), List.of())));
     }
 
     @Transactional
     public PreferencesView updatePreferences(PreferencesRequest request) {
-        var entity = preferences.findById("default").orElseGet(() ->
+        var entity = preferences.findById(LocalProfile.DEFAULT_ID).orElseGet(() ->
                 new UserPreferences(request.level(), request.sessionMinutes(), list(request.favoriteGenres()),
                         list(request.favoriteArtists()), list(request.favoriteSongs()),
                         request.primaryInstrument() == null ? InstrumentId.GUITAR : request.primaryInstrument()));

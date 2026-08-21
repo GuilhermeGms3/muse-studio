@@ -4,11 +4,8 @@ import { QueryState } from "@/shared/ui/query/QueryState";
 import { Breadcrumb } from "@/workspace/navigation/Breadcrumb";
 import { useLibrary } from "@/lib/music-api";
 import { cn } from "@/shared/utils/cn";
-import { CatalogEditor } from "@/shared/catalog/CatalogEditor";
-import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
 
 export function LibraryLayout() {
-  const { instrument } = useWorkspace();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const libraryQuery = useLibrary();
   if (!libraryQuery.data) return <QueryState error={libraryQuery.error} />;
@@ -21,11 +18,7 @@ export function LibraryLayout() {
     <div className="flex h-full min-h-0 flex-col">
       <Breadcrumb trail={["Biblioteca"]} />
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-px overflow-hidden bg-border lg:grid-cols-[240px_1fr]">
-        <Panel
-          title="Índice"
-          bodyClassName="p-0"
-          actions={<CatalogEditor kind="lesson" instrument={instrument} />}
-        >
+        <Panel title="Índice" bodyClassName="p-0">
           {categories.map((category) => (
             <div key={category}>
               <div className="border-b border-border bg-surface px-2 py-0.5">

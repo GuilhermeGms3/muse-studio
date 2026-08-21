@@ -9,14 +9,14 @@ spring:
     password:
   sql:
     init:
-      mode: always
+      mode: never
   flyway:
-    baseline-on-migrate: true
-    baseline-version: 0
+    validate-on-migrate: true
+    out-of-order: true
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         format_sql: true
@@ -41,3 +41,5 @@ music-os:
   data-dir: ${MUSIC_OS_DATA_DIR:${user.home}/.music-os}
   youtube:
     api-key: ${YOUTUBE_API_KEY:}
+  reaper:
+    agent-token: ${MUSE_REAPER_TOKEN:}

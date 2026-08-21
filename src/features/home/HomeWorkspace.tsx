@@ -7,7 +7,6 @@ import {
   Compass,
   Ear,
   Focus,
-  Gauge,
   Music2,
   PenTool,
   Play,
@@ -122,43 +121,6 @@ export function Home() {
             </section>
           )}
 
-          <section
-            aria-labelledby="today-program"
-            className="border-t border-border px-5 py-5 md:px-7"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <h2 id="today-program" className="label-tech">
-                Programa de hoje
-              </h2>
-              <Link to="/plano" className="text-2xs text-text-muted hover:text-signal">
-                Abrir plano
-              </Link>
-            </div>
-            {home.todayPlan.length ? (
-              <ol className="mt-3 divide-y divide-border border-y border-border">
-                {home.todayPlan.map((activity, index) => (
-                  <li
-                    key={activity.id}
-                    className="grid min-h-14 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-3 py-2.5"
-                  >
-                    <span className="num text-2xs text-text-muted">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm">{activity.title}</span>
-                      <span className="label-tech mt-0.5 block">{activity.kind}</span>
-                    </span>
-                    <span className="num text-2xs text-text-muted">{activity.minutes} min</span>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p className="mt-3 text-xs text-text-muted">
-                O Coach ainda não montou atividades para hoje.
-              </p>
-            )}
-          </section>
-
           {reviews.length > 0 && (
             <section
               aria-labelledby="review-title"
@@ -185,7 +147,12 @@ export function Home() {
             aria-label="Acesso livre ao estúdio"
             className="mt-5 divide-y divide-border border-y border-border"
           >
-            <StudioLink to="/sessao" label="Prática livre" detail="Sessão em foco" icon={Gauge} />
+            <StudioLink
+              to="/pratica"
+              label="Prática"
+              detail="Missão, exercício ou Studio"
+              icon={Play}
+            />
             <StudioLink
               to="/biblioteca"
               label="Conhecimento"
@@ -358,7 +325,7 @@ function StudioLink({
   detail,
   icon: Icon,
 }: {
-  to: "/sessao" | "/biblioteca" | "/ouvido" | "/projetos" | "/musicas";
+  to: "/pratica" | "/biblioteca" | "/ouvido" | "/projetos" | "/musicas";
   label: string;
   detail: string;
   icon: ComponentType<{ className?: string }>;

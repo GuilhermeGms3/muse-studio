@@ -10,4 +10,6 @@ public interface ReaperBridge {
     ReaperStatusView testConnection();
     ReaperStatusView disconnect();
     OpenInReaperView open(StudioProject project);
+    ReaperOperationView transport(ReaperTransportRequest request);
+    ReaperOperationView command(StudioProject project, ReaperOperationRequest request);
 }

@@ -28,10 +28,10 @@ export function SongsWorkspace() {
             Adicione repertório quando houver uma música que você realmente queira desenvolver.
           </p>
           <Link
-            to="/repertorio"
+            to="/explorar"
             className="mt-5 inline-flex min-h-11 items-center border border-signal px-4 text-signal"
           >
-            Abrir gerenciamento de repertório
+            Explorar possibilidades musicais
           </Link>
         </section>
       ) : (
@@ -39,7 +39,7 @@ export function SongsWorkspace() {
           {query.data.map((song, index) => (
             <Link
               key={song.id}
-              to="/repertorio/$songId"
+              to="/musicas/$songId"
               params={{ songId: song.id }}
               className="group grid min-h-24 grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:grid-cols-[64px_minmax(220px,.8fr)_minmax(0,1fr)_auto]"
             >

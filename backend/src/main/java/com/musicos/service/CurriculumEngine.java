@@ -185,28 +185,28 @@ public class CurriculumEngine {
 
     private EngineContext load(String instrumentProfileId) {
         if (instrumentProfileId == null || instrumentProfileId.isBlank()) {
-            throw new IllegalArgumentException("instrumentProfileId Ã© obrigatÃ³rio");
+            throw new IllegalArgumentException("instrumentProfileId é obrigatório");
         }
         var profile = profiles.findById(instrumentProfileId)
-                .orElseThrow(() -> new NotFoundException("Perfil instrumental nÃ£o encontrado: " + instrumentProfileId));
-        if (!profile.isActive()) throw new IllegalStateException("Perfil instrumental estÃ¡ inativo");
+                .orElseThrow(() -> new NotFoundException("Perfil instrumental não encontrado: " + instrumentProfileId));
+        if (!profile.isActive()) throw new IllegalStateException("Perfil instrumental está inativo");
         var path = learningPaths.findByInstrumentProfileIdAndStatus(instrumentProfileId, LearningPath.Status.ACTIVE)
-                .orElseThrow(() -> new NotFoundException("Caminho ativo nÃ£o encontrado para o perfil: " + instrumentProfileId));
+                .orElseThrow(() -> new NotFoundException("Caminho ativo não encontrado para o perfil: " + instrumentProfileId));
         var curriculum = curricula.findById(path.getCurriculumId())
-                .orElseThrow(() -> new NotFoundException("CurrÃ­culo do caminho nÃ£o encontrado: " + path.getCurriculumId()));
+                .orElseThrow(() -> new NotFoundException("Currículo do caminho não encontrado: " + path.getCurriculumId()));
 
         var orderedIds = path.getSteps().stream().map(step -> step.getCompetencyId()).distinct().toList();
         var curriculumIds = Set.copyOf(curriculum.getCompetencyIds());
         var outsideCurriculum = orderedIds.stream().filter(id -> !curriculumIds.contains(id)).toList();
         if (!outsideCurriculum.isEmpty()) {
-            throw new IllegalStateException("Caminho referencia competÃªncias fora do currÃ­culo: " + outsideCurriculum);
+            throw new IllegalStateException("Caminho referencia competências fora do currículo: " + outsideCurriculum);
         }
         var competencyMap = competencies.findAll().stream()
                 .filter(Competency::isActive)
                 .collect(Collectors.toMap(Competency::getId, Function.identity()));
         var missing = orderedIds.stream().filter(id -> !competencyMap.containsKey(id)).toList();
         if (!missing.isEmpty()) {
-            throw new IllegalStateException("Caminho referencia competÃªncias ausentes ou inativas: " + missing);
+            throw new IllegalStateException("Caminho referencia competências ausentes ou inativas: " + missing);
         }
         var masteryMap = mastery.findByInstrumentProfileId(instrumentProfileId).stream()
                 .collect(Collectors.toMap(Mastery::getCompetencyId, Function.identity(), this::latestMastery));
@@ -272,17 +272,17 @@ public class CurriculumEngine {
             reason = reviewReason;
         } else if (!unlocked) {
             status = CompetencyStatus.BLOCKED;
-            reason = "Bloqueada por prÃ©-requisitos estritos sem evidÃªncia mÃ­nima vÃ¡lida: "
+            reason = "Bloqueada por pré-requisitos estritos sem evidência mínima válida: "
                     + blocking.stream().map(PrerequisiteView::competencyId).toList();
         } else if (isEstablished(currentMastery)) {
             status = CompetencyStatus.ESTABLISHED;
-            reason = "HipÃ³tese atual sustentada em aplicaÃ§Ã£o ou retenÃ§Ã£o.";
+            reason = "Hipótese atual sustentada em aplicação ou retenção.";
         } else if (currentMastery != null && currentMastery.getState() != Mastery.State.UNOBSERVED) {
             status = CompetencyStatus.IN_PROGRESS;
-            reason = "HÃ¡ evidÃªncia parcial; a competÃªncia ainda precisa de consolidaÃ§Ã£o.";
+            reason = "Há evidência parcial; a competência ainda precisa de consolidação.";
         } else {
             status = CompetencyStatus.AVAILABLE;
-            reason = "DisponÃ­vel para prÃ¡tica guiada; nenhum prÃ©-requisito estrito bloqueia o passo.";
+            reason = "Disponível para prática guiada; nenhum pré-requisito estrito bloqueia o passo.";
         }
         return new CompetencyView(competencyId, competency.getFriendlyTitle(),
                 context.positions().get(competencyId), status,
@@ -302,12 +302,12 @@ public class CurriculumEngine {
             var sufficient = exists && hasMinimumEvidence(context, item.competencyId(), evaluatedAt);
             var blocking = item.strictChain() && !sufficient;
             var reason = !exists
-                    ? "PrÃ©-requisito referenciado nÃ£o estÃ¡ disponÃ­vel no caminho ativo."
+                    ? "Pré-requisito referenciado não está disponível no caminho ativo."
                     : sufficient
-                    ? "Possui evidÃªncia mÃ­nima atual para sustentar o prÃ³ximo passo."
+                    ? "Possui evidência mínima atual para sustentar o próximo passo."
                     : item.type() == CompetencyPrerequisite.Type.STRICT
-                    ? "Exige evidÃªncia consistente e atual antes da prÃ¡tica guiada."
-                    : "Lacuna aconselhÃ¡vel, mas nÃ£o bloqueante para exploraÃ§Ã£o guiada.";
+                    ? "Exige evidência consistente e atual antes da prática guiada."
+                    : "Lacuna aconselhável, mas não bloqueante para exploração guiada.";
             return new PrerequisiteView(item.competencyId(), item.type(), item.depth(), item.direct(),
                     sufficient, blocking, reason);
         }).toList();
@@ -351,16 +351,16 @@ public class CurriculumEngine {
         var current = context.mastery().get(competencyId);
         if (current == null || current.getState() == Mastery.State.UNOBSERVED) return null;
         if (current.getState() == Mastery.State.REVALIDATION_NEEDED) {
-            return "A hipÃ³tese de domÃ­nio requer revalidaÃ§Ã£o.";
+            return "A hipótese de domínio requer revalidação.";
         }
         if (current.isUnresolvedConflict() || hasContradictoryEvidence(context.evidence().get(competencyId))) {
-            return "Existem evidÃªncias conflitantes que pedem observaÃ§Ã£o focal.";
+            return "Existem evidências conflitantes que pedem observação focal.";
         }
         if (current.getNextReviewAt() != null && !current.getNextReviewAt().isAfter(evaluatedAt)) {
-            return "A revisÃ£o programada estÃ¡ devida.";
+            return "A revisão programada está devida.";
         }
         if (hasAgedSupportingEvidence(current, context.evidence().get(competencyId), evaluatedAt)) {
-            return "EvidÃªncia que sustenta a hipÃ³tese atual envelheceu.";
+            return "Evidência que sustenta a hipótese atual envelheceu.";
         }
         return null;
     }
@@ -420,10 +420,10 @@ public class CurriculumEngine {
                 : current.getState() == Mastery.State.CONSISTENT_CONTROLLED
                 ? SuggestionKind.APPLICATION : SuggestionKind.PRACTICE;
         var reason = switch (kind) {
-            case INTRODUCTION -> "Primeiro passo ainda nÃ£o observado no caminho ativo.";
-            case PRACTICE -> "EvidÃªncias parciais indicam que consolidar agora reduz incerteza.";
-            case APPLICATION -> "A execuÃ§Ã£o controlada estÃ¡ consistente; o prÃ³ximo valor Ã© aplicaÃ§Ã£o musical.";
-            default -> throw new IllegalStateException("Tipo de sugestÃ£o inesperado: " + kind);
+            case INTRODUCTION -> "Primeiro passo ainda não observado no caminho ativo.";
+            case PRACTICE -> "Evidências parciais indicam que consolidar agora reduz incerteza.";
+            case APPLICATION -> "A execução controlada está consistente; o próximo valor é aplicação musical.";
+            default -> throw new IllegalStateException("Tipo de sugestão inesperado: " + kind);
         };
         var advisory = view.prerequisites().stream()
                 .filter(prerequisite -> !prerequisite.blocking() && !prerequisite.satisfied())
@@ -439,12 +439,12 @@ public class CurriculumEngine {
         var blocked = count(views, CompetencyStatus.BLOCKED);
         var focus = nextSteps.isEmpty() ? null : nextSteps.getFirst().competencyId();
         var explanation = focus == null && established == views.size()
-                ? "Todas as competÃªncias do caminho estÃ£o estabelecidas e nenhuma revisÃ£o estÃ¡ devida."
+                ? "Todas as competências do caminho estão estabelecidas e nenhuma revisão está devida."
                 : focus == null
-                ? "Nenhum passo estÃ¡ disponÃ­vel; os bloqueios precisam ser atendidos ou inspecionados."
+                ? "Nenhum passo está disponível; os bloqueios precisam ser atendidos ou inspecionados."
                 : reviews.isEmpty()
-                ? "O foco atual Ã© o primeiro passo produtivo e desbloqueado do caminho ativo."
-                : "O foco atual prioriza uma revisÃ£o devida sem impedir avanÃ§o paralelo quando adequado.";
+                ? "O foco atual é o primeiro passo produtivo e desbloqueado do caminho ativo."
+                : "O foco atual prioriza uma revisão devida sem impedir avanço paralelo quando adequado.";
         return new CurriculumPosition(views.size(), established, inProgress, available, blocked,
                 reviews.size(), focus, explanation);
     }
@@ -455,11 +455,11 @@ public class CurriculumEngine {
 
     private Competency requireCurriculumCompetency(EngineContext context, String competencyId) {
         if (competencyId == null || competencyId.isBlank()) {
-            throw new IllegalArgumentException("competencyId Ã© obrigatÃ³rio");
+            throw new IllegalArgumentException("competencyId é obrigatório");
         }
         var competency = context.competencies().get(competencyId);
         if (competency == null || !context.curriculum().getCompetencyIds().contains(competencyId)) {
-            throw new NotFoundException("CompetÃªncia nÃ£o pertence ao currÃ­culo ativo: " + competencyId);
+            throw new NotFoundException("Competência não pertence ao currículo ativo: " + competencyId);
         }
         return competency;
     }

@@ -1,5 +1,7 @@
 package com.musicos.service;
 
+import com.musicos.domain.LocalProfile;
+
 import static com.musicos.api.ApiModels.*;
 
 import com.musicos.domain.MissionExperience;
@@ -85,7 +87,7 @@ public class MissionExperienceService {
     }
 
     private com.musicos.domain.InstrumentProfile profile(com.musicos.domain.InstrumentId instrument) {
-        return profiles.findByOwnerIdAndInstrument("default", instrument)
+        return profiles.findByOwnerIdAndInstrument(LocalProfile.DEFAULT_ID, instrument)
                 .orElseThrow(() -> new NotFoundException("Perfil instrumental não encontrado"));
     }
 

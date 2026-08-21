@@ -1,6 +1,5 @@
 import { useEffect, type ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { Gauge } from "lucide-react";
 import { useInstruments } from "@/shared/api/home";
 import { useMetronomeEngine } from "@/features/metronome/engine/use-metronome";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
@@ -22,22 +21,6 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     openTab({ path: pathname, title: titleForRegisteredPath(pathname) });
   }, [openTab, pathname]);
-
-  if (pathname === "/sessao") {
-    return (
-      <div
-        data-theme={theme}
-        className="flex h-dvh min-h-0 w-full flex-col bg-background-app text-text-primary"
-      >
-        <header className="flex min-h-10 shrink-0 items-center gap-2 border-b border-border bg-background-rail px-3">
-          <Gauge className="size-4 text-signal" aria-hidden="true" />
-          <span className="text-xs font-semibold">MUSE STUDIO</span>
-          <span className="label-tech">Sessão em foco</span>
-        </header>
-        <main className="min-h-0 flex-1">{children}</main>
-      </div>
-    );
-  }
 
   return (
     <div

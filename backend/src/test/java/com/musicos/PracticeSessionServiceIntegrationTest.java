@@ -35,11 +35,11 @@ class PracticeSessionServiceIntegrationTest {
         var finished = sessions.finish(started.id(),
                 new FinishSessionRequest(900, "Bends mais estáveis", "Afinação", "Melhor controle"));
 
-        assertThat(started.activities()).hasSize(4);
+        assertThat(started.activities()).isEmpty();
         assertThat(finished.status()).isEqualTo(SessionStatus.FINISHED);
         assertThat(finished.elapsedSeconds()).isEqualTo(900);
         assertThat(journal.count()).isEqualTo(before + 1);
-        assertThat(skills.findById("alternate-picking").orElseThrow().getHours()).isGreaterThan(previousHours);
+        assertThat(skills.findById("alternate-picking").orElseThrow().getHours()).isEqualTo(previousHours);
 
         sessions.finish(started.id(),
                 new FinishSessionRequest(900, "Reenvio", "Afinação", "Melhor controle"));

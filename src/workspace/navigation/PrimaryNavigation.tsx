@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Compass, History, Home, Map, Music2 } from "lucide-react";
+import { Dumbbell, History, Home, Map, Music2 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { primaryNavigationPaths } from "@/features/product-model";
 
@@ -8,7 +8,7 @@ const icons = {
   "/jornada": Map,
   "/musicas": Music2,
   "/historico": History,
-  "/explorar": Compass,
+  "/pratica": Dumbbell,
 };
 const items = primaryNavigationPaths.map((item) => ({
   ...item,

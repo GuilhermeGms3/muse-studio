@@ -381,6 +381,7 @@ export interface ExerciseAttempt {
   bpm: number;
   accuracy: number;
   durationSeconds: number;
+  externalItemId?: string;
   repetitions: number;
   perceivedDifficulty: number;
   passed: boolean;
@@ -691,6 +692,8 @@ export interface StudioRegion {
   startSeconds: number;
   endSeconds: number;
   origin: StudioRegionOrigin;
+  boundaryConfidence: "DEFINED" | "ESTIMATED" | "UNKNOWN";
+  externalRegionId?: string;
 }
 
 export interface StudioMarker {
@@ -698,6 +701,7 @@ export interface StudioMarker {
   name: string;
   positionSeconds: number;
   origin: StudioRegionOrigin;
+  externalMarkerId?: string;
 }
 
 export interface StudioTake {
@@ -742,10 +746,22 @@ export interface StudioProject {
 }
 
 export interface ReaperStatus {
-  status: "NOT_CONFIGURED" | "AVAILABLE" | "CONNECTED" | "DISCONNECTED" | "ERROR";
+  status:
+    | "NOT_CONFIGURED"
+    | "AGENT_OFFLINE"
+    | "REAPER_OFFLINE"
+    | "REAPER_AVAILABLE"
+    | "PROJECT_CONNECTED"
+    | "ERROR";
   configured: boolean;
-  executablePath?: string;
-  workspacePath?: string;
+  agentBaseUrl?: string;
+  containerMediaRoot?: string;
+  hostMediaRoot?: string;
+  agentVersion?: string;
+  reaperVersion?: string;
+  projectId?: string;
+  positionSeconds?: number;
+  playState?: number;
   message: string;
   checkedAt: string;
 }

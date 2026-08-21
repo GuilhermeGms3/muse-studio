@@ -1,5 +1,7 @@
 package com.musicos.service;
 
+import com.musicos.domain.LocalProfile;
+
 import static com.musicos.api.ApiModels.*;
 
 import com.musicos.domain.AssessmentAttempt;
@@ -72,7 +74,7 @@ public class DataManagementService {
 
     @Transactional(readOnly = true)
     public BackupSnapshot backup() {
-        var profile = preferences.findById("default").map(value -> new PreferencesView(
+        var profile = preferences.findById(LocalProfile.DEFAULT_ID).map(value -> new PreferencesView(
                 value.getLevel(), value.getSessionMinutes(), value.getFavoriteGenres(),
                 value.getFavoriteArtists(), value.getFavoriteSongs(), value.getPrimaryInstrument(),
                 value.isOnboardingCompleted(), value.getRhythmBaseline(), value.getEarBaseline(),
@@ -167,7 +169,7 @@ public class DataManagementService {
                     value.favoriteGenres(), value.favoriteArtists(), value.favoriteSongs(),
                     value.primaryInstrument()));
             if (value.onboardingCompleted()) {
-                preferences.findById("default").ifPresent(profile -> {
+                preferences.findById(LocalProfile.DEFAULT_ID).ifPresent(profile -> {
                     profile.completeOnboarding(value.rhythmBaseline(), value.earBaseline(),
                             value.techniqueBaseline());
                     preferences.save(profile);

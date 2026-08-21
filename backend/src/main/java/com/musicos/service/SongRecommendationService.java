@@ -1,5 +1,7 @@
 package com.musicos.service;
 
+import com.musicos.domain.LocalProfile;
+
 import static com.musicos.api.ApiModels.SongRecommendationView;
 import static com.musicos.api.ApiModels.PracticeInstrumentView;
 import static com.musicos.api.ApiModels.PracticeSongView;
@@ -40,7 +42,7 @@ public class SongRecommendationService {
     }
 
     public List<SongRecommendationView> recommend(String skill, String instrument) {
-        var profile = preferences.findById("default").orElse(null);
+        var profile = preferences.findById(LocalProfile.DEFAULT_ID).orElse(null);
         var tastes = profile == null ? "rock blues" : String.join(" ", profile.getFavoriteGenres()) + " "
                 + String.join(" ", profile.getFavoriteArtists());
         var query = (tastes + " " + value(skill) + " " + lessonTerms(instrument)).trim();

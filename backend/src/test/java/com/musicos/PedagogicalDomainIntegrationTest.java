@@ -93,7 +93,7 @@ class PedagogicalDomainIntegrationTest {
                     assertThat(relation.getTargetId()).isEqualTo("alternate-picking");
                 });
         assertThat(contentRelations.findBySourceTypeAndSourceId(
-                LearningContentRelation.ContentType.EXERCISE, "ex1"))
+                LearningContentRelation.ContentType.EXERCISE, "guitar-chromatic-1234"))
                 .anySatisfy(relation -> assertThat(relation.getTargetId()).isEqualTo("alternate-picking"));
 
     }
@@ -104,7 +104,7 @@ class PedagogicalDomainIntegrationTest {
                 "select \"version\" from \"flyway_schema_history\" where \"success\" = true "
                         + "order by \"installed_rank\" desc limit 1",
                 String.class);
-        assertThat(version).isEqualTo("7");
+        assertThat(version).isEqualTo("12");
     }
 
     @Test

@@ -2,11 +2,45 @@ import type { HomeData } from "@/shared/api/contracts";
 
 export const primaryNavigationPaths = [
   { label: "Hoje", path: "/" },
+  { label: "Prática", path: "/pratica" },
   { label: "Jornada", path: "/jornada" },
   { label: "Músicas", path: "/musicas" },
   { label: "Histórico", path: "/historico" },
-  { label: "Explorar", path: "/explorar" },
 ] as const;
+
+const legacyWorkspaceTabDestinations: Record<string, { path: string; title: string }> = {
+  "/sessao": { path: "/pratica", title: "Prática" },
+  "/plano": { path: "/pratica", title: "Prática" },
+  "/repertorio": { path: "/musicas", title: "Músicas" },
+  "/treino-musica": { path: "/musicas", title: "Músicas" },
+  "/skills": { path: "/jornada", title: "Jornada" },
+  "/mapa": { path: "/jornada", title: "Jornada" },
+};
+
+export function consolidateWorkspaceTabs<
+  T extends { path: string; title: string; id?: string; context?: unknown; type?: unknown },
+>(tabs: T[]): T[] {
+  const result: T[] = [];
+  const paths = new Set<string>();
+
+  for (const tab of tabs) {
+    const destination = legacyWorkspaceTabDestinations[tab.path.split("?")[0]];
+    const consolidated = destination
+      ? ({
+          ...tab,
+          ...destination,
+          id: destination.path,
+          context: undefined,
+          type: undefined,
+        } as T)
+      : tab;
+    if (paths.has(consolidated.path)) continue;
+    paths.add(consolidated.path);
+    result.push(consolidated);
+  }
+
+  return result;
+}
 
 export type HomeFocus = "ACTIVE_EXPERIENCE" | "COACH_RECOMMENDATION" | "EVIDENCE_ACTION";
 

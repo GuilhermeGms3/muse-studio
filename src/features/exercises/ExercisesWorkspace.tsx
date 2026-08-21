@@ -6,7 +6,6 @@ import { Breadcrumb } from "@/workspace/navigation/Breadcrumb";
 import { useExercises } from "@/lib/music-api";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
 import { cn } from "@/shared/utils/cn";
-import { CatalogEditor } from "@/shared/catalog/CatalogEditor";
 
 export function ExercisesPage() {
   const { instrument } = useWorkspace();
@@ -44,11 +43,7 @@ export function ExercisesPage() {
             </button>
           ))}
         </Panel>
-        <Panel
-          title="Exercícios"
-          bodyClassName="p-0"
-          actions={<CatalogEditor kind="exercise" instrument={instrument} />}
-        >
+        <Panel title="Exercícios" bodyClassName="p-0">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border bg-surface text-left">

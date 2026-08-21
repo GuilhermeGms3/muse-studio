@@ -14,6 +14,7 @@ import { Route as BibliotecaRouteImport } from './routes/biblioteca'
 import { Route as DadosRouteImport } from './routes/dados'
 import { Route as DiagnosticoRouteImport } from './routes/diagnostico'
 import { Route as DiarioRouteImport } from './routes/diario'
+import { Route as EditorRouteImport } from './routes/editor'
 import { Route as ExerciciosRouteImport } from './routes/exercicios'
 import { Route as ExplorarRouteImport } from './routes/explorar'
 import { Route as HistoricoRouteImport } from './routes/historico'
@@ -23,6 +24,7 @@ import { Route as MetronomoRouteImport } from './routes/metronomo'
 import { Route as MusicasRouteImport } from './routes/musicas'
 import { Route as OuvidoRouteImport } from './routes/ouvido'
 import { Route as PlanoRouteImport } from './routes/plano'
+import { Route as PraticaRouteImport } from './routes/pratica'
 import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as RepertorioRouteImport } from './routes/repertorio'
 import { Route as SessaoRouteImport } from './routes/sessao'
@@ -32,6 +34,7 @@ import { Route as TreinoMusicaRouteImport } from './routes/treino-musica'
 import { Route as BibliotecaNodeIdRouteImport } from './routes/biblioteca.$nodeId'
 import { Route as ExerciciosExerciseIdRouteImport } from './routes/exercicios.$exerciseId'
 import { Route as MissoesMissionIdRouteImport } from './routes/missoes.$missionId'
+import { Route as MusicasSongIdRouteImport } from './routes/musicas.$songId'
 import { Route as ProjetosProjectIdRouteImport } from './routes/projetos.$projectId'
 import { Route as RepertorioSongIdRouteImport } from './routes/repertorio.$songId'
 import { Route as StudioIndexRouteImport } from './routes/studio.index'
@@ -61,6 +64,11 @@ const DiagnosticoRoute = DiagnosticoRouteImport.update({
 const DiarioRoute = DiarioRouteImport.update({
   id: '/diario',
   path: '/diario',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EditorRoute = EditorRouteImport.update({
+  id: '/editor',
+  path: '/editor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExerciciosRoute = ExerciciosRouteImport.update({
@@ -108,6 +116,11 @@ const PlanoRoute = PlanoRouteImport.update({
   path: '/plano',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PraticaRoute = PraticaRouteImport.update({
+  id: '/pratica',
+  path: '/pratica',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjetosRoute = ProjetosRouteImport.update({
   id: '/projetos',
   path: '/projetos',
@@ -153,6 +166,11 @@ const MissoesMissionIdRoute = MissoesMissionIdRouteImport.update({
   path: '/missoes/$missionId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MusicasSongIdRoute = MusicasSongIdRouteImport.update({
+  id: '/$songId',
+  path: '/$songId',
+  getParentRoute: () => MusicasRoute,
+} as any)
 const ProjetosProjectIdRoute = ProjetosProjectIdRouteImport.update({
   id: '/$projectId',
   path: '/$projectId',
@@ -186,15 +204,17 @@ export interface FileRoutesByFullPath {
   '/dados': typeof DadosRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/diario': typeof DiarioRoute
+  '/editor': typeof EditorRoute
   '/exercicios': typeof ExerciciosRouteWithChildren
   '/explorar': typeof ExplorarRoute
   '/historico': typeof HistoricoRoute
   '/jornada': typeof JornadaRoute
   '/mapa': typeof MapaRoute
   '/metronomo': typeof MetronomoRoute
-  '/musicas': typeof MusicasRoute
+  '/musicas': typeof MusicasRouteWithChildren
   '/ouvido': typeof OuvidoRoute
   '/plano': typeof PlanoRoute
+  '/pratica': typeof PraticaRoute
   '/projetos': typeof ProjetosRouteWithChildren
   '/repertorio': typeof RepertorioRouteWithChildren
   '/sessao': typeof SessaoRoute
@@ -204,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
   '/exercicios/$exerciseId': typeof ExerciciosExerciseIdRoute
   '/missoes/$missionId': typeof MissoesMissionIdRoute
+  '/musicas/$songId': typeof MusicasSongIdRoute
   '/projetos/$projectId': typeof ProjetosProjectIdRoute
   '/repertorio/$songId': typeof RepertorioSongIdRoute
   '/studio/$studioProjectId': typeof StudioStudioProjectIdRoute
@@ -216,15 +237,17 @@ export interface FileRoutesByTo {
   '/dados': typeof DadosRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/diario': typeof DiarioRoute
+  '/editor': typeof EditorRoute
   '/exercicios': typeof ExerciciosRouteWithChildren
   '/explorar': typeof ExplorarRoute
   '/historico': typeof HistoricoRoute
   '/jornada': typeof JornadaRoute
   '/mapa': typeof MapaRoute
   '/metronomo': typeof MetronomoRoute
-  '/musicas': typeof MusicasRoute
+  '/musicas': typeof MusicasRouteWithChildren
   '/ouvido': typeof OuvidoRoute
   '/plano': typeof PlanoRoute
+  '/pratica': typeof PraticaRoute
   '/projetos': typeof ProjetosRouteWithChildren
   '/repertorio': typeof RepertorioRouteWithChildren
   '/sessao': typeof SessaoRoute
@@ -233,6 +256,7 @@ export interface FileRoutesByTo {
   '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
   '/exercicios/$exerciseId': typeof ExerciciosExerciseIdRoute
   '/missoes/$missionId': typeof MissoesMissionIdRoute
+  '/musicas/$songId': typeof MusicasSongIdRoute
   '/projetos/$projectId': typeof ProjetosProjectIdRoute
   '/repertorio/$songId': typeof RepertorioSongIdRoute
   '/studio/$studioProjectId': typeof StudioStudioProjectIdRoute
@@ -246,15 +270,17 @@ export interface FileRoutesById {
   '/dados': typeof DadosRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/diario': typeof DiarioRoute
+  '/editor': typeof EditorRoute
   '/exercicios': typeof ExerciciosRouteWithChildren
   '/explorar': typeof ExplorarRoute
   '/historico': typeof HistoricoRoute
   '/jornada': typeof JornadaRoute
   '/mapa': typeof MapaRoute
   '/metronomo': typeof MetronomoRoute
-  '/musicas': typeof MusicasRoute
+  '/musicas': typeof MusicasRouteWithChildren
   '/ouvido': typeof OuvidoRoute
   '/plano': typeof PlanoRoute
+  '/pratica': typeof PraticaRoute
   '/projetos': typeof ProjetosRouteWithChildren
   '/repertorio': typeof RepertorioRouteWithChildren
   '/sessao': typeof SessaoRoute
@@ -264,6 +290,7 @@ export interface FileRoutesById {
   '/biblioteca/$nodeId': typeof BibliotecaNodeIdRoute
   '/exercicios/$exerciseId': typeof ExerciciosExerciseIdRoute
   '/missoes/$missionId': typeof MissoesMissionIdRoute
+  '/musicas/$songId': typeof MusicasSongIdRoute
   '/projetos/$projectId': typeof ProjetosProjectIdRoute
   '/repertorio/$songId': typeof RepertorioSongIdRoute
   '/studio/$studioProjectId': typeof StudioStudioProjectIdRoute
@@ -278,6 +305,7 @@ export interface FileRouteTypes {
     | '/dados'
     | '/diagnostico'
     | '/diario'
+    | '/editor'
     | '/exercicios'
     | '/explorar'
     | '/historico'
@@ -287,6 +315,7 @@ export interface FileRouteTypes {
     | '/musicas'
     | '/ouvido'
     | '/plano'
+    | '/pratica'
     | '/projetos'
     | '/repertorio'
     | '/sessao'
@@ -296,6 +325,7 @@ export interface FileRouteTypes {
     | '/biblioteca/$nodeId'
     | '/exercicios/$exerciseId'
     | '/missoes/$missionId'
+    | '/musicas/$songId'
     | '/projetos/$projectId'
     | '/repertorio/$songId'
     | '/studio/$studioProjectId'
@@ -308,6 +338,7 @@ export interface FileRouteTypes {
     | '/dados'
     | '/diagnostico'
     | '/diario'
+    | '/editor'
     | '/exercicios'
     | '/explorar'
     | '/historico'
@@ -317,6 +348,7 @@ export interface FileRouteTypes {
     | '/musicas'
     | '/ouvido'
     | '/plano'
+    | '/pratica'
     | '/projetos'
     | '/repertorio'
     | '/sessao'
@@ -325,6 +357,7 @@ export interface FileRouteTypes {
     | '/biblioteca/$nodeId'
     | '/exercicios/$exerciseId'
     | '/missoes/$missionId'
+    | '/musicas/$songId'
     | '/projetos/$projectId'
     | '/repertorio/$songId'
     | '/studio/$studioProjectId'
@@ -337,6 +370,7 @@ export interface FileRouteTypes {
     | '/dados'
     | '/diagnostico'
     | '/diario'
+    | '/editor'
     | '/exercicios'
     | '/explorar'
     | '/historico'
@@ -346,6 +380,7 @@ export interface FileRouteTypes {
     | '/musicas'
     | '/ouvido'
     | '/plano'
+    | '/pratica'
     | '/projetos'
     | '/repertorio'
     | '/sessao'
@@ -355,6 +390,7 @@ export interface FileRouteTypes {
     | '/biblioteca/$nodeId'
     | '/exercicios/$exerciseId'
     | '/missoes/$missionId'
+    | '/musicas/$songId'
     | '/projetos/$projectId'
     | '/repertorio/$songId'
     | '/studio/$studioProjectId'
@@ -368,15 +404,17 @@ export interface RootRouteChildren {
   DadosRoute: typeof DadosRoute
   DiagnosticoRoute: typeof DiagnosticoRoute
   DiarioRoute: typeof DiarioRoute
+  EditorRoute: typeof EditorRoute
   ExerciciosRoute: typeof ExerciciosRouteWithChildren
   ExplorarRoute: typeof ExplorarRoute
   HistoricoRoute: typeof HistoricoRoute
   JornadaRoute: typeof JornadaRoute
   MapaRoute: typeof MapaRoute
   MetronomoRoute: typeof MetronomoRoute
-  MusicasRoute: typeof MusicasRoute
+  MusicasRoute: typeof MusicasRouteWithChildren
   OuvidoRoute: typeof OuvidoRoute
   PlanoRoute: typeof PlanoRoute
+  PraticaRoute: typeof PraticaRoute
   ProjetosRoute: typeof ProjetosRouteWithChildren
   RepertorioRoute: typeof RepertorioRouteWithChildren
   SessaoRoute: typeof SessaoRoute
@@ -421,6 +459,13 @@ declare module '@tanstack/react-router' {
       path: '/diario'
       fullPath: '/diario'
       preLoaderRoute: typeof DiarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/editor': {
+      id: '/editor'
+      path: '/editor'
+      fullPath: '/editor'
+      preLoaderRoute: typeof EditorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/exercicios': {
@@ -486,6 +531,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlanoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pratica': {
+      id: '/pratica'
+      path: '/pratica'
+      fullPath: '/pratica'
+      preLoaderRoute: typeof PraticaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projetos': {
       id: '/projetos'
       path: '/projetos'
@@ -549,6 +601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MissoesMissionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/musicas/$songId': {
+      id: '/musicas/$songId'
+      path: '/$songId'
+      fullPath: '/musicas/$songId'
+      preLoaderRoute: typeof MusicasSongIdRouteImport
+      parentRoute: typeof MusicasRoute
+    }
     '/projetos/$projectId': {
       id: '/projetos/$projectId'
       path: '/$projectId'
@@ -611,6 +670,17 @@ const ExerciciosRouteWithChildren = ExerciciosRoute._addFileChildren(
   ExerciciosRouteChildren,
 )
 
+interface MusicasRouteChildren {
+  MusicasSongIdRoute: typeof MusicasSongIdRoute
+}
+
+const MusicasRouteChildren: MusicasRouteChildren = {
+  MusicasSongIdRoute: MusicasSongIdRoute,
+}
+
+const MusicasRouteWithChildren =
+  MusicasRoute._addFileChildren(MusicasRouteChildren)
+
 interface ProjetosRouteChildren {
   ProjetosProjectIdRoute: typeof ProjetosProjectIdRoute
 }
@@ -666,15 +736,17 @@ const rootRouteChildren: RootRouteChildren = {
   DadosRoute: DadosRoute,
   DiagnosticoRoute: DiagnosticoRoute,
   DiarioRoute: DiarioRoute,
+  EditorRoute: EditorRoute,
   ExerciciosRoute: ExerciciosRouteWithChildren,
   ExplorarRoute: ExplorarRoute,
   HistoricoRoute: HistoricoRoute,
   JornadaRoute: JornadaRoute,
   MapaRoute: MapaRoute,
   MetronomoRoute: MetronomoRoute,
-  MusicasRoute: MusicasRoute,
+  MusicasRoute: MusicasRouteWithChildren,
   OuvidoRoute: OuvidoRoute,
   PlanoRoute: PlanoRoute,
+  PraticaRoute: PraticaRoute,
   ProjetosRoute: ProjetosRouteWithChildren,
   RepertorioRoute: RepertorioRouteWithChildren,
   SessaoRoute: SessaoRoute,

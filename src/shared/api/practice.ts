@@ -1,20 +1,5 @@
-import { apiRequest, useApiQuery } from "./client";
-import type {
-  ActivityResult,
-  InstrumentId,
-  PlanActivity,
-  PracticeSession,
-  SessionSummary,
-} from "./contracts";
-
-export const useTodayPlan = (instrument: InstrumentId) =>
-  useApiQuery<PlanActivity[]>(["plan", instrument], `/plans/today?instrument=${instrument}`);
-
-export const updateActivity = (id: string, done: boolean) =>
-  apiRequest<PlanActivity>(`/plans/activities/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify({ done }),
-  });
+import { apiRequest } from "./client";
+import type { ActivityResult, InstrumentId, PracticeSession, SessionSummary } from "./contracts";
 
 export const startPracticeSession = (instrument: InstrumentId, availableMinutes?: number) =>
   apiRequest<PracticeSession>("/sessions", {

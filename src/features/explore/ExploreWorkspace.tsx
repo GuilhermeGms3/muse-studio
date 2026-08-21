@@ -9,11 +9,9 @@ import {
   ListChecks,
   Search,
   Settings2,
-  Sparkles,
 } from "lucide-react";
 import { useExercises } from "@/shared/api/exercises";
 import { useLibrary } from "@/shared/api/library";
-import { useSkills } from "@/shared/api/learning";
 import { QueryState } from "@/shared/ui/query/QueryState";
 import { useWorkspace } from "@/workspace/store/WorkspaceProvider";
 
@@ -21,10 +19,9 @@ export function ExploreWorkspace() {
   const { instrument } = useWorkspace();
   const library = useLibrary();
   const exercises = useExercises(instrument);
-  const skills = useSkills(instrument);
   const [search, setSearch] = useState("");
-  if (!library.data || !exercises.data || !skills.data)
-    return <QueryState error={library.error ?? exercises.error ?? skills.error} />;
+  if (!library.data || !exercises.data)
+    return <QueryState error={library.error ?? exercises.error} />;
   const groups = [
     {
       title: "Conteúdos",
@@ -37,12 +34,6 @@ export function ExploreWorkspace() {
       description: `${exercises.data.length} práticas disponíveis para o instrumento ativo`,
       to: "/exercicios" as const,
       icon: ListChecks,
-    },
-    {
-      title: "Habilidades",
-      description: `${skills.data.length} registros legados de habilidade`,
-      to: "/skills" as const,
-      icon: Sparkles,
     },
     {
       title: "Treino de ouvido",

@@ -3,16 +3,12 @@ import { contextForPath } from "@/workspace/navigation/registry";
 
 export type WorkspaceTabType =
   | "home"
-  | "session"
-  | "plan"
+  | "practice"
   | "journal"
-  | "skill-tree"
   | "library"
   | "lesson"
   | "mission"
-  | "repertoire"
   | "song"
-  | "song-practice"
   | "exercises"
   | "exercise"
   | "ear-training"
@@ -43,17 +39,13 @@ export function tabKey(tab: WorkspaceTab) {
 
 export function tabTypeForPath(path: string): WorkspaceTabType {
   if (path === "/") return "home";
-  if (path === "/sessao") return "session";
-  if (path === "/plano") return "plan";
+  if (path === "/pratica" || path === "/sessao") return "practice";
   if (path === "/diario") return "journal";
-  if (path === "/skills" || path === "/mapa") return "skill-tree";
   if (path.startsWith("/biblioteca/")) return "lesson";
   if (path.startsWith("/missoes/")) return "mission";
   if (path === "/biblioteca") return "library";
-  if (path.startsWith("/repertorio/")) return "song";
-  if (path === "/repertorio") return "repertoire";
-  if (path === "/treino-musica") return "song-practice";
-  if (path.startsWith("/treino-musica/")) return "song-practice";
+  if (path.startsWith("/musicas/")) return "song";
+  if (path === "/musicas") return "song";
   if (path.startsWith("/exercicios/")) return "exercise";
   if (path === "/exercicios") return "exercises";
   if (path === "/ouvido") return "ear-training";
